@@ -1,0 +1,78 @@
+---
+import { formatPKR } from '@hamza/shared';
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CheckoutForm from '../components/ui/CheckoutForm.astro';
+import OrderSummaryLines from '../components/ui/OrderSummaryLines.astro';
+import { TRUST } from '../content/microcopy.js';
+import { priceCart, survivingCart } from '../lib/cart/pricing.js';
+import { readCart, writeCart } from '../lib/cart/session.js';
+import { listCities } from '../lib/delivery.js';
+import { NO_STORE } from '../lib/cache.js';
+import { getWalletNumbers } from '../lib/runtime.js';
+import { takeCheckoutError } from '../lib/orders/error-cookie.js';
+
+export const prerender = false;
+
+const priced = await priceCart(Astro.locals, readCart(Astro.cookies));
+
+if (priced.changed) {
+  writeCart(Astro.cookies, survivingCart(priced));
+}
+
+/* Nothing to check out — send them back rather than showing an empty form. */
+if (priced.lines.length === 0) {
+  return Astro.redirect('/cart', 303);
+}
+
+const [cities, rejected] = [
+  await listCities(Astro.locals),
+  takeCheckoutError(Astro.cookies),
+];
+const wallets = getWalletNumbers(Astro.locals);
+
+Astro.response.headers.set('Cache-Control', NO_STORE);
+---
+
+<BaseLayout title="Checkout" noindex>
+  <div class="mx-auto max-w-3xl px-4 pt-8">
+    <h1 class="text-2xl font-bold tracking-tight text-ink">Checkout</h1>
+
+    {
+      priced.removed.length > 0 && (
+        <p role="alert" class="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Some items were removed because they are no longer available. Please
+          review your order below.
+        </p>
+      )
+    }
+
+    {
+      rejected?.message && (
+        <p role="alert" class="mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">
+          {rejected.message}
+        </p>
+      )
+    }
+
+    <section class="mt-6 rounded-lg border border-neutral-200 p-4">
+      <h2 class="text-sm font-semibold text-ink">Your order</h2>
+      <OrderSummaryLines lines={priced.lines} />
+      <div class="mt-3 flex items-baseline justify-between border-t border-neutral-200 pt-3">
+        <p class="text-sm text-ink-muted">Subtotal</p>
+        <p class="text-base font-bold text-ink">{formatPKR(priced.subtotalPkr)}</p>
+      </div>
+      <p class="mt-1 text-xs text-ink-muted">{TRUST.deliveryFeeNote}</p>
+    </section>
+
+    <div class="mt-8">
+      <CheckoutForm
+        cities={cities}
+        wallets={wallets}
+        subtotalPkr={priced.subtotalPkr}
+        errors={rejected?.errors ?? {}}
+        values={rejected?.values ?? {}}
+      />
+    </div>
+  </div>
+</BaseLayout>

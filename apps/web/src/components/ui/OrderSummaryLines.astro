@@ -1,0 +1,25 @@
+---
+import { formatPKR } from '@hamza/shared';
+
+import type { PricedLine } from '../../lib/cart/pricing.js';
+
+interface Props {
+  lines: readonly PricedLine[];
+}
+
+const { lines } = Astro.props;
+---
+
+<ul class="mt-2 space-y-2">
+  {
+    lines.map((line) => (
+      <li class="flex justify-between gap-4 text-sm">
+        <span class="text-ink">
+          {line.entry.quantity} &times; {line.product.name}
+          <span class="text-ink-muted"> (UK {line.entry.size})</span>
+        </span>
+        <span class="shrink-0 font-medium text-ink">{formatPKR(line.lineTotalPkr)}</span>
+      </li>
+    ))
+  }
+</ul>

@@ -1,0 +1,50 @@
+---
+import { readVideoRef } from '@hamza/shared';
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CategoryTiles from '../components/ui/CategoryTiles.astro';
+import Pagination from '../components/ui/Pagination.astro';
+import ProductGrid from '../components/ui/ProductGrid.astro';
+import { listCatalogue } from '../lib/catalogue.js';
+import { CATALOGUE_CACHE_CONTROL } from '../lib/cache.js';
+
+export const prerender = false;
+
+/**
+ * The whole catalogue in one browsable, paginated place.
+ *
+ * The category pages answer "show me men's shoes"; this answers "show me
+ * everything you have", which is how someone shops a small store when they
+ * arrived without a specific product in mind.
+ */
+const page = Number.parseInt(Astro.url.searchParams.get('page') ?? '1', 10);
+const result = await listCatalogue(Astro.locals, {
+  page: Number.isSafeInteger(page) ? page : 1,
+});
+const videoRef = readVideoRef(Astro.url.searchParams);
+
+Astro.response.headers.set('Cache-Control', CATALOGUE_CACHE_CONTROL);
+---
+
+<BaseLayout
+  title="All Shoes"
+  description="Browse every style Hamza Footwear has in stock — men, women and kids. Delivered across Pakistan with Cash on Delivery."
+>
+  <div class="mx-auto max-w-5xl px-4 pt-8">
+    <h1 class="text-2xl font-bold tracking-tight text-ink">All Shoes</h1>
+    <p class="mt-1 text-sm text-ink-muted">
+      {result.total}
+      {result.total === 1 ? 'style' : 'styles'} in stock
+    </p>
+
+    <div class="mt-6">
+      <CategoryTiles />
+    </div>
+
+    <div class="mt-8">
+      <ProductGrid products={result.products} videoRef={videoRef} />
+    </div>
+
+    <Pagination page={result.page} pageCount={result.pageCount} basePath="/shop" />
+  </div>
+</BaseLayout>

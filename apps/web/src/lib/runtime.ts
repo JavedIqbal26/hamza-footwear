@@ -38,3 +38,22 @@ export function getImageBucket(locals: App.Locals): R2Bucket {
 export function getShopWhatsApp(locals: App.Locals): string {
   return env(locals).SHOP_WHATSAPP ?? '';
 }
+
+export interface WalletNumbers {
+  readonly jazzcash: string | null;
+  readonly easypaisa: string | null;
+}
+
+/**
+ * The shop's own wallet numbers, shown at checkout for manual payment.
+ *
+ * Absent means that payment option is hidden entirely — better than showing a
+ * customer a blank number to send money to.
+ */
+export function getWalletNumbers(locals: App.Locals): WalletNumbers {
+  const runtimeEnv = env(locals);
+  return {
+    jazzcash: runtimeEnv.JAZZCASH_NUMBER ?? null,
+    easypaisa: runtimeEnv.EASYPAISA_NUMBER ?? null,
+  };
+}

@@ -4,42 +4,84 @@ import { TRUST } from '../../content/microcopy.js';
 
 const currentPath = Astro.url.pathname;
 
+/*
+ * No cart cookie is read here on purpose. This header appears on pages that are
+ * cached at Cloudflare's edge, so anything person-specific baked into it would
+ * be served to the next visitor. The badge is filled in on the client by
+ * `cart-badge.ts` and starts hidden.
+ */
 function isActive(href: string): boolean {
   return currentPath === href || currentPath.startsWith(`${href}/`);
 }
 ---
 
 <header class="sticky top-0 z-40 border-b border-neutral-200 bg-white">
-  <div class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
+  <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
     <a href="/" class="text-lg font-bold tracking-tight text-brand-700">
       {SITE.name}
     </a>
 
-    <nav aria-label="Categories">
-      <ul class="flex items-center gap-1">
-        {
-          PRIMARY_NAV.map((link) => (
-            <li>
-              <a
-                href={link.href}
-                aria-current={isActive(link.href) ? 'page' : undefined}
-                class:list={[
-                  'tap-target flex items-center rounded px-3 text-sm font-medium',
-                  isActive(link.href)
-                    ? 'bg-brand-50 text-brand-700'
-                    : 'text-ink-muted hover:text-ink',
-                ]}
-              >
-                {link.label}
-              </a>
-            </li>
-          ))
-        }
-      </ul>
-    </nav>
+    <div class="flex items-center gap-1">
+      <nav aria-label="Categories">
+        <ul class="flex items-center gap-0.5">
+          {
+            PRIMARY_NAV.map((link) => (
+              <li>
+                <a
+                  href={link.href}
+                  aria-current={isActive(link.href) ? 'page' : undefined}
+                  class:list={[
+                    'tap-target flex items-center rounded px-2.5 text-sm font-medium sm:px-3',
+                    isActive(link.href)
+                      ? 'bg-brand-50 text-brand-700'
+                      : 'text-ink-muted hover:text-ink',
+                  ]}
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      <a
+        href="/cart"
+        data-cart-link
+        aria-label="Cart"
+        class="tap-target relative flex items-center justify-center rounded px-2 text-ink-muted hover:text-ink"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+          class="h-6 w-6"
+        >
+          <path d="M6 6h15l-1.5 9h-12z" />
+          <circle cx="9" cy="20" r="1.4" />
+          <circle cx="18" cy="20" r="1.4" />
+          <path d="M6 6 5 3H3" />
+        </svg>
+        <span
+          data-cart-badge
+          hidden
+          class="absolute right-0 top-0.5 min-w-5 rounded-full bg-brand-600 px-1 text-center text-xs font-bold leading-5 text-white"
+        ></span>
+      </a>
+    </div>
   </div>
 
   <p class="bg-brand-700 px-4 py-1.5 text-center text-xs font-medium text-white">
     {TRUST.cod}
   </p>
 </header>
+
+<script>
+  import { initCartBadge } from '../../scripts/cart-badge.js';
+
+  initCartBadge();
+</script>

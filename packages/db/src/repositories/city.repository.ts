@@ -1,3 +1,4 @@
+import type { D1Database } from '@cloudflare/workers-types';
 import type { City } from '@hamza/shared';
 
 import { toCities, toCity } from '../mappers/city.mapper.js';

@@ -1,0 +1,55 @@
+---
+interface Props {
+  page: number;
+  pageCount: number;
+  /** Path without a page parameter, e.g. "/shop" or "/men". */
+  basePath: string;
+}
+
+const { page, pageCount, basePath } = Astro.props;
+
+function pageHref(target: number): string {
+  return target <= 1 ? basePath : `${basePath}?page=${target}`;
+}
+
+const hasPrevious = page > 1;
+const hasNext = page < pageCount;
+---
+
+{
+  pageCount > 1 && (
+    <nav aria-label="Pagination" class="mt-10 flex items-center justify-between gap-4">
+      {/*
+        Real links, not buttons: a browsing shopper can open page 2 in a new tab,
+        and the pages are crawlable.
+      */}
+      {hasPrevious ? (
+        <a
+          href={pageHref(page - 1)}
+          rel="prev"
+          class="tap-target flex items-center rounded-lg border border-neutral-300 px-4 text-sm font-medium text-ink"
+        >
+          Previous
+        </a>
+      ) : (
+        <span />
+      )}
+
+      <p class="text-sm text-ink-muted">
+        Page {page} of {pageCount}
+      </p>
+
+      {hasNext ? (
+        <a
+          href={pageHref(page + 1)}
+          rel="next"
+          class="tap-target flex items-center rounded-lg border border-neutral-300 px-4 text-sm font-medium text-ink"
+        >
+          Next
+        </a>
+      ) : (
+        <span />
+      )}
+    </nav>
+  )
+}

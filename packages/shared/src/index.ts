@@ -10,6 +10,7 @@
 
 export * from './constants/categories.js';
 export * from './constants/cities.js';
+export * from './constants/order-number.js';
 export * from './constants/size-chart.js';
 export * from './constants/sizes.js';
 export * from './constants/statuses.js';
@@ -20,6 +21,7 @@ export * from './links/whatsapp.js';
 export * from './money/format.js';
 export * from './money/pricing.js';
 
+export * from './types/cart.js';
 export * from './types/city.js';
 export * from './types/image.js';
 export * from './types/order.js';

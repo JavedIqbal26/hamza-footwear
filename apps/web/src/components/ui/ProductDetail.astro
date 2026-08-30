@@ -5,10 +5,11 @@ import {
   effectivePricePkr,
   isOrderable,
   type Product,
+  type UkSize,
 } from '@hamza/shared';
 
+import AddToCartForm from '../interactive/AddToCartForm.astro';
 import ProductGallery from '../interactive/ProductGallery.astro';
-import SizeSelector from '../interactive/SizeSelector.astro';
 import Price from './Price.astro';
 import ProductTrustList from './ProductTrustList.astro';
 import StockBadge from './StockBadge.astro';
@@ -20,9 +21,17 @@ interface Props {
   /** Canonical URL of this product, already carrying `?v=` when present. */
   productUrl: string;
   shopPhone: string;
+  selectedSize?: UkSize | null;
+  showSizeError?: boolean;
 }
 
-const { product, productUrl, shopPhone } = Astro.props;
+const {
+  product,
+  productUrl,
+  shopPhone,
+  selectedSize = null,
+  showSizeError = false,
+} = Astro.props;
 
 const price = effectivePricePkr(product);
 const orderable = isOrderable(product.stock_status);
@@ -54,15 +63,13 @@ const hasSizes = product.sizes_available.length > 0;
         <StockBadge status={product.stock_status} />
       </div>
 
-      {hasSizes && <SizeSelector sizes={product.sizes_available} disabled={!orderable} />}
-
       {
-        orderable ? (
-          <WhatsAppButton
-            shopPhone={shopPhone}
-            productName={product.name}
-            productUrl={productUrl}
-            pricePkr={price}
+        orderable && hasSizes ? (
+          <AddToCartForm
+            slug={product.slug}
+            sizes={product.sizes_available}
+            selectedSize={selectedSize}
+            showSizeError={showSizeError}
           />
         ) : (
           <p class="rounded-lg bg-neutral-100 px-4 py-3 text-center text-sm font-medium text-ink">
@@ -70,6 +77,20 @@ const hasSizes = product.sizes_available.length > 0;
           </p>
         )
       }
+
+      {/*
+        The WhatsApp path stays available alongside the cart, never behind it.
+        Plenty of customers will never fill in a form, and this one works on
+        arrival with no JavaScript at all.
+      */}
+      <div class="border-t border-neutral-200 pt-5">
+        <WhatsAppButton
+          shopPhone={shopPhone}
+          productName={product.name}
+          productUrl={productUrl}
+          pricePkr={price}
+        />
+      </div>
 
       <ProductTrustList />
 

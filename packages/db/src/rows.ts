@@ -30,3 +30,25 @@ export interface CityRow {
   delivery_fee_pkr: number;
   tier: string;
 }
+
+export interface OrderRow {
+  id: string;
+  order_number: string;
+  customer_name: string;
+  phone: string;
+  city: string;
+  area: string;
+  address_line: string;
+  /** JSON array of order items. */
+  items: string;
+  subtotal_pkr: number;
+  delivery_fee_pkr: number;
+  total_pkr: number;
+  payment_method: string;
+  payment_proof_key: string | null;
+  payment_status: string;
+  order_status: string;
+  tiktok_video_ref: string | null;
+  notes: string;
+  created_at: string;
+}

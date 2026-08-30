@@ -1,10 +1,11 @@
 ---
-import { CATEGORY_LABELS, isCategory, readVideoRef } from '@hamza/shared';
+import { CATEGORY_LABELS, categoryPath, isCategory, readVideoRef } from '@hamza/shared';
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import NotFound from '../components/ui/NotFound.astro';
+import Pagination from '../components/ui/Pagination.astro';
 import ProductGrid from '../components/ui/ProductGrid.astro';
-import { listProductsInCategory } from '../lib/catalogue.js';
+import { listCatalogue } from '../lib/catalogue.js';
 import { CATALOGUE_CACHE_CONTROL, NO_STORE } from '../lib/cache.js';
 
 export const prerender = false;
@@ -17,9 +18,14 @@ export const prerender = false;
 const raw = Astro.params.category;
 const category = raw && isCategory(raw) ? raw : null;
 
-const products = category
-  ? await listProductsInCategory(Astro.locals, category)
-  : [];
+const page = Number.parseInt(Astro.url.searchParams.get('page') ?? '1', 10);
+const result = category
+  ? await listCatalogue(Astro.locals, {
+      category,
+      page: Number.isSafeInteger(page) ? page : 1,
+    })
+  : null;
+
 const videoRef = readVideoRef(Astro.url.searchParams);
 
 if (category === null) {
@@ -33,7 +39,7 @@ const label = category ? CATEGORY_LABELS[category] : '';
 ---
 
 {
-  category === null ? (
+  category === null || result === null ? (
     <BaseLayout title="Page not found" noindex>
       <NotFound />
     </BaseLayout>
@@ -57,12 +63,18 @@ const label = category ? CATEGORY_LABELS[category] : '';
 
         <h1 class="mt-2 text-2xl font-bold tracking-tight text-ink">{label}</h1>
         <p class="mt-1 text-sm text-ink-muted">
-          {products.length} {products.length === 1 ? 'style' : 'styles'} available
+          {result.total} {result.total === 1 ? 'style' : 'styles'} available
         </p>
 
         <div class="mt-6">
-          <ProductGrid products={products} videoRef={videoRef} />
+          <ProductGrid products={result.products} videoRef={videoRef} />
         </div>
+
+        <Pagination
+          page={result.page}
+          pageCount={result.pageCount}
+          basePath={categoryPath(category)}
+        />
       </div>
     </BaseLayout>
   )

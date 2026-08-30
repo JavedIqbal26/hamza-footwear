@@ -1,3 +1,4 @@
+import type { D1Database } from '@cloudflare/workers-types';
 import type { Category, Product } from '@hamza/shared';
 
 import { toProduct, toProducts } from '../mappers/product.mapper.js';
@@ -34,6 +35,8 @@ function clampLimit(limit: number | undefined): number {
 export interface ProductRepository {
   listActive(options?: ListProductsOptions): Promise<Product[]>;
   findBySlug(slug: string): Promise<Product | null>;
+  findBySlugs(slugs: readonly string[]): Promise<Product[]>;
+  listRelated(product: Product, limit?: number): Promise<Product[]>;
   countActive(category?: Category): Promise<number>;
   listSlugs(): Promise<string[]>;
 }
@@ -74,6 +77,43 @@ export function createProductRepository(db: D1Database): ProductRepository {
         .first<ProductRow>();
 
       return row === null ? null : toProduct(row);
+    },
+
+    /**
+     * Fetches many products in one query — the cart needs authoritative prices
+     * for every line, and one round trip beats N.
+     *
+     * Placeholders are generated from the array length, never from its contents,
+     * so this stays fully parameterised.
+     */
+    async findBySlugs(slugs: readonly string[]): Promise<Product[]> {
+      if (slugs.length === 0) return [];
+
+      const placeholders = slugs.map((_, index) => `?${index + 1}`).join(', ');
+      const { results } = await db
+        .prepare(
+          `SELECT ${COLUMNS} FROM products
+           WHERE is_active = 1 AND slug IN (${placeholders})`,
+        )
+        .bind(...slugs)
+        .all<ProductRow>();
+
+      return toProducts(results);
+    },
+
+    /** "More from this category" on a product page. Excludes the product itself. */
+    async listRelated(product: Product, limit = 4): Promise<Product[]> {
+      const { results } = await db
+        .prepare(
+          `SELECT ${COLUMNS} FROM products
+           WHERE is_active = 1 AND category = ?1 AND slug <> ?2
+           ORDER BY created_at DESC, id DESC
+           LIMIT ?3`,
+        )
+        .bind(product.category, product.slug, clampLimit(limit))
+        .all<ProductRow>();
+
+      return toProducts(results);
     },
 
     async countActive(category?: Category): Promise<number> {

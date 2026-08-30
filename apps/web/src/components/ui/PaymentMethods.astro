@@ -1,0 +1,101 @@
+---
+import { formatPhone } from '@hamza/shared';
+
+import { TRUST } from '../../content/microcopy.js';
+import type { WalletNumbers } from '../../lib/runtime.js';
+
+interface Props {
+  wallets: WalletNumbers;
+  selected?: string;
+  errors?: Readonly<Record<string, string>>;
+}
+
+const { wallets, selected = '', errors = {} } = Astro.props;
+
+/*
+ * Cash on Delivery is listed first and preselected. It is what most customers
+ * want, and it is the option that requires the least trust from a first-time
+ * buyer — which is most of this shop's traffic.
+ *
+ * A wallet option only appears if its number is actually configured. Showing
+ * "send money to (blank)" would be worse than not offering it.
+ */
+const walletOptions = [
+  { value: 'jazzcash', label: 'JazzCash', number: wallets.jazzcash },
+  { value: 'easypaisa', label: 'Easypaisa', number: wallets.easypaisa },
+].filter((option): option is typeof option & { number: string } => option.number !== null);
+
+const isSelected = (value: string): boolean =>
+  selected === value || (selected === '' && value === 'cod');
+---
+
+<fieldset class="space-y-3">
+  <legend class="text-lg font-semibold text-ink">Payment</legend>
+
+  <label class="flex cursor-pointer gap-3 rounded-lg border border-neutral-300 p-4 has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
+    <input
+      type="radio"
+      name="payment_method"
+      value="cod"
+      required
+      checked={isSelected('cod')}
+      class="mt-0.5 h-5 w-5 shrink-0 accent-brand-600"
+    />
+    <span>
+      <span class="block text-sm font-semibold text-ink">Cash on Delivery</span>
+      <span class="mt-0.5 block text-sm text-ink-muted">{TRUST.cod}</span>
+    </span>
+  </label>
+
+  {
+    walletOptions.map((option) => (
+      <label class="flex cursor-pointer gap-3 rounded-lg border border-neutral-300 p-4 has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
+        <input
+          type="radio"
+          name="payment_method"
+          value={option.value}
+          checked={isSelected(option.value)}
+          class="mt-0.5 h-5 w-5 shrink-0 accent-brand-600"
+        />
+        <span>
+          <span class="block text-sm font-semibold text-ink">{option.label}</span>
+          <span class="mt-0.5 block text-sm text-ink-muted">
+            Is number par bhejein:
+            <strong class="font-semibold text-ink">{formatPhone(option.number)}</strong>
+          </span>
+          <span class="mt-1 block text-xs text-ink-muted">
+            Paisay bhejne ke baad transaction ID neeche likhein.
+          </span>
+        </span>
+      </label>
+    ))
+  }
+
+  {
+    walletOptions.length > 0 && (
+      <div>
+        <label for="payment_reference" class="block text-sm font-medium text-ink">
+          Transaction ID <span class="font-normal text-ink-muted">(wallet payments only)</span>
+        </label>
+        <input
+          id="payment_reference"
+          name="payment_reference"
+          type="text"
+          inputmode="numeric"
+          class="tap-target mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base"
+        />
+        <p class="mt-1 text-xs text-ink-muted">
+          Screenshot order confirm hone ke baad WhatsApp par bhej sakte hain.
+        </p>
+      </div>
+    )
+  }
+
+  {
+    errors.payment_method && (
+      <p role="alert" class="text-sm text-red-700">
+        {errors.payment_method}
+      </p>
+    )
+  }
+</fieldset>

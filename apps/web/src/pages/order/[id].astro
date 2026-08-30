@@ -1,0 +1,121 @@
+---
+import { createOrderRepository } from '@hamza/db';
+import {
+  buildWhatsAppContactLink,
+  formatPKR,
+  formatPhone,
+  PAYMENT_METHOD_LABELS,
+} from '@hamza/shared';
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import NotFound from '../../components/ui/NotFound.astro';
+import { TRUST } from '../../content/microcopy.js';
+import { NO_STORE } from '../../lib/cache.js';
+import { getDatabase, getShopWhatsApp } from '../../lib/runtime.js';
+
+export const prerender = false;
+
+/**
+ * Order confirmation.
+ *
+ * Addressed by the order's UUID rather than its human-readable number: the
+ * number is sequential, so a guessable URL would expose every customer's name,
+ * phone and address to anyone counting upwards.
+ */
+const { id } = Astro.params;
+const order = id ? await createOrderRepository(getDatabase(Astro.locals)).findById(id) : null;
+
+if (order === null) Astro.response.status = 404;
+
+/* Contains personal data. Never cached, never indexed. */
+Astro.response.headers.set('Cache-Control', NO_STORE);
+
+const shopPhone = getShopWhatsApp(Astro.locals);
+---
+
+{
+  order === null ? (
+    <BaseLayout title="Order not found" noindex>
+      <NotFound message="We could not find that order. If you have just placed one, please check the link we sent you." />
+    </BaseLayout>
+  ) : (
+    <BaseLayout title={`Order ${order.order_number}`} noindex>
+      <div class="mx-auto max-w-2xl px-4 pt-10">
+        <div class="rounded-lg bg-brand-50 px-4 py-6 text-center">
+          <p class="text-sm font-semibold uppercase tracking-wide text-brand-700">
+            Shukriya!
+          </p>
+          <h1 class="mt-1 text-2xl font-bold tracking-tight text-ink">
+            Order {order.order_number}
+          </h1>
+          <p class="mt-2 text-sm text-ink">
+            Hum aap ko is number par confirm karenge: {formatPhone(order.phone)}
+          </p>
+        </div>
+
+        <section class="mt-8">
+          <h2 class="text-sm font-semibold text-ink">Your order</h2>
+          <ul class="mt-2 divide-y divide-neutral-200 border-y border-neutral-200">
+            {order.items.map((item) => (
+              <li class="flex justify-between gap-4 py-3 text-sm">
+                <span class="text-ink">
+                  {item.quantity} &times; {item.name}
+                  <span class="text-ink-muted"> (UK {item.size})</span>
+                </span>
+                <span class="shrink-0 font-medium text-ink">
+                  {formatPKR(item.unit_price_pkr * item.quantity)}
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          <dl class="mt-4 space-y-1 text-sm">
+            <div class="flex justify-between">
+              <dt class="text-ink-muted">Subtotal</dt>
+              <dd class="text-ink">{formatPKR(order.subtotal_pkr)}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-ink-muted">Delivery to {order.city}</dt>
+              <dd class="text-ink">{formatPKR(order.delivery_fee_pkr)}</dd>
+            </div>
+            <div class="flex justify-between border-t border-neutral-200 pt-2">
+              <dt class="font-semibold text-ink">Total</dt>
+              <dd class="text-lg font-bold text-ink">{formatPKR(order.total_pkr)}</dd>
+            </div>
+          </dl>
+
+          <p class="mt-3 text-sm text-ink-muted">
+            Payment: {PAYMENT_METHOD_LABELS[order.payment_method]}
+          </p>
+        </section>
+
+        <section class="mt-8">
+          <h2 class="text-sm font-semibold text-ink">Delivery address</h2>
+          <address class="mt-1 text-sm not-italic leading-relaxed text-ink-muted">
+            {order.customer_name}
+            <br />
+            {order.address_line}
+            <br />
+            {order.area}, {order.city}
+          </address>
+        </section>
+
+        <p class="mt-8 rounded-lg bg-neutral-50 px-4 py-3 text-sm text-ink">
+          {TRUST.deliveryTime}
+        </p>
+
+        <a
+          href={buildWhatsAppContactLink(shopPhone)}
+          rel="noopener"
+          class="tap-target mt-4 flex w-full items-center justify-center rounded-lg bg-whatsapp px-5 py-3.5 text-base font-semibold text-white"
+        >
+          WhatsApp par rabta karein
+        </a>
+
+        <a href="/shop" class="mt-3 block text-center text-sm text-brand-600 underline">
+          Continue shopping
+        </a>
+      </div>
+    </BaseLayout>
+  )
+}
