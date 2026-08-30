@@ -33,14 +33,17 @@ Astro.response.headers.set('Cache-Control', CATALOGUE_CACHE_CONTROL);
     <CategoryTiles />
   </section>
 
-  <TrustStrip />
-
-  <section class="mx-auto max-w-5xl px-4 pt-10">
-    <div class="flex items-baseline justify-between gap-4">
-      <h2 class="text-lg font-semibold text-ink">New arrivals</h2>
-    </div>
+  <section class="mx-auto max-w-5xl px-4 pt-8">
+    <h2 class="text-lg font-semibold text-ink">New arrivals</h2>
     <div class="mt-4">
       <ProductGrid products={products} videoRef={videoRef} />
     </div>
   </section>
+
+  {/*
+    Below the grid on purpose. A visitor arriving from a TikTok video wants to
+    see shoes, not read three paragraphs first — and the Cash on Delivery
+    promise is already in the sticky header on every page.
+  */}
+  <TrustStrip />
 </BaseLayout>

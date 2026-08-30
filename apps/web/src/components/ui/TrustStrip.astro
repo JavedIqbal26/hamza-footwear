@@ -2,14 +2,18 @@
 import { TRUST } from '../../content/microcopy.js';
 
 /**
- * The three reassurances that decide whether a first-time visitor from TikTok
- * orders at all: payment on delivery, how long it takes, and what happens if
- * the size is wrong. Roman Urdu, because this is the trust moment.
+ * The reassurances that decide whether a first-time visitor from TikTok orders
+ * at all. Roman Urdu, because this is the trust moment.
+ *
+ * Cash on Delivery is deliberately absent: it already sits in the sticky header
+ * banner on every page. Repeating it here word for word cost a third of this
+ * strip and taught the eye to skip the whole row. Sizing takes its place —
+ * the other thing a first-time buyer hesitates over.
  */
 const POINTS = [
-  { title: 'Cash on Delivery', body: TRUST.cod },
   { title: 'Delivery', body: TRUST.deliveryTime },
   { title: 'Exchange', body: TRUST.returns },
+  { title: 'Sizing', body: TRUST.sizeHelp },
 ] as const;
 ---
 

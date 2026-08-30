@@ -50,7 +50,7 @@ export function createProductRepository(db: D1Database): ProductRepository {
               .prepare(
                 `SELECT ${COLUMNS} FROM products
                  WHERE is_active = 1
-                 ORDER BY created_at DESC
+                 ORDER BY created_at DESC, id DESC
                  LIMIT ?1 OFFSET ?2`,
               )
               .bind(limit, offset)
@@ -58,7 +58,7 @@ export function createProductRepository(db: D1Database): ProductRepository {
               .prepare(
                 `SELECT ${COLUMNS} FROM products
                  WHERE is_active = 1 AND category = ?1
-                 ORDER BY created_at DESC
+                 ORDER BY created_at DESC, id DESC
                  LIMIT ?2 OFFSET ?3`,
               )
               .bind(options.category, limit, offset);
@@ -93,7 +93,7 @@ export function createProductRepository(db: D1Database): ProductRepository {
     /** Used to build the sitemap. */
     async listSlugs(): Promise<string[]> {
       const { results } = await db
-        .prepare('SELECT slug FROM products WHERE is_active = 1 ORDER BY created_at DESC')
+        .prepare('SELECT slug FROM products WHERE is_active = 1 ORDER BY created_at DESC, id DESC')
         .all<{ slug: string }>();
       return results.map((row) => row.slug);
     },
