@@ -1,0 +1,41 @@
+---
+import { primaryImage, productPath, type Product } from '@hamza/shared';
+
+import Price from './Price.astro';
+import ProductImage from './ProductImage.astro';
+import StockBadge from './StockBadge.astro';
+
+interface Props {
+  product: Product;
+  /** Carried through from `?v=` so the video reference survives navigation. */
+  videoRef?: string | null;
+  /** The first row of a grid is above the fold on a phone. */
+  eager?: boolean;
+}
+
+const { product, videoRef = null, eager = false } = Astro.props;
+---
+
+<article class="group">
+  <a
+    href={productPath(product.slug, videoRef)}
+    class="block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+  >
+    <div class="overflow-hidden rounded-lg">
+      <ProductImage
+        baseKey={primaryImage(product)}
+        alt={product.name}
+        variant="thumb"
+        sizes="(min-width: 640px) 25vw, 50vw"
+        loading={eager ? 'eager' : 'lazy'}
+        class="transition-transform duration-200 group-hover:scale-105"
+      />
+    </div>
+
+    <div class="mt-2 space-y-1">
+      <h3 class="text-sm font-medium text-ink">{product.name}</h3>
+      <Price price_pkr={product.price_pkr} sale_price_pkr={product.sale_price_pkr} />
+      <StockBadge status={product.stock_status} />
+    </div>
+  </a>
+</article>

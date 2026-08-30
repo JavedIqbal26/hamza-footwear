@@ -1,0 +1,49 @@
+---
+import { buildWhatsAppOrderLink } from '@hamza/shared';
+
+import { TRUST } from '../../content/microcopy.js';
+
+interface Props {
+  shopPhone: string;
+  productName: string;
+  productUrl: string;
+  pricePkr: number;
+  /** Disabled products still show the button — the customer may want a restock. */
+  disabled?: boolean;
+}
+
+const { shopPhone, productName, productUrl, pricePkr } = Astro.props;
+
+/**
+ * The href is built on the server, so this button is a working link the moment
+ * the HTML arrives — no hydration, no JavaScript required. When a size is
+ * selected, `size-selector.ts` rewrites the href to include it; if the script
+ * never runs, the customer still reaches WhatsApp with the product and price.
+ */
+const href = buildWhatsAppOrderLink({ shopPhone, productName, productUrl, pricePkr });
+---
+
+<div class="space-y-2">
+  <a
+    id="whatsapp-order"
+    href={href}
+    data-shop-phone={shopPhone}
+    data-product-name={productName}
+    data-product-url={productUrl}
+    data-price-pkr={String(pricePkr)}
+    rel="noopener"
+    class="tap-target flex w-full items-center justify-center gap-2 rounded-lg bg-whatsapp px-5 py-3.5 text-base font-semibold text-white transition-colors hover:bg-whatsapp-dark"
+  >
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="h-5 w-5">
+      <path
+        d="M17.5 14.4c-.3-.2-1.7-.9-2-1-.3-.1-.5-.2-.7.1-.2.3-.7 1-.9 1.2-.2.2-.3.2-.6.1-1.7-.9-2.9-1.6-4-3.5-.3-.5.3-.5.8-1.5.1-.2 0-.4 0-.5 0-.2-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1 2.9 1.2 3.1c.1.2 2 3.1 4.9 4.3 1.8.8 2.5.9 3.4.7.5-.1 1.7-.7 1.9-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3z"
+      ></path>
+      <path
+        d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3.1.8.8-3-.2-.3A8.2 8.2 0 1 1 12 20.2z"
+      ></path>
+    </svg>
+    {TRUST.whatsappPrompt}
+  </a>
+
+  <p class="text-center text-xs text-ink-muted">{TRUST.whatsappHelp}</p>
+</div>

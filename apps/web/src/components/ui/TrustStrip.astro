@@ -1,0 +1,29 @@
+---
+import { TRUST } from '../../content/microcopy.js';
+
+/**
+ * The three reassurances that decide whether a first-time visitor from TikTok
+ * orders at all: payment on delivery, how long it takes, and what happens if
+ * the size is wrong. Roman Urdu, because this is the trust moment.
+ */
+const POINTS = [
+  { title: 'Cash on Delivery', body: TRUST.cod },
+  { title: 'Delivery', body: TRUST.deliveryTime },
+  { title: 'Exchange', body: TRUST.returns },
+] as const;
+---
+
+<section aria-label="Why order from us" class="mx-auto max-w-5xl px-4 pt-8">
+  <ul class="grid gap-3 sm:grid-cols-3">
+    {
+      POINTS.map((point) => (
+        <li class="rounded-lg bg-brand-50 px-4 py-3">
+          <h3 class="text-xs font-semibold uppercase tracking-wide text-brand-700">
+            {point.title}
+          </h3>
+          <p class="mt-1 text-sm text-ink">{point.body}</p>
+        </li>
+      ))
+    }
+  </ul>
+</section>

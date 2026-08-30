@@ -1,0 +1,75 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SizeChartTable from '../components/ui/SizeChartTable.astro';
+import { TRUST } from '../content/microcopy.js';
+
+/* Pure content — a real static file on the CDN, no database, no function. */
+export const prerender = true;
+
+const STEPS = [
+  {
+    title: 'Stand on a piece of paper',
+    body: 'Keep your heel against a wall and put your full weight on that foot.',
+  },
+  {
+    title: 'Mark your longest toe',
+    body: 'Draw a line at the tip. It is not always the big toe.',
+  },
+  {
+    title: 'Measure heel to line, in cm',
+    body: 'Measure in the evening — feet swell slightly through the day.',
+  },
+  {
+    title: 'Measure both feet',
+    body: 'Most people have one foot slightly larger. Use the bigger number.',
+  },
+] as const;
+---
+
+<BaseLayout
+  title="Size Guide"
+  description="Measure your foot in centimetres and find your UK shoe size. All Hamza Footwear sizes are UK."
+>
+  <div class="mx-auto max-w-3xl px-4 pt-8">
+    <h1 class="text-2xl font-bold tracking-tight text-ink">Size Guide</h1>
+    <p class="mt-2 text-sm text-ink-muted">
+      All our sizes are UK. {TRUST.sizeHelp}
+    </p>
+
+    <section class="mt-8">
+      <h2 class="text-lg font-semibold text-ink">Measure your foot</h2>
+      <ol class="mt-3 space-y-3">
+        {
+          STEPS.map((step, index) => (
+            <li class="flex gap-3">
+              <span
+                aria-hidden="true"
+                class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white"
+              >
+                {index + 1}
+              </span>
+              <div>
+                <h3 class="text-sm font-semibold text-ink">{step.title}</h3>
+                <p class="text-sm text-ink-muted">{step.body}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section class="mt-10">
+      <h2 class="text-lg font-semibold text-ink">UK size chart</h2>
+      <p class="mt-1 text-sm text-ink-muted">
+        If your measurement falls between two sizes, choose the larger one.
+      </p>
+      <div class="mt-4">
+        <SizeChartTable />
+      </div>
+    </section>
+
+    <p class="mt-8 rounded-lg bg-brand-50 px-4 py-3 text-sm text-ink">
+      {TRUST.returns}
+    </p>
+  </div>
+</BaseLayout>

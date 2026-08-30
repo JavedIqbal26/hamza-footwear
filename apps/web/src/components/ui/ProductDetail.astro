@@ -1,0 +1,88 @@
+---
+import {
+  CATEGORY_LABELS,
+  categoryPath,
+  effectivePricePkr,
+  isOrderable,
+  type Product,
+} from '@hamza/shared';
+
+import ProductGallery from '../interactive/ProductGallery.astro';
+import SizeSelector from '../interactive/SizeSelector.astro';
+import Price from './Price.astro';
+import ProductTrustList from './ProductTrustList.astro';
+import StockBadge from './StockBadge.astro';
+import WhatsAppButton from './WhatsAppButton.astro';
+import { TRUST } from '../../content/microcopy.js';
+
+interface Props {
+  product: Product;
+  /** Canonical URL of this product, already carrying `?v=` when present. */
+  productUrl: string;
+  shopPhone: string;
+}
+
+const { product, productUrl, shopPhone } = Astro.props;
+
+const price = effectivePricePkr(product);
+const orderable = isOrderable(product.stock_status);
+const hasSizes = product.sizes_available.length > 0;
+---
+
+<div class="mx-auto max-w-5xl px-4 pt-6">
+  <nav aria-label="Breadcrumb" class="text-sm text-ink-muted">
+    <a href="/" class="hover:text-ink">Home</a>
+    <span aria-hidden="true" class="px-1">/</span>
+    <a href={categoryPath(product.category)} class="hover:text-ink">
+      {CATEGORY_LABELS[product.category]}
+    </a>
+  </nav>
+
+  <div class="mt-4 grid gap-8 lg:grid-cols-2">
+    <ProductGallery images={product.images} productName={product.name} />
+
+    <div class="space-y-6">
+      <div class="space-y-2">
+        <h1 class="text-xl font-bold tracking-tight text-ink sm:text-2xl">
+          {product.name}
+        </h1>
+        <Price
+          price_pkr={product.price_pkr}
+          sale_price_pkr={product.sale_price_pkr}
+          size="lg"
+        />
+        <StockBadge status={product.stock_status} />
+      </div>
+
+      {hasSizes && <SizeSelector sizes={product.sizes_available} disabled={!orderable} />}
+
+      {
+        orderable ? (
+          <WhatsAppButton
+            shopPhone={shopPhone}
+            productName={product.name}
+            productUrl={productUrl}
+            pricePkr={price}
+          />
+        ) : (
+          <p class="rounded-lg bg-neutral-100 px-4 py-3 text-center text-sm font-medium text-ink">
+            {TRUST.outOfStock}
+          </p>
+        )
+      }
+
+      <ProductTrustList />
+
+      {
+        product.description && (
+          <div>
+            <h2 class="text-sm font-semibold text-ink">Details</h2>
+            <p class="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink-muted">
+              {product.description}
+            </p>
+          </div>
+        )
+      }
+    </div>
+  </div>
+</div>

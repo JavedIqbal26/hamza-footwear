@@ -1,0 +1,28 @@
+{
+  "name": "hamza-footwear",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev:web": "npm run dev --workspace @hamza/web",
+    "dev:api": "npm run dev --workspace @hamza/api",
+    "build": "npm run build --workspaces --if-present",
+    "build:web": "npm run build --workspace @hamza/web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:reset": "npm run db:reset --workspace @hamza/web",
+    "db:migrate": "npm run db:migrate --workspace @hamza/web",
+    "db:seed": "npm run db:seed --workspace @hamza/web",
+    "db:migrate:remote": "npm run db:migrate:remote --workspace @hamza/web",
+    "db:seed:remote": "npm run db:seed:remote --workspace @hamza/web"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "wrangler": "^3.99.0"
+  }
+}

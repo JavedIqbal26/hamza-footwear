@@ -1,0 +1,44 @@
+---
+import {
+  effectivePricePkr,
+  imageUrl,
+  isOrderable,
+  type Product,
+} from '@hamza/shared';
+
+import { SITE } from '../../lib/site.js';
+
+interface Props {
+  product: Product;
+  url: string;
+}
+
+const { product, url } = Astro.props;
+
+/**
+ * Product structured data.
+ *
+ * Costs nothing at runtime (it is not JavaScript, just a data block) and is what
+ * lets a shared link render as a product card rather than a bare URL.
+ */
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: product.name,
+  description: product.description,
+  sku: product.id,
+  image: product.images.map((key) => new URL(imageUrl(key, 'full'), SITE.url).href),
+  brand: { '@type': 'Brand', name: SITE.name },
+  offers: {
+    '@type': 'Offer',
+    url,
+    priceCurrency: 'PKR',
+    price: String(effectivePricePkr(product)),
+    availability: isOrderable(product.stock_status)
+      ? 'https://schema.org/InStock'
+      : 'https://schema.org/OutOfStock',
+  },
+};
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />

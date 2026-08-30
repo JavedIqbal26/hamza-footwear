@@ -1,0 +1,31 @@
+---
+import CategoryTiles from './CategoryTiles.astro';
+
+interface Props {
+  /** Overridden on the product page, where "sold out" is the likelier cause. */
+  message?: string;
+}
+
+const {
+  message = 'The page you are looking for has moved or is no longer available.',
+} = Astro.props;
+---
+
+<div class="mx-auto max-w-3xl px-4 py-16 text-center">
+  <p class="text-sm font-semibold uppercase tracking-wide text-brand-600">404</p>
+  <h1 class="mt-2 text-2xl font-bold tracking-tight text-ink">
+    Ye page mojood nahi hai
+  </h1>
+  <p class="mt-2 text-sm text-ink-muted">{message}</p>
+
+  <div class="mt-8 text-left">
+    <CategoryTiles />
+  </div>
+
+  <a
+    href="/"
+    class="tap-target mt-6 inline-flex items-center justify-center rounded-lg bg-brand-600 px-5 py-3 text-sm font-semibold text-white"
+  >
+    Go to home
+  </a>
+</div>

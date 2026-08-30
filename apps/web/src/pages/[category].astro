@@ -1,0 +1,69 @@
+---
+import { CATEGORY_LABELS, isCategory, readVideoRef } from '@hamza/shared';
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import NotFound from '../components/ui/NotFound.astro';
+import ProductGrid from '../components/ui/ProductGrid.astro';
+import { listProductsInCategory } from '../lib/catalogue.js';
+import { CATALOGUE_CACHE_CONTROL, NO_STORE } from '../lib/cache.js';
+
+export const prerender = false;
+
+/*
+ * This route sits at the site root, so it also catches every unknown top-level
+ * path. Anything that is not a real category renders the not-found page with a
+ * real 404 status — no redirect hop, and no empty grid pretending to be a page.
+ */
+const raw = Astro.params.category;
+const category = raw && isCategory(raw) ? raw : null;
+
+const products = category
+  ? await listProductsInCategory(Astro.locals, category)
+  : [];
+const videoRef = readVideoRef(Astro.url.searchParams);
+
+if (category === null) {
+  Astro.response.status = 404;
+  Astro.response.headers.set('Cache-Control', NO_STORE);
+} else {
+  Astro.response.headers.set('Cache-Control', CATALOGUE_CACHE_CONTROL);
+}
+
+const label = category ? CATEGORY_LABELS[category] : '';
+---
+
+{
+  category === null ? (
+    <BaseLayout title="Page not found" noindex>
+      <NotFound />
+    </BaseLayout>
+  ) : (
+    <BaseLayout
+      title={`${label}'s Shoes`}
+      description={`${label}'s shoes delivered across Pakistan. Cash on Delivery available.`}
+    >
+      <div class="mx-auto max-w-5xl px-4 pt-8">
+        <nav aria-label="Breadcrumb" class="text-sm text-ink-muted">
+          <a href="/" class="hover:text-ink">
+            Home
+          </a>
+          <span aria-hidden="true" class="px-1">
+            /
+          </span>
+          <span aria-current="page" class="text-ink">
+            {label}
+          </span>
+        </nav>
+
+        <h1 class="mt-2 text-2xl font-bold tracking-tight text-ink">{label}</h1>
+        <p class="mt-1 text-sm text-ink-muted">
+          {products.length} {products.length === 1 ? 'style' : 'styles'} available
+        </p>
+
+        <div class="mt-6">
+          <ProductGrid products={products} videoRef={videoRef} />
+        </div>
+      </div>
+    </BaseLayout>
+  )
+}

@@ -1,0 +1,46 @@
+---
+import { readVideoRef } from '@hamza/shared';
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProductGrid from '../components/ui/ProductGrid.astro';
+import TrustStrip from '../components/ui/TrustStrip.astro';
+import CategoryTiles from '../components/ui/CategoryTiles.astro';
+import { listFeaturedProducts } from '../lib/catalogue.js';
+import { CATALOGUE_CACHE_CONTROL } from '../lib/cache.js';
+import { SITE } from '../lib/site.js';
+
+/* Reads the catalogue from D1, so it renders on demand rather than at build. */
+export const prerender = false;
+
+const products = await listFeaturedProducts(Astro.locals);
+const videoRef = readVideoRef(Astro.url.searchParams);
+
+Astro.response.headers.set('Cache-Control', CATALOGUE_CACHE_CONTROL);
+---
+
+<BaseLayout title={SITE.name} description={SITE.description}>
+  <section class="mx-auto max-w-5xl px-4 pt-8">
+    <h1 class="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+      {SITE.tagline}
+    </h1>
+    <p class="mt-2 max-w-prose text-sm text-ink-muted">
+      Men, women and kids. Order on WhatsApp — Cash on Delivery available across
+      Pakistan.
+    </p>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-4 pt-6">
+    <CategoryTiles />
+  </section>
+
+  <TrustStrip />
+
+  <section class="mx-auto max-w-5xl px-4 pt-10">
+    <div class="flex items-baseline justify-between gap-4">
+      <h2 class="text-lg font-semibold text-ink">New arrivals</h2>
+    </div>
+    <div class="mt-4">
+      <ProductGrid products={products} videoRef={videoRef} />
+    </div>
+  </section>
+</BaseLayout>

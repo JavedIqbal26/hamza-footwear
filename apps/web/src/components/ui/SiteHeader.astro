@@ -1,0 +1,45 @@
+---
+import { PRIMARY_NAV, SITE } from '../../lib/site.js';
+import { TRUST } from '../../content/microcopy.js';
+
+const currentPath = Astro.url.pathname;
+
+function isActive(href: string): boolean {
+  return currentPath === href || currentPath.startsWith(`${href}/`);
+}
+---
+
+<header class="sticky top-0 z-40 border-b border-neutral-200 bg-white">
+  <div class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
+    <a href="/" class="text-lg font-bold tracking-tight text-brand-700">
+      {SITE.name}
+    </a>
+
+    <nav aria-label="Categories">
+      <ul class="flex items-center gap-1">
+        {
+          PRIMARY_NAV.map((link) => (
+            <li>
+              <a
+                href={link.href}
+                aria-current={isActive(link.href) ? 'page' : undefined}
+                class:list={[
+                  'tap-target flex items-center rounded px-3 text-sm font-medium',
+                  isActive(link.href)
+                    ? 'bg-brand-50 text-brand-700'
+                    : 'text-ink-muted hover:text-ink',
+                ]}
+              >
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+
+  <p class="bg-brand-700 px-4 py-1.5 text-center text-xs font-medium text-white">
+    {TRUST.cod}
+  </p>
+</header>

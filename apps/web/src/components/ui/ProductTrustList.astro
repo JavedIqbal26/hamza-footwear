@@ -1,0 +1,21 @@
+---
+import { TRUST } from '../../content/microcopy.js';
+
+/** The three promises that sit directly under the order button. */
+const PROMISES = [
+  { term: 'Payment', copy: TRUST.cod },
+  { term: 'Delivery', copy: TRUST.deliveryTime },
+  { term: 'Exchange', copy: TRUST.returns },
+] as const;
+---
+
+<dl class="space-y-2 rounded-lg bg-brand-50 px-4 py-3 text-sm">
+  {
+    PROMISES.map((promise) => (
+      <div>
+        <dt class="sr-only">{promise.term}</dt>
+        <dd class="text-ink">{promise.copy}</dd>
+      </div>
+    ))
+  }
+</dl>

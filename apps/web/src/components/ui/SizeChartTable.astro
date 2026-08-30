@@ -1,0 +1,29 @@
+---
+import { SIZE_CHART_CM, UK_SIZES } from '@hamza/shared';
+---
+
+<div class="overflow-x-auto">
+  <table class="w-full min-w-80 border-collapse text-sm">
+    <caption class="sr-only">
+      UK shoe sizes and the foot length each one fits, in centimetres
+    </caption>
+    <thead>
+      <tr class="border-b border-neutral-300 text-left">
+        <th scope="col" class="py-2 pr-4 font-semibold text-ink">UK size</th>
+        <th scope="col" class="py-2 font-semibold text-ink">Foot length</th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        UK_SIZES.map((size) => (
+          <tr class="border-b border-neutral-200">
+            <th scope="row" class="py-2 pr-4 text-left font-medium text-ink">
+              {size}
+            </th>
+            <td class="py-2 text-ink-muted">{SIZE_CHART_CM[size]} cm</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</div>

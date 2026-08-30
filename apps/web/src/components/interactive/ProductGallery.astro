@@ -1,0 +1,62 @@
+---
+import { imageUrl, imageSrcSet } from '@hamza/shared';
+
+import ProductImage from '../ui/ProductImage.astro';
+
+interface Props {
+  images: readonly string[];
+  productName: string;
+}
+
+const { images, productName } = Astro.props;
+
+const [firstImage, ...restImages] = images;
+const hasThumbnails = restImages.length > 0;
+---
+
+<div data-gallery class="space-y-3">
+  <div class="overflow-hidden rounded-xl">
+    <ProductImage
+      baseKey={firstImage ?? null}
+      alt={productName}
+      variant="product"
+      sizes="(min-width: 1024px) 512px, 100vw"
+      loading="eager"
+      class="rounded-xl"
+    />
+  </div>
+
+  {
+    hasThumbnails && (
+      <ul class="grid grid-cols-4 gap-2">
+        {images.map((baseKey, index) => (
+          <li>
+            <button
+              type="button"
+              data-gallery-thumb
+              data-full-src={imageUrl(baseKey, 'product')}
+              data-full-srcset={imageSrcSet(baseKey)}
+              aria-label={`Show image ${index + 1} of ${images.length}`}
+              aria-current={index === 0 ? 'true' : 'false'}
+              class="block w-full overflow-hidden rounded-lg border-2 border-transparent aria-[current=true]:border-brand-600"
+            >
+              <ProductImage
+                baseKey={baseKey}
+                alt=""
+                variant="thumb"
+                sizes="25vw"
+                loading="lazy"
+              />
+            </button>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</div>
+
+<script>
+  import { initGallery } from '../../scripts/gallery.js';
+
+  initGallery();
+</script>

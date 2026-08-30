@@ -1,0 +1,46 @@
+---
+import { discountPercent, effectivePricePkr, formatPKR, isOnSale } from '@hamza/shared';
+
+interface Props {
+  price_pkr: number;
+  sale_price_pkr: number | null;
+  /** Product pages want a larger, louder price than listing cards. */
+  size?: 'sm' | 'lg';
+}
+
+const { price_pkr, sale_price_pkr, size = 'sm' } = Astro.props;
+
+const product = { price_pkr, sale_price_pkr };
+const now = effectivePricePkr(product);
+const onSale = isOnSale(product);
+const percentOff = discountPercent(product);
+---
+
+<p class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+  <span
+    class:list={[
+      'font-bold text-ink',
+      size === 'lg' ? 'text-2xl' : 'text-base',
+    ]}
+  >
+    {formatPKR(now)}
+  </span>
+
+  {
+    onSale && (
+      <>
+        <span
+          class:list={[
+            'text-ink-muted line-through',
+            size === 'lg' ? 'text-base' : 'text-sm',
+          ]}
+        >
+          {formatPKR(price_pkr)}
+        </span>
+        <span class="rounded bg-brand-50 px-1.5 py-0.5 text-xs font-semibold text-brand-700">
+          {percentOff}% off
+        </span>
+      </>
+    )
+  }
+</p>

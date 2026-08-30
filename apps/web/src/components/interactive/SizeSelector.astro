@@ -1,0 +1,51 @@
+---
+import { footLengthCm, type UkSize } from '@hamza/shared';
+
+import { TRUST } from '../../content/microcopy.js';
+
+interface Props {
+  sizes: readonly UkSize[];
+  /** Out-of-stock products show sizes for reference but disable selection. */
+  disabled?: boolean;
+}
+
+const { sizes, disabled = false } = Astro.props;
+---
+
+<fieldset data-size-selector class="space-y-3" disabled={disabled}>
+  <div class="flex items-baseline justify-between gap-3">
+    <legend class="text-sm font-semibold text-ink">Select size (UK)</legend>
+    <a href="/size-guide" class="text-sm font-medium text-brand-600 underline">
+      Size guide
+    </a>
+  </div>
+
+  <div class="flex flex-wrap gap-2">
+    {
+      sizes.map((size) => (
+        <label class="cursor-pointer">
+          <input
+            type="radio"
+            name="size"
+            value={size}
+            class="peer sr-only"
+            data-foot-cm={String(footLengthCm(size))}
+          />
+          <span class="tap-target flex items-center justify-center rounded-lg border border-neutral-300 px-3 text-sm font-medium text-ink transition-colors peer-checked:border-brand-600 peer-checked:bg-brand-600 peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand-600">
+            {size}
+          </span>
+        </label>
+      ))
+    }
+  </div>
+
+  <p class="text-xs text-ink-muted">
+    {TRUST.sizeUk}. <span data-selected-size-hint>{TRUST.sizeHelp}</span>
+  </p>
+</fieldset>
+
+<script>
+  import { initSizeSelector } from '../../scripts/size-selector.js';
+
+  initSizeSelector();
+</script>

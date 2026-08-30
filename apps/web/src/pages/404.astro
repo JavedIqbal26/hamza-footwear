@@ -1,0 +1,11 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import NotFound from '../components/ui/NotFound.astro';
+
+/* Static fallback for paths no route matches at all. */
+export const prerender = true;
+---
+
+<BaseLayout title="Page not found" noindex>
+  <NotFound />
+</BaseLayout>

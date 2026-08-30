@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { TRUST } from '../content/microcopy.js';
+
+export const prerender = true;
+
+const CONDITIONS = [
+  'Joota bilkul naya ho — pehna hua na ho',
+  'Original box aur packing saath ho',
+  'Order ke 7 din ke andar batayein',
+] as const;
+---
+
+<BaseLayout
+  title="Returns & Exchange"
+  description="Exchange your Hamza Footwear order within 7 days if the size does not fit."
+>
+  <div class="mx-auto max-w-3xl px-4 pt-8">
+    <h1 class="text-2xl font-bold tracking-tight text-ink">Returns &amp; Exchange</h1>
+
+    <p class="mt-4 rounded-lg bg-brand-50 px-4 py-3 text-sm font-medium text-ink">
+      {TRUST.returns}
+    </p>
+
+    <section class="mt-8">
+      <h2 class="text-lg font-semibold text-ink">Conditions</h2>
+      <ul class="mt-3 space-y-2">
+        {
+          CONDITIONS.map((condition) => (
+            <li class="flex gap-2 text-sm text-ink">
+              <span aria-hidden="true" class="text-brand-600">
+                &bull;
+              </span>
+              <span>{condition}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="mt-8">
+      <h2 class="text-lg font-semibold text-ink">How to exchange</h2>
+      <ol class="mt-3 list-decimal space-y-2 pl-5 text-sm text-ink">
+        <li>WhatsApp par humein apna order number aur size batayein.</li>
+        <li>Hum aap ko courier ki tafseel bhej dete hain.</li>
+        <li>Naya size wapsi ke saman milne ke baad bhej diya jata hai.</li>
+      </ol>
+    </section>
+
+    <section class="mt-8">
+      <h2 class="text-lg font-semibold text-ink">Avoiding an exchange</h2>
+      <p class="mt-2 text-sm text-ink-muted">
+        Most exchanges happen because of size. Measure your foot in centimetres
+        first — our <a href="/size-guide" class="font-medium text-brand-600 underline">size
+        guide</a> takes two minutes and saves a week.
+      </p>
+    </section>
+  </div>
+</BaseLayout>

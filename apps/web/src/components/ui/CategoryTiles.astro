@@ -1,0 +1,20 @@
+---
+import { CATEGORIES, CATEGORY_LABELS, categoryPath } from '@hamza/shared';
+---
+
+<nav aria-label="Shop by category">
+  <ul class="grid grid-cols-3 gap-3">
+    {
+      CATEGORIES.map((category) => (
+        <li>
+          <a
+            href={categoryPath(category)}
+            class="tap-target flex items-center justify-center rounded-lg border border-neutral-200 bg-white px-3 py-4 text-sm font-semibold text-ink transition-colors hover:border-brand-600 hover:text-brand-700"
+          >
+            {CATEGORY_LABELS[category]}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>

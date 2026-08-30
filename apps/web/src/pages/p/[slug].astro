@@ -1,0 +1,50 @@
+---
+import { imageUrl, primaryImage, productPath, readVideoRef } from '@hamza/shared';
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import NotFound from '../../components/ui/NotFound.astro';
+import ProductDetail from '../../components/ui/ProductDetail.astro';
+import ProductJsonLd from '../../components/ui/ProductJsonLd.astro';
+import { findProduct } from '../../lib/catalogue.js';
+import { CATALOGUE_CACHE_CONTROL, NO_STORE } from '../../lib/cache.js';
+import { getShopWhatsApp } from '../../lib/runtime.js';
+import { SITE } from '../../lib/site.js';
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+const product = slug ? await findProduct(Astro.locals, slug) : null;
+
+const videoRef = readVideoRef(Astro.url.searchParams);
+const shopPhone = getShopWhatsApp(Astro.locals);
+
+if (product === null) {
+  Astro.response.status = 404;
+  Astro.response.headers.set('Cache-Control', NO_STORE);
+} else {
+  Astro.response.headers.set('Cache-Control', CATALOGUE_CACHE_CONTROL);
+}
+
+/* The shared URL keeps `?v=`, so a forwarded link still credits the video. */
+const productUrl = product
+  ? new URL(productPath(product.slug, videoRef), SITE.url).href
+  : '';
+const cover = product ? primaryImage(product) : null;
+---
+
+{
+  product === null ? (
+    <BaseLayout title="Product not found" noindex>
+      <NotFound message="This product is no longer available. Have a look at what else is in stock." />
+    </BaseLayout>
+  ) : (
+    <BaseLayout
+      title={product.name}
+      description={product.description}
+      image={cover ? imageUrl(cover, 'full') : undefined}
+    >
+      <ProductJsonLd product={product} url={productUrl} />
+      <ProductDetail product={product} productUrl={productUrl} shopPhone={shopPhone} />
+    </BaseLayout>
+  )
+}

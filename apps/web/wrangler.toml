@@ -1,0 +1,25 @@
+#:schema node_modules/wrangler/config-schema.json
+# Cloudflare Pages configuration for the storefront.
+#
+# These bindings are what `astro dev` proxies through Miniflare locally and what
+# the deployed Pages project uses in production. The D1 `database_id` is filled
+# in after `wrangler d1 create hamza-footwear-db`.
+
+name = "hamza-footwear"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "./dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "hamza-footwear-db"
+database_id = "REPLACE_WITH_DATABASE_ID"
+migrations_dir = "../../db/migrations"
+
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "hamza-footwear-images"
+
+[vars]
+# The shop's WhatsApp number. Overridden per-environment in the Pages dashboard.
+SHOP_WHATSAPP = "03001234567"

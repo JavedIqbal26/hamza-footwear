@@ -1,0 +1,27 @@
+#:schema node_modules/wrangler/config-schema.json
+# Admin / write API Worker.
+#
+# Not deployed in Phase 1 — the storefront reads D1 directly through its own
+# binding and ordering goes via WhatsApp. This config exists so Phase 2 can
+# deploy without rediscovering the wiring.
+#
+# In Phase 2 this Worker sits behind Cloudflare Access; there is no auth code
+# in the application.
+
+name = "hamza-footwear-api"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "hamza-footwear-db"
+database_id = "REPLACE_WITH_DATABASE_ID"
+migrations_dir = "../../db/migrations"
+
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "hamza-footwear-images"
+
+# Secrets are set with `wrangler secret put`, never in this file:
+#   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, RESEND_API_KEY

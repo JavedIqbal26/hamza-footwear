@@ -1,0 +1,41 @@
+---
+import type { StockStatus } from '@hamza/shared';
+
+import { TRUST } from '../../content/microcopy.js';
+
+interface Props {
+  status: StockStatus;
+}
+
+const { status } = Astro.props;
+
+/**
+ * In-stock is the silent default — a badge on every product would train the eye
+ * to ignore all of them. Only scarcity and unavailability are worth saying.
+ */
+const BADGES: Partial<Record<StockStatus, { label: string; class: string }>> = {
+  low: {
+    label: TRUST.lowStock,
+    class: 'bg-amber-100 text-amber-900',
+  },
+  out: {
+    label: TRUST.outOfStock,
+    class: 'bg-neutral-200 text-neutral-700',
+  },
+};
+
+const badge = BADGES[status];
+---
+
+{
+  badge && (
+    <span
+      class:list={[
+        'inline-block rounded px-2 py-0.5 text-xs font-medium',
+        badge.class,
+      ]}
+    >
+      {badge.label}
+    </span>
+  )
+}
