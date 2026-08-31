@@ -21,5 +21,19 @@ binding = "IMAGES"
 bucket_name = "hamza-footwear-images"
 
 [vars]
-# The shop's WhatsApp number. Overridden per-environment in the Pages dashboard.
+# All placeholders. Set the real values in the Pages dashboard before launch.
+#
+# The shop's WhatsApp number.
 SHOP_WHATSAPP = "03001234567"
+
+# Wallet numbers shown at checkout for manual payment. A wallet option is
+# hidden entirely unless its number is set, so nobody is ever shown a blank
+# number to send money to — delete these lines to hide that payment method.
+JAZZCASH_NUMBER = "03001234567"
+EASYPAISA_NUMBER = "03451234567"
+
+# Order notifications are configured as secrets, not here:
+#   wrangler secret put TELEGRAM_BOT_TOKEN
+#   wrangler secret put TELEGRAM_CHAT_ID
+#   wrangler secret put RESEND_API_KEY
+# A missing channel is skipped and logged; it never fails an order.

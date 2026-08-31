@@ -17,7 +17,15 @@ function isActive(href: string): boolean {
 
 <header class="sticky top-0 z-40 border-b border-neutral-200 bg-white">
   <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
-    <a href="/" class="text-lg font-bold tracking-tight text-brand-700">
+    {/*
+      `whitespace-nowrap` matters: at 390px the name otherwise wraps to two
+      lines and doubles the height of a sticky header, on the exact device
+      most of this shop's customers use.
+    */}
+    <a
+      href="/"
+      class="whitespace-nowrap text-base font-bold tracking-tight text-brand-700 sm:text-lg"
+    >
       {SITE.name}
     </a>
 

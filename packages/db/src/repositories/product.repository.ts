@@ -12,6 +12,16 @@ import type { ProductRow } from '../rows.js';
  * pricing rules, or presentation; it returns domain types and stops.
  */
 
+/**
+ * Storefront ordering: sold-out products sink to the bottom.
+ *
+ * They stay listed — a customer who wants that shoe should still find it, and
+ * the page keeps its search value — but a shop whose first shelf is empty looks
+ * shut. `created_at` alone is not stable because seeded rows share a timestamp,
+ * so `id` breaks the tie and keeps pagination from repeating or skipping rows.
+ */
+const ORDER_BY = `ORDER BY (stock_status = 'out'), created_at DESC, id DESC`;
+
 /** Columns every read selects. Listed explicitly so `SELECT *` never leaks a new column. */
 const COLUMNS = `
   id, slug, name, description, price_pkr, sale_price_pkr, category,
@@ -53,7 +63,7 @@ export function createProductRepository(db: D1Database): ProductRepository {
               .prepare(
                 `SELECT ${COLUMNS} FROM products
                  WHERE is_active = 1
-                 ORDER BY created_at DESC, id DESC
+                 ${ORDER_BY}
                  LIMIT ?1 OFFSET ?2`,
               )
               .bind(limit, offset)
@@ -61,7 +71,7 @@ export function createProductRepository(db: D1Database): ProductRepository {
               .prepare(
                 `SELECT ${COLUMNS} FROM products
                  WHERE is_active = 1 AND category = ?1
-                 ORDER BY created_at DESC, id DESC
+                 ${ORDER_BY}
                  LIMIT ?2 OFFSET ?3`,
               )
               .bind(options.category, limit, offset);
@@ -107,7 +117,7 @@ export function createProductRepository(db: D1Database): ProductRepository {
         .prepare(
           `SELECT ${COLUMNS} FROM products
            WHERE is_active = 1 AND category = ?1 AND slug <> ?2
-           ORDER BY created_at DESC, id DESC
+           ${ORDER_BY}
            LIMIT ?3`,
         )
         .bind(product.category, product.slug, clampLimit(limit))
