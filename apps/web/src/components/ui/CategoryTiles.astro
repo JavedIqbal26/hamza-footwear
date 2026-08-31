@@ -1,17 +1,32 @@
 ---
 import { CATEGORIES, CATEGORY_LABELS, categoryPath } from '@hamza/shared';
+
+/** The one-line promise under each category name, as in the design. */
+const META: Record<string, string> = {
+  women: 'Khussa, heels, flats',
+  men: 'Sneakers, loafers, formal',
+  kids: 'School shoes, sandals',
+};
 ---
 
 <nav aria-label="Shop by category">
-  <ul class="grid grid-cols-3 gap-3">
+  <ul class="grid gap-3 sm:grid-cols-3">
     {
       CATEGORIES.map((category) => (
         <li>
           <a
             href={categoryPath(category)}
-            class="tap-target flex items-center justify-center rounded-lg border border-neutral-200 bg-white px-3 py-4 text-sm font-semibold text-ink transition-colors hover:border-brand-600 hover:text-brand-700"
+            class="flex items-center justify-between gap-3 rounded-[14px] border border-line bg-surface-warm px-5 py-5 transition-colors hover:border-brand-600"
           >
-            {CATEGORY_LABELS[category]}
+            <span>
+              <span class="block text-[19px] font-extrabold text-ink">
+                {CATEGORY_LABELS[category]}
+              </span>
+              <span class="mt-0.5 block text-[13px] text-ink-soft">{META[category]}</span>
+            </span>
+            <span aria-hidden="true" class="text-lg font-extrabold text-brand-600">
+              →
+            </span>
           </a>
         </li>
       ))

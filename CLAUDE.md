@@ -473,6 +473,88 @@ would be easy to add now.
 | Cookie banner? | No. |
 | Multi-currency / i18n framework? | No. Pakistan only, PKR only. |
 | React on the storefront? | No. ~47KB gzipped against a 30KB budget. |
-| A webfont, even self-hosted? | No. System font stack — zero bytes, zero CLS. |
+| A webfont for body text? | No. System stack — zero bytes, zero CLS. |
+| Instrument Serif for headings? | Yes, self-hosted only. Never via Google Fonts. |
+| Stock photography? | No. Only the shop own photos, uploaded through admin. |
+| Invented ratings or order counts? | No. Every star comes from a delivered order. |
 | pnpm? | No. npm workspaces; nothing here needs more. |
 | Serve images from an R2 public URL? | No. Same-origin `/img/` route. |
+
+---
+
+## Phase 3 — the redesign, accounts, search and reviews
+
+Built from a Claude Design handoff bundle (`Online shoe store redesign`). The
+design's visual language was adopted wholesale; three things in it were not.
+
+### Typography
+
+Display face is **Instrument Serif**, self-hosted at
+`apps/web/public/fonts/instrument-serif-400.woff2`. The design linked it from
+`fonts.googleapis.com`; that is forbidden by rule 3 and the file is served from
+our own origin instead. Body text stays on the **system stack** — a second
+webfont would cost LCP and a flash of unstyled body text on exactly the device
+this shop is built for.
+
+If the woff2 is absent the `@font-face` fails silently and Georgia takes over,
+so the site is never broken by a missing font — only slightly less distinctive.
+There is deliberately **no `<link rel="preload">`** for it until the file exists;
+preloading a missing file 404s on every page load. Add both together.
+
+### What was deliberately NOT taken from the design
+
+| In the mock | Why it is not here |
+|---|---|
+| Unsplash product photography | Someone else's shoes on a real shop's page. Photos come from admin. |
+| "12,400 orders delivered", "4.8★ from 1,900 reviews" | Invented social proof. Real aggregates only. |
+| "Free delivery over Rs 3,000" | Delivery is per-city from the `cities` table. Adding a threshold is a pricing decision, not a design one. |
+| EU sizes (36–40) on some cards | Sizes are UK. The mock was internally inconsistent. |
+
+**Never put an invented number on this site.** `aggregateRating` in the product
+JSON-LD is emitted only when real reviews exist — a fabricated one is both a lie
+to shoppers and a Google manual action.
+
+### Customer accounts
+
+Passwordless: phone number, then a five-digit code. No email field, no password,
+anywhere. Guest checkout is never more than one tap away — an account has to
+earn itself, because COD shoppers abandon forms.
+
+- **Secrets are stored hashed.** OTP codes and session tokens are both SHA-256'd
+  before they touch D1, so a dumped database yields nothing replayable.
+- **Codes are single-use and budgeted**: 10-minute expiry, 5 guesses, 5 sends per
+  number per hour. That last one is a spend control as much as an abuse control.
+- **The session cookie is `httpOnly`** — unlike the cart and saved cookies, which
+  are deliberately readable so the header badges can be filled in on the client
+  and catalogue pages stay edge-cacheable.
+- **First sign-in adopts guest orders** placed from the same number, or a
+  returning customer signs in to an empty history and the account looks broken.
+
+> **⚠ Sending the code costs money, and nothing else in this project does.**
+> An SMS gateway runs ~PKR 1–2 per message; the WhatsApp Cloud API needs Meta
+> business verification, which needs the NTN and business bank account that also
+> blocked JazzCash in Phase 1. `apps/web/src/lib/auth/sender.ts` defines the seam
+> and ships two adapters: `log` (development — prints the code, and **refuses to
+> run in production**) and `http` (any gateway accepting `{to, text}` with a
+> bearer token). Set `OTP_GATEWAY_URL` and `OTP_GATEWAY_KEY` to go live, or leave
+> phone sign-in switched off. This is a commercial decision, not a code one.
+
+### Reviews
+
+A review may only be written against a **delivered order containing that
+product**, by the signed-in customer who placed it, once. Entitlement is checked
+server-side on every submit, never inferred from the form having been rendered.
+`db/seed/0003_reviews.sql` is development-only and must never be loaded on the
+live shop.
+
+### Search, filters and the saved list
+
+Every facet lives in the query string and every chip is a plain `<a>`. Filtered
+views are therefore linkable, shareable, back-buttonable and work with no
+JavaScript. The saved list is a cookie of slugs, like the cart, so it works
+signed out.
+
+Personalised pages — anything showing a saved size, the review form, the cart or
+an account — send `no-store`. **Anything person-specific must stay out of
+edge-cacheable HTML**; that mistake would serve one shopper's state to the next
+visitor.

@@ -1,41 +1,38 @@
 ---
-import { footLengthCm, productPath, type UkSize } from '@hamza/shared';
+import { footLengthCm, formatPKR, productPath, type UkSize } from '@hamza/shared';
 
 import { TRUST } from '../../content/microcopy.js';
 
 interface Props {
   slug: string;
   sizes: readonly UkSize[];
-  /** Preselects the size when the customer arrived with one already chosen. */
+  pricePkr: number;
+  /** Preselects the size the customer arrived with, or the one on their account. */
   selectedSize?: UkSize | null;
-  /** Set when the customer submitted without picking a size. */
   showSizeError?: boolean;
 }
 
-const { slug, sizes, selectedSize = null, showSizeError = false } = Astro.props;
+const { slug, sizes, pricePkr, selectedSize = null, showSizeError = false } = Astro.props;
 
 /*
  * A real form posting to a real endpoint: add-to-cart works with JavaScript
  * disabled. `required` on the radios means the browser itself blocks a submit
- * with no size chosen, so the size error below is only for no-JS clients.
+ * with no size chosen, so the error below is only for no-JS clients.
+ *
+ * The submit button is inside the sticky bottom bar in the design, so the form
+ * wraps both the size tiles and that bar — one form, two visually separate
+ * regions, no JavaScript needed to connect them.
  */
 ---
 
-<form
-  method="POST"
-  action="/cart/add"
-  data-size-selector
-  class="space-y-4"
->
+<form method="POST" action="/cart/add" data-size-selector>
   <input type="hidden" name="slug" value={slug} />
   <input type="hidden" name="return_to" value={productPath(slug)} />
 
-  <fieldset class="space-y-3">
+  <fieldset class="flex flex-col gap-2.5">
     <div class="flex items-baseline justify-between gap-3">
-      <legend class="text-sm font-semibold text-ink">Select size (UK)</legend>
-      <a href="/size-guide" class="text-sm font-medium text-brand-600 underline">
-        Size guide
-      </a>
+      <legend class="text-sm font-extrabold">Size (UK)</legend>
+      <a href="/size-guide" class="text-[13px] font-bold text-brand-600">Size guide</a>
     </div>
 
     <div class="flex flex-wrap gap-2">
@@ -51,7 +48,7 @@ const { slug, sizes, selectedSize = null, showSizeError = false } = Astro.props;
               class="peer sr-only"
               data-foot-cm={String(footLengthCm(size))}
             />
-            <span class="tap-target flex items-center justify-center rounded-lg border border-neutral-300 px-3 text-sm font-medium text-ink transition-colors peer-checked:border-brand-600 peer-checked:bg-brand-600 peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand-600">
+            <span class="flex h-[46px] min-w-[52px] items-center justify-center rounded-xl border border-line-strong px-3 text-[15px] font-bold text-ink transition-colors peer-checked:border-2 peer-checked:border-ink peer-checked:font-extrabold peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand-600">
               {size}
             </span>
           </label>
@@ -61,7 +58,7 @@ const { slug, sizes, selectedSize = null, showSizeError = false } = Astro.props;
 
     {
       showSizeError && (
-        <p role="alert" class="text-sm font-medium text-red-700">
+        <p role="alert" class="text-sm font-bold text-brand-700">
           Pehle size chunein.
         </p>
       )
@@ -72,12 +69,21 @@ const { slug, sizes, selectedSize = null, showSizeError = false } = Astro.props;
     </p>
   </fieldset>
 
-  <button
-    type="submit"
-    class="tap-target flex w-full items-center justify-center rounded-lg bg-brand-600 px-5 py-3.5 text-base font-semibold text-white transition-colors hover:bg-brand-700"
+  {/*
+    The order action never leaves the bottom of the screen — the single most
+    important structural idea in the design's product screen.
+  */}
+  <div
+    class="sticky bottom-0 z-20 -mx-4 mt-8 flex items-center gap-2.5 bg-ink px-4 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] sm:mx-0 sm:rounded-2xl"
   >
-    Add to cart
-  </button>
+    <button
+      type="submit"
+      class="flex h-[52px] flex-1 items-center justify-center rounded-full bg-surface text-[15px] font-extrabold text-ink"
+    >
+      Add to cart · {formatPKR(pricePkr)}
+    </button>
+    <slot name="whatsapp" />
+  </div>
 </form>
 
 <script>

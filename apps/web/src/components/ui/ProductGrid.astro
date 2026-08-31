@@ -1,39 +1,54 @@
 ---
-import type { Product } from '@hamza/shared';
+import { NO_RATING, type Product, type RatingSummary } from '@hamza/shared';
 
 import ProductCard from './ProductCard.astro';
+import { TRUST } from '../../content/microcopy.js';
 
 interface Props {
   products: readonly Product[];
+  ratings?: ReadonlyMap<string, RatingSummary>;
+  saved?: readonly string[];
   videoRef?: string | null;
-  /** Shown when the category is empty rather than rendering a bare page. */
+  returnTo?: string;
   emptyMessage?: string;
 }
 
 const {
   products,
+  ratings,
+  saved = [],
   videoRef = null,
-  emptyMessage = 'Naye design jald aa rahe hain.',
+  returnTo = '/',
+  emptyMessage = TRUST.noResults,
 } = Astro.props;
 
-/** Only the first row is above the fold on a phone; the rest load lazily. */
+/*
+ * Two-up on a phone, matching the design. The first row is above the fold, so
+ * those two images load eagerly and the rest wait.
+ */
 const EAGER_COUNT = 2;
+const savedSet = new Set(saved);
 ---
 
 {
   products.length === 0 ? (
-    <p class="rounded-lg bg-neutral-50 px-4 py-10 text-center text-sm text-ink-muted">
+    <p class="rounded-[14px] border border-line bg-surface-sunk px-4 py-12 text-center text-sm text-ink-muted">
       {emptyMessage}
     </p>
   ) : (
-    <ul class="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+    <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
       {products.map((product, index) => (
-        <li>
-          <ProductCard
-            product={product}
-            videoRef={videoRef}
-            eager={index < EAGER_COUNT}
-          />
+        <li class="flex">
+          <div class="flex w-full">
+            <ProductCard
+              product={product}
+              rating={ratings?.get(product.id) ?? NO_RATING}
+              saved={savedSet.has(product.slug)}
+              videoRef={videoRef}
+              returnTo={returnTo}
+              eager={index < EAGER_COUNT}
+            />
+          </div>
         </li>
       ))}
     </ul>

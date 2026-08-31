@@ -1,9 +1,12 @@
 ---
 import {
   effectivePricePkr,
+  hasRating,
   imageUrl,
   isOrderable,
+  NO_RATING,
   type Product,
+  type RatingSummary,
 } from '@hamza/shared';
 
 import { SITE } from '../../lib/site.js';
@@ -11,17 +14,21 @@ import { SITE } from '../../lib/site.js';
 interface Props {
   product: Product;
   url: string;
+  rating?: RatingSummary;
 }
 
-const { product, url } = Astro.props;
+const { product, url, rating = NO_RATING } = Astro.props;
 
 /**
  * Product structured data.
  *
- * Costs nothing at runtime (it is not JavaScript, just a data block) and is what
- * lets a shared link render as a product card rather than a bare URL.
+ * Costs nothing at runtime (it is data, not JavaScript) and is what lets a
+ * shared link render as a product card rather than a bare URL.
+ *
+ * `aggregateRating` is included only when real reviews exist — inventing one
+ * is both a lie to shoppers and a manual action from Google.
  */
-const jsonLd = {
+const jsonLd: Record<string, unknown> = {
   '@context': 'https://schema.org',
   '@type': 'Product',
   name: product.name,
@@ -39,6 +46,14 @@ const jsonLd = {
       : 'https://schema.org/OutOfStock',
   },
 };
+
+if (hasRating(rating)) {
+  jsonLd.aggregateRating = {
+    '@type': 'AggregateRating',
+    ratingValue: rating.average.toFixed(1),
+    reviewCount: rating.count,
+  };
+}
 ---
 
 <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />

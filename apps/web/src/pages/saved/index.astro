@@ -1,0 +1,57 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProductGrid from '../../components/ui/ProductGrid.astro';
+import { TRUST } from '../../content/microcopy.js';
+import { findProducts, ratingsFor } from '../../lib/catalogue.js';
+import { NO_STORE } from '../../lib/cache.js';
+import { getShopWhatsApp } from '../../lib/runtime.js';
+import { readWishlist, writeWishlist } from '../../lib/wishlist/session.js';
+
+export const prerender = false;
+
+/**
+ * The saved list.
+ *
+ * Cookie-backed like the cart, so it works signed out — a shopper should be
+ * able to save a shoe before deciding whether to sign in.
+ */
+const slugs = readWishlist(Astro.cookies);
+const products = await findProducts(Astro.locals, slugs);
+const ratings = await ratingsFor(Astro.locals, products);
+
+/*
+ * Products that have since been hidden or deleted are dropped from the cookie,
+ * so the list and what is on screen never disagree.
+ */
+const live = new Set(products.map((product) => product.slug));
+if (products.length !== slugs.length) {
+  writeWishlist(Astro.cookies, slugs.filter((slug) => live.has(slug)));
+}
+
+/* Personal, and changes constantly — never cached, never indexed. */
+Astro.response.headers.set('Cache-Control', NO_STORE);
+
+/* Preserve the customer's own ordering rather than the database's. */
+const ordered = slugs
+  .map((slug) => products.find((product) => product.slug === slug))
+  .filter((product): product is NonNullable<typeof product> => product !== undefined);
+---
+
+<BaseLayout title="Saved" noindex shopPhone={getShopWhatsApp(Astro.locals)}>
+  <div class="mx-auto max-w-[1440px] px-4 pt-8 sm:px-6">
+    <h1 class="display text-[30px] sm:text-[38px]">Saved</h1>
+    <p class="mt-1 text-sm text-ink-muted">
+      {ordered.length} {ordered.length === 1 ? 'item' : 'items'}
+    </p>
+
+    <div class="mt-7">
+      <ProductGrid
+        products={ordered}
+        ratings={ratings}
+        saved={slugs}
+        returnTo="/saved"
+        emptyMessage={TRUST.emptySaved}
+      />
+    </div>
+  </div>
+</BaseLayout>

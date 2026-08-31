@@ -1,0 +1,158 @@
+---
+import {
+  catalogueHref,
+  formatPKRAmount,
+  hasFilters,
+  isUkSize,
+  PRICE_CHIPS_PKR,
+  SORT_LABELS,
+  SORT_OPTIONS,
+  sortUkSizes,
+  type CatalogueQuery,
+} from '@hamza/shared';
+
+interface Props {
+  basePath: string;
+  query: CatalogueQuery;
+  availableSizes: readonly string[];
+  total: number;
+}
+
+const { basePath, query, availableSizes, total } = Astro.props;
+
+/*
+ * Every chip is a plain link, not a button.
+ *
+ * That makes a filtered view shareable, linkable and back-buttonable, and it
+ * works with JavaScript disabled — which is the whole reason the storefront
+ * ships almost none. The cost is a page load per tap; on Cloudflare's edge with
+ * a cached catalogue that is cheaper than the JavaScript would have been.
+ *
+ * Collapsed behind a <details> on phones: expanded, the three rows cost around
+ * 350px before the first product. `<details>` gives a disclosure with no script
+ * at all, and the CSS below forces it open from `sm:` upwards where the room
+ * exists.
+ */
+const sizes = sortUkSizes(availableSizes.filter(isUkSize));
+const active = hasFilters(query);
+
+const activeCount =
+  (query.size ? 1 : 0) + (query.maxPricePkr ? 1 : 0) + (query.onSale ? 1 : 0);
+
+const chip = (on: boolean) =>
+  on ? 'bg-ink text-surface border-ink' : 'bg-surface text-ink border-line-strong hover:border-ink';
+---
+
+<details class="filters group" open={active}>
+  <summary
+    class="tap-target flex cursor-pointer list-none items-center justify-between gap-3 rounded-full border border-line-strong px-5 text-sm font-bold sm:hidden"
+  >
+    <span>
+      Filter &amp; sort
+      {activeCount > 0 && <span class="text-brand-600">· {activeCount}</span>}
+    </span>
+    <span class="text-ink-muted">{total} {total === 1 ? 'result' : 'results'}</span>
+  </summary>
+
+  <div class="filters-body flex flex-col gap-3 pt-3 sm:pt-0">
+    <div class="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+      <div class="flex w-max gap-2 sm:w-auto sm:flex-wrap">
+        <a
+          href={catalogueHref(basePath, { q: query.q, sort: query.sort }, {})}
+          class:list={[
+            'tap-target flex items-center whitespace-nowrap rounded-full border px-4 text-sm font-bold',
+            chip(!active),
+          ]}
+        >
+          All
+        </a>
+
+        <a
+          href={catalogueHref(basePath, query, { onSale: !query.onSale })}
+          class:list={[
+            'tap-target flex items-center whitespace-nowrap rounded-full border px-4 text-sm font-bold',
+            query.onSale
+              ? chip(true)
+              : 'border-line-strong bg-surface text-brand-600 hover:border-brand-600',
+          ]}
+        >
+          Sale
+        </a>
+
+        {
+          PRICE_CHIPS_PKR.map((max) => (
+            <a
+              href={catalogueHref(basePath, query, {
+                maxPricePkr: query.maxPricePkr === max ? undefined : max,
+              })}
+              class:list={[
+                'tap-target flex items-center whitespace-nowrap rounded-full border px-4 text-sm font-semibold',
+                chip(query.maxPricePkr === max),
+              ]}
+            >
+              Under Rs {formatPKRAmount(max)}
+            </a>
+          ))
+        }
+      </div>
+    </div>
+
+    {
+      sizes.length > 0 && (
+        <div class="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <div class="flex w-max items-center gap-2 sm:w-auto sm:flex-wrap">
+            <span class="eyebrow pr-1">Size</span>
+            {sizes.map((size) => (
+              <a
+                href={catalogueHref(basePath, query, {
+                  size: query.size === size ? undefined : size,
+                })}
+                class:list={[
+                  'flex h-9 min-w-11 items-center justify-center rounded-full border px-3 text-sm font-bold',
+                  chip(query.size === size),
+                ]}
+              >
+                {size}
+              </a>
+            ))}
+          </div>
+        </div>
+      )
+    }
+
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="eyebrow pr-1">Sort</span>
+      {
+        SORT_OPTIONS.map((option) => (
+          <a
+            href={catalogueHref(basePath, query, { sort: option })}
+            class:list={[
+              'flex h-9 items-center rounded-full border px-3.5 text-[13px] font-semibold',
+              chip((query.sort ?? 'new') === option),
+            ]}
+          >
+            {SORT_LABELS[option]}
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</details>
+
+<style>
+  /* Hide the default disclosure triangle without losing the button semantics. */
+  .filters summary::-webkit-details-marker {
+    display: none;
+  }
+
+  /*
+   * From `sm:` upwards there is room for the filters, so they are always shown
+   * regardless of the element's open state — the summary is hidden at the same
+   * breakpoint, so there would otherwise be no way to reopen them.
+   */
+  @media (min-width: 640px) {
+    .filters .filters-body {
+      display: flex !important;
+    }
+  }
+</style>

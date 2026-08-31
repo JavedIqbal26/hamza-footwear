@@ -1,41 +1,137 @@
 ---
-import { primaryImage, productPath, type Product } from '@hamza/shared';
+import {
+  CATEGORY_LABELS,
+  discountPercent,
+  isOnSale,
+  isOrderable,
+  NO_RATING,
+  primaryImage,
+  productPath,
+  sortUkSizes,
+  type Product,
+  type RatingSummary,
+} from '@hamza/shared';
 
 import Price from './Price.astro';
 import ProductImage from './ProductImage.astro';
-import StockBadge from './StockBadge.astro';
+import SaveButton from './SaveButton.astro';
+import Stars from './Stars.astro';
+import { TRUST } from '../../content/microcopy.js';
 
 interface Props {
   product: Product;
+  rating?: RatingSummary;
+  saved?: boolean;
   /** Carried through from `?v=` so the video reference survives navigation. */
   videoRef?: string | null;
   /** The first row of a grid is above the fold on a phone. */
   eager?: boolean;
+  returnTo?: string;
 }
 
-const { product, videoRef = null, eager = false } = Astro.props;
+const {
+  product,
+  rating = NO_RATING,
+  saved = false,
+  videoRef = null,
+  eager = false,
+  returnTo = '/',
+} = Astro.props;
+
+const href = productPath(product.slug, videoRef);
+const orderable = isOrderable(product.stock_status);
+const onSale = isOnSale(product);
+const sizes = sortUkSizes(product.sizes_available).slice(0, 5);
+
+/*
+ * Stock copy is a selling line, not a status label: "only a few left" moves a
+ * hesitant buyer, and green vs terracotta carries the urgency without a badge.
+ */
+const stockLine =
+  product.stock_status === 'out'
+    ? { text: TRUST.outOfStock, tone: 'text-ink-soft' }
+    : product.stock_status === 'low'
+      ? { text: TRUST.lowStock, tone: 'text-brand-600' }
+      : { text: TRUST.dispatchToday, tone: 'text-stock' };
 ---
 
-<article class="group">
-  <a
-    href={productPath(product.slug, videoRef)}
-    class="block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
-  >
-    <div class="overflow-hidden rounded-lg">
+<article
+  class="group flex flex-col overflow-hidden rounded-[14px] border border-line bg-surface transition-shadow hover:border-line-strong hover:shadow-[0_10px_30px_-18px_rgba(23,18,15,0.35)]"
+>
+  <div class="relative aspect-square overflow-hidden bg-photo">
+    <a href={href} class="block">
       <ProductImage
         baseKey={primaryImage(product)}
         alt={product.name}
         variant="thumb"
         sizes="(min-width: 640px) 25vw, 50vw"
         loading={eager ? 'eager' : 'lazy'}
-        class="transition-transform duration-200 group-hover:scale-105"
+        class="transition-transform duration-300 group-hover:scale-[1.04]"
       />
+    </a>
+
+    <span class="absolute left-2.5 top-2.5 flex flex-col items-start gap-1.5">
+      {
+        onSale && (
+          <span class="rounded-full bg-brand-600 px-2.5 py-1.5 text-[11px] font-extrabold leading-none text-white">
+            {discountPercent(product)}% off
+          </span>
+        )
+      }
+      {
+        !orderable && (
+          <span class="rounded-full bg-ink px-2.5 py-1.5 text-[11px] font-extrabold uppercase leading-none text-surface" style="letter-spacing: 0.08em;">
+            Sold out
+          </span>
+        )
+      }
+    </span>
+
+    <SaveButton slug={product.slug} saved={saved} returnTo={returnTo} />
+  </div>
+
+  <div class="flex flex-1 flex-col gap-2 p-4">
+    <p class="eyebrow">{CATEGORY_LABELS[product.category]}</p>
+
+    <h3 class="text-[15px] font-bold leading-snug">
+      <a href={href} class="hover:text-brand-600">{product.name}</a>
+    </h3>
+
+    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+      <Price price_pkr={product.price_pkr} sale_price_pkr={product.sale_price_pkr} />
+      <Stars rating={rating} />
     </div>
 
-    <div class="mt-2 space-y-1">
-      <h3 class="text-sm font-medium text-ink">{product.name}</h3>
-      <Price price_pkr={product.price_pkr} sale_price_pkr={product.sale_price_pkr} />
-      <StockBadge status={product.stock_status} />
-    </div>
-  </a>
+    {/*
+      Sizes on the card let a shopper rule the shoe out before tapping into it —
+      the single biggest saver of pointless product-page loads on mobile data.
+    */}
+    {
+      sizes.length > 0 && (
+        <ul class="flex flex-wrap gap-1.5 pt-0.5">
+          {sizes.map((size) => (
+            <li class="rounded-md border border-line-strong px-2 py-0.5 text-[11px] font-bold text-ink">
+              {size}
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    <p class:list={['mt-auto pt-1.5 text-[13px] font-medium', stockLine.tone]}>
+      {stockLine.text}
+    </p>
+
+    <a
+      href={href}
+      class:list={[
+        'tap-target mt-1 flex items-center justify-center rounded-full text-sm font-bold transition-colors',
+        orderable
+          ? 'bg-ink text-surface hover:bg-brand-600'
+          : 'border border-line-strong text-ink-soft',
+      ]}
+    >
+      {orderable ? 'View & add to cart' : 'See details'}
+    </a>
+  </div>
 </article>

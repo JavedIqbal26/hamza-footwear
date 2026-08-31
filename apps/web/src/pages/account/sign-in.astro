@@ -1,0 +1,99 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AuthShell from '../../components/ui/AuthShell.astro';
+import { AUTH } from '../../content/microcopy.js';
+import { NO_STORE } from '../../lib/cache.js';
+import { currentCustomer } from '../../lib/auth/session.js';
+import { takeAuthError } from '../../lib/auth/error-cookie.js';
+
+export const prerender = false;
+
+/* Already signed in — there is nothing to do here. */
+if (await currentCustomer(Astro.locals, Astro.cookies)) {
+  return Astro.redirect('/account', 303);
+}
+
+const rejected = takeAuthError(Astro.cookies);
+Astro.response.headers.set('Cache-Control', NO_STORE);
+---
+
+<BaseLayout title="Sign in" noindex bare>
+  <AuthShell step={1}>
+    <h1 class="display text-[34px]">{AUTH.numberTitle}</h1>
+    <p class="mt-2 text-[15px] leading-relaxed text-ink-body">{AUTH.numberBody}</p>
+
+    {
+      rejected?.message && (
+        <p role="alert" class="mt-4 rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-700">
+          {rejected.message}
+        </p>
+      )
+    }
+
+    <form method="POST" action="/account/request-code" class="mt-6 flex flex-col gap-5">
+      <div class="flex flex-col gap-2">
+        <label for="phone" class="eyebrow">{AUTH.numberLabel}</label>
+        {/*
+          The +92 prefix is shown, not typed. `normalisePhone` on the server
+          still accepts every shape a customer might paste, but the field itself
+          asks for the one thing it needs.
+        */}
+        <div class="flex items-stretch overflow-hidden rounded-[14px] border-2 border-ink">
+          <span
+            class="flex items-center border-r border-line-strong bg-surface-fill px-4 text-[17px] font-bold"
+            aria-hidden="true">+92</span
+          >
+          <input
+            id="phone"
+            name="phone"
+            type="tel"
+            inputmode="numeric"
+            autocomplete="tel"
+            required
+            value={rejected?.phone ?? ''}
+            placeholder="300 123 4567"
+            class="w-full px-4 py-4 text-[19px] font-bold tracking-wide outline-none"
+          />
+        </div>
+        <p class="text-[13px] text-ink-muted">{AUTH.numberHint}</p>
+      </div>
+
+      <label class="flex items-start gap-3">
+        <input
+          type="checkbox"
+          name="whatsapp_updates"
+          value="1"
+          checked
+          class="mt-0.5 h-6 w-6 shrink-0 rounded-lg accent-ink"
+        />
+        <span class="text-sm leading-relaxed text-ink">
+          {AUTH.whatsappOptIn}
+          <span class="text-ink-soft">(recommended)</span>
+        </span>
+      </label>
+
+      <button
+        type="submit"
+        class="tap-target flex h-[54px] items-center justify-center rounded-full bg-ink text-base font-extrabold text-surface"
+      >
+        {AUTH.sendCode}
+      </button>
+    </form>
+
+    <div class="flex items-center gap-3 py-5">
+      <span class="h-px flex-1 bg-line"></span>
+      <span class="text-[13px] text-ink-label">ya</span>
+      <span class="h-px flex-1 bg-line"></span>
+    </div>
+
+    {/* Guest checkout is never more than one tap away. An account must earn itself. */}
+    <a
+      href="/shop"
+      class="tap-target flex h-[54px] items-center justify-center rounded-full border-[1.5px] border-line-strong text-[15px] font-bold text-ink"
+    >
+      {AUTH.guest}
+    </a>
+
+    <p class="pt-5 text-xs leading-relaxed text-ink-soft">{AUTH.terms}</p>
+  </AuthShell>
+</BaseLayout>

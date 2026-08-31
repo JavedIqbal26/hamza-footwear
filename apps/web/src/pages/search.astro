@@ -1,0 +1,42 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CatalogueView from '../components/ui/CatalogueView.astro';
+import { TRUST } from '../content/microcopy.js';
+import { browseCatalogue, parseCatalogueQuery } from '../lib/catalogue.js';
+import { NO_STORE } from '../lib/cache.js';
+import { getShopWhatsApp } from '../lib/runtime.js';
+import { readWishlist } from '../lib/wishlist/session.js';
+
+export const prerender = false;
+
+/**
+ * Search results.
+ *
+ * Reached by a plain GET form in the header, so searching works with no
+ * JavaScript. Never indexed and never cached: result pages are thin content and
+ * the query is the visitor's, not the shop's.
+ */
+const query = parseCatalogueQuery(Astro.url.searchParams);
+const view = await browseCatalogue(Astro.locals, query);
+const saved = readWishlist(Astro.cookies);
+
+Astro.response.headers.set('Cache-Control', NO_STORE);
+
+const heading = query.q ? `"${query.q}"` : 'Search';
+---
+
+<BaseLayout
+  title={query.q ? `Search: ${query.q}` : 'Search'}
+  noindex
+  query={query.q ?? ''}
+  shopPhone={getShopWhatsApp(Astro.locals)}
+>
+  <CatalogueView
+    heading={heading}
+    basePath="/search"
+    query={query}
+    view={view}
+    saved={saved}
+    emptyMessage={TRUST.noResults}
+  />
+</BaseLayout>

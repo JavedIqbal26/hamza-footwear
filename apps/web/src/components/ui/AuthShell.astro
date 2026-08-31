@@ -1,0 +1,41 @@
+---
+import { SITE } from '../../lib/site.js';
+import { TRUST } from '../../content/microcopy.js';
+
+interface Props {
+  /** 1 = number, 2 = code. Drives the progress dots and the back link. */
+  step: 1 | 2;
+}
+
+const { step } = Astro.props;
+---
+
+{/*
+  Sign-in runs without the site chrome: no nav, no tab bar, no footer. One
+  screen, one decision. The way out — Skip — stays visible throughout, because
+  a login wall that traps a COD shopper loses the sale outright.
+*/}
+<div class="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pb-10 pt-6">
+  <div class="flex items-center justify-between pb-6">
+    <a
+      href={step === 1 ? '/' : '/account/sign-in'}
+      aria-label={step === 1 ? 'Close' : 'Back'}
+      class="tap-target flex items-center justify-center rounded-full border border-line text-lg text-ink-muted"
+    >
+      <span aria-hidden="true">{step === 1 ? '✕' : '←'}</span>
+    </a>
+    <a href="/shop" class="text-[13.5px] font-bold text-brand-600">Skip</a>
+  </div>
+
+  <div class="flex flex-1 flex-col">
+    <slot />
+  </div>
+
+  <div class="mt-8 flex gap-2 border-t border-line pt-4 text-center">
+    <span class="flex-1 text-xs font-bold text-ink-muted">Cash on Delivery</span>
+    <span class="w-px bg-line"></span>
+    <span class="flex-1 text-xs font-bold text-ink-muted">7 din exchange</span>
+    <span class="w-px bg-line"></span>
+    <span class="flex-1 text-xs font-bold text-ink-muted">2–4 din delivery</span>
+  </div>
+</div>

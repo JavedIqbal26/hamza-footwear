@@ -15,7 +15,7 @@ import type { OrderRow } from '../rows.js';
 const COLUMNS = `
   id, order_number, customer_name, phone, city, area, address_line, items,
   subtotal_pkr, delivery_fee_pkr, total_pkr, payment_method, payment_proof_key,
-  payment_status, order_status, tiktok_video_ref, notes, created_at
+  payment_status, order_status, tiktok_video_ref, notes, created_at, customer_id
 `;
 
 export interface NewOrder {
@@ -34,6 +34,8 @@ export interface NewOrder {
   readonly payment_proof_key: string | null;
   readonly tiktok_video_ref: string | null;
   readonly notes: string;
+  /** Null for guest orders, which stay first-class. */
+  readonly customer_id: string | null;
 }
 
 export interface ListOrdersOptions {
@@ -51,6 +53,7 @@ export interface OrderRepository {
   create(order: NewOrder): Promise<Order>;
   list(options?: ListOrdersOptions): Promise<Order[]>;
   findByNumber(orderNumber: string): Promise<Order | null>;
+  listForCustomer(customerId: string, limit?: number): Promise<Order[]>;
   findById(id: string): Promise<Order | null>;
   updateStatus(id: string, update: StatusUpdate): Promise<Order | null>;
   attachPaymentProof(id: string, key: string): Promise<void>;
@@ -65,8 +68,8 @@ export function createOrderRepository(db: D1Database): OrderRepository {
           `INSERT INTO orders (
              id, order_number, customer_name, phone, city, area, address_line,
              items, subtotal_pkr, delivery_fee_pkr, total_pkr, payment_method,
-             payment_proof_key, tiktok_video_ref, notes
-           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)
+             payment_proof_key, tiktok_video_ref, notes, customer_id
+           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)
            RETURNING ${COLUMNS}`,
         )
         .bind(
@@ -85,6 +88,7 @@ export function createOrderRepository(db: D1Database): OrderRepository {
           order.payment_proof_key,
           order.tiktok_video_ref,
           order.notes,
+          order.customer_id,
         )
         .first<OrderRow>();
 
@@ -115,6 +119,20 @@ export function createOrderRepository(db: D1Database): OrderRepository {
               .bind(options.orderStatus, limit, offset);
 
       const { results } = await statement.all<OrderRow>();
+      return toOrders(results);
+    },
+
+    /** A customer's own order history, newest first. */
+    async listForCustomer(customerId: string, limit = 20): Promise<Order[]> {
+      const { results } = await db
+        .prepare(
+          `SELECT ${COLUMNS} FROM orders
+           WHERE customer_id = ?1
+           ORDER BY created_at DESC, id DESC
+           LIMIT ?2`,
+        )
+        .bind(customerId, Math.min(Math.max(Math.trunc(limit), 1), 50))
+        .all<OrderRow>();
       return toOrders(results);
     },
 

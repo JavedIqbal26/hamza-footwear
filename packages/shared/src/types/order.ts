@@ -42,6 +42,8 @@ export interface Order {
   readonly tiktok_video_ref: string | null;
   readonly notes: string;
   readonly created_at: string;
+  /** Null for guest orders, which stay first-class. */
+  readonly customer_id: string | null;
 }
 
 export type OrderSummary = Pick<

@@ -7,10 +7,12 @@
 
 export const SITE = {
   name: 'Hamza Footwear',
-  tagline: 'Shoes delivered across Pakistan',
+  tagline: 'Shoes that reach your door.',
   url: 'https://hamzafootwear.com',
   description:
     'Shoes for men, women and kids, delivered across Pakistan. Cash on Delivery available.',
+  /* Shown in the footer. Replace with the shop's real address before launch. */
+  address: 'Delivering across Pakistan.',
 } as const;
 
 export interface NavLink {
@@ -19,8 +21,8 @@ export interface NavLink {
 }
 
 export const PRIMARY_NAV: readonly NavLink[] = [
-  { href: '/men', label: 'Men' },
   { href: '/women', label: 'Women' },
+  { href: '/men', label: 'Men' },
   { href: '/kids', label: 'Kids' },
 ];
 
@@ -28,4 +30,5 @@ export const FOOTER_NAV: readonly NavLink[] = [
   { href: '/size-guide', label: 'Size Guide' },
   { href: '/delivery', label: 'Delivery' },
   { href: '/returns', label: 'Returns & Exchange' },
+  { href: '/account', label: 'Your account' },
 ];

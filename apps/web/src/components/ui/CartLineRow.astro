@@ -1,5 +1,5 @@
 ---
-import { formatPKR, primaryImage, productPath, MAX_QUANTITY_PER_LINE } from '@hamza/shared';
+import { formatPKR, MAX_QUANTITY_PER_LINE, primaryImage, productPath } from '@hamza/shared';
 
 import ProductImage from './ProductImage.astro';
 import type { PricedLine } from '../../lib/cart/pricing.js';
@@ -13,28 +13,29 @@ const { line, returnTo } = Astro.props;
 const { entry, product, unitPricePkr, lineTotalPkr } = line;
 
 const quantities = Array.from({ length: MAX_QUANTITY_PER_LINE }, (_, i) => i + 1);
+const fieldId = `qty-${product.slug}-${entry.size}`;
 ---
 
-<li class="flex gap-4 border-b border-neutral-200 py-4">
+<li class="flex gap-4 border-b border-line py-4">
   <a href={productPath(product.slug)} class="w-20 shrink-0 sm:w-24">
     <ProductImage
       baseKey={primaryImage(product)}
       alt={product.name}
       variant="thumb"
       sizes="96px"
-      class="rounded-lg"
+      class="rounded-xl"
     />
   </a>
 
   <div class="min-w-0 flex-1">
-    <a href={productPath(product.slug)} class="text-sm font-medium text-ink hover:underline">
+    <a href={productPath(product.slug)} class="text-[15px] font-bold text-ink hover:text-brand-600">
       {product.name}
     </a>
-    <p class="mt-0.5 text-xs text-ink-muted">
+    <p class="mt-0.5 text-xs text-ink-soft">
       Size UK {entry.size} &middot; {formatPKR(unitPricePkr)} each
     </p>
 
-    <div class="mt-2 flex flex-wrap items-center gap-3">
+    <div class="mt-2.5 flex flex-wrap items-center gap-3">
       {/*
         A select plus a submit button, not a JavaScript stepper: changing the
         quantity is a real form post, so it works with no JavaScript. The submit
@@ -45,13 +46,13 @@ const quantities = Array.from({ length: MAX_QUANTITY_PER_LINE }, (_, i) => i + 1
         <input type="hidden" name="size" value={entry.size} />
         <input type="hidden" name="return_to" value={returnTo} />
 
-        <label class="sr-only" for={`qty-${product.slug}-${entry.size}`}>
+        <label class="sr-only" for={fieldId}>
           Quantity for {product.name}, size {entry.size}
         </label>
         <select
-          id={`qty-${product.slug}-${entry.size}`}
+          id={fieldId}
           name="quantity"
-          class="tap-target rounded-lg border border-neutral-300 px-2 text-sm"
+          class="tap-target rounded-xl border border-line-strong bg-surface px-3 text-sm font-bold"
         >
           {
             quantities.map((quantity) => (
@@ -65,7 +66,7 @@ const quantities = Array.from({ length: MAX_QUANTITY_PER_LINE }, (_, i) => i + 1
         <button
           type="submit"
           data-cart-qty-submit
-          class="rounded border border-neutral-300 px-2 py-1 text-xs font-medium text-ink-muted"
+          class="rounded-full border border-line-strong px-3 py-1.5 text-xs font-bold text-ink-muted"
         >
           Update
         </button>
@@ -76,12 +77,10 @@ const quantities = Array.from({ length: MAX_QUANTITY_PER_LINE }, (_, i) => i + 1
         <input type="hidden" name="size" value={entry.size} />
         <input type="hidden" name="action" value="remove" />
         <input type="hidden" name="return_to" value={returnTo} />
-        <button type="submit" class="text-xs font-medium text-red-700 underline">
-          Remove
-        </button>
+        <button type="submit" class="text-xs font-bold text-brand-700 underline">Remove</button>
       </form>
     </div>
   </div>
 
-  <p class="shrink-0 text-sm font-semibold text-ink">{formatPKR(lineTotalPkr)}</p>
+  <p class="shrink-0 text-[15px] font-extrabold text-ink">{formatPKR(lineTotalPkr)}</p>
 </li>

@@ -33,3 +33,13 @@ export const PAYMENT_METHOD_LABELS: Readonly<Record<PaymentMethod, string>> = {
 export function isOrderable(stock: StockStatus): boolean {
   return stock !== 'out';
 }
+
+/** Customer-facing order status wording. Admin uses its own shorter labels. */
+export const ORDER_STATUS_LABELS: Readonly<Record<OrderStatus, string>> = {
+  new: 'Received',
+  confirmed: 'Confirmed',
+  dispatched: 'Out for delivery',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled',
+  returned: 'Returned',
+};

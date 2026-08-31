@@ -1,15 +1,17 @@
 ---
+import { createCustomerRepository } from '@hamza/db';
 import { formatPKR } from '@hamza/shared';
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CheckoutForm from '../components/ui/CheckoutForm.astro';
 import OrderSummaryLines from '../components/ui/OrderSummaryLines.astro';
 import { TRUST } from '../content/microcopy.js';
+import { currentCustomer } from '../lib/auth/session.js';
 import { priceCart, survivingCart } from '../lib/cart/pricing.js';
 import { readCart, writeCart } from '../lib/cart/session.js';
 import { listCities } from '../lib/delivery.js';
 import { NO_STORE } from '../lib/cache.js';
-import { getWalletNumbers } from '../lib/runtime.js';
+import { getDatabase, getWalletNumbers } from '../lib/runtime.js';
 import { takeCheckoutError } from '../lib/orders/error-cookie.js';
 
 export const prerender = false;
@@ -25,22 +27,57 @@ if (priced.lines.length === 0) {
   return Astro.redirect('/cart', 303);
 }
 
-const [cities, rejected] = [
-  await listCities(Astro.locals),
-  takeCheckoutError(Astro.cookies),
-];
-const wallets = getWalletNumbers(Astro.locals);
+const [cities, rejected, customer] = await Promise.all([
+  listCities(Astro.locals),
+  Promise.resolve(takeCheckoutError(Astro.cookies)),
+  currentCustomer(Astro.locals, Astro.cookies),
+]);
 
+/*
+ * A signed-in customer gets the form filled in from their account. This is the
+ * whole payoff of signing in for a COD shopper: two taps instead of five fields
+ * typed with a thumb. A rejected submit always wins over the saved values, so
+ * corrections are never overwritten.
+ */
+let prefill: Record<string, string> = {};
+if (customer && !rejected) {
+  const addresses = await createCustomerRepository(getDatabase(Astro.locals)).listAddresses(
+    customer.id,
+  );
+  const address = addresses.find((entry) => entry.is_default) ?? addresses[0];
+
+  prefill = {
+    customer_name: customer.name,
+    phone: customer.phone,
+    ...(address
+      ? { city: address.city, area: address.area, address_line: address.address_line }
+      : {}),
+  };
+}
+
+const wallets = getWalletNumbers(Astro.locals);
 Astro.response.headers.set('Cache-Control', NO_STORE);
 ---
 
-<BaseLayout title="Checkout" noindex>
-  <div class="mx-auto max-w-3xl px-4 pt-8">
-    <h1 class="text-2xl font-bold tracking-tight text-ink">Checkout</h1>
+<BaseLayout title="Checkout" noindex bare>
+  <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <a href="/cart" class="text-sm font-bold text-ink-muted hover:text-ink">← Back to cart</a>
+    <h1 class="display mt-2 text-[30px] sm:text-[38px]">Checkout</h1>
+
+    {
+      !customer && (
+        <p class="mt-4 rounded-[16px] border border-line bg-surface-sunk px-4 py-3.5 text-sm text-ink">
+          <a href="/account/sign-in" class="font-bold text-brand-600">
+            Sign in
+          </a>{' '}
+          to fill this in automatically — ya guest ke tor par jari rakhein.
+        </p>
+      )
+    }
 
     {
       priced.removed.length > 0 && (
-        <p role="alert" class="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <p role="alert" class="mt-4 rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-700">
           Some items were removed because they are no longer available. Please
           review your order below.
         </p>
@@ -49,20 +86,20 @@ Astro.response.headers.set('Cache-Control', NO_STORE);
 
     {
       rejected?.message && (
-        <p role="alert" class="mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p role="alert" class="mt-4 rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-700">
           {rejected.message}
         </p>
       )
     }
 
-    <section class="mt-6 rounded-lg border border-neutral-200 p-4">
-      <h2 class="text-sm font-semibold text-ink">Your order</h2>
+    <section class="mt-6 rounded-[16px] border border-line p-4">
+      <h2 class="text-sm font-extrabold">Your order</h2>
       <OrderSummaryLines lines={priced.lines} />
-      <div class="mt-3 flex items-baseline justify-between border-t border-neutral-200 pt-3">
+      <div class="mt-3 flex items-baseline justify-between border-t border-line pt-3">
         <p class="text-sm text-ink-muted">Subtotal</p>
-        <p class="text-base font-bold text-ink">{formatPKR(priced.subtotalPkr)}</p>
+        <p class="text-lg font-extrabold text-ink">{formatPKR(priced.subtotalPkr)}</p>
       </div>
-      <p class="mt-1 text-xs text-ink-muted">{TRUST.deliveryFeeNote}</p>
+      <p class="mt-1 text-xs text-ink-soft">{TRUST.deliveryFeeNote}</p>
     </section>
 
     <div class="mt-8">
@@ -71,7 +108,7 @@ Astro.response.headers.set('Cache-Control', NO_STORE);
         wallets={wallets}
         subtotalPkr={priced.subtotalPkr}
         errors={rejected?.errors ?? {}}
-        values={rejected?.values ?? {}}
+        values={rejected?.values ?? prefill}
       />
     </div>
   </div>

@@ -7,6 +7,7 @@ import { TRUST } from '../content/microcopy.js';
 import { priceCart, survivingCart } from '../lib/cart/pricing.js';
 import { readCart, writeCart } from '../lib/cart/session.js';
 import { NO_STORE } from '../lib/cache.js';
+import { getShopWhatsApp } from '../lib/runtime.js';
 
 export const prerender = false;
 
@@ -31,14 +32,14 @@ const REMOVAL_REASONS = {
 } as const;
 ---
 
-<BaseLayout title="Your Cart" noindex>
-  <div class="mx-auto max-w-3xl px-4 pt-8">
-    <h1 class="text-2xl font-bold tracking-tight text-ink">Your Cart</h1>
+<BaseLayout title="Your Cart" noindex shopPhone={getShopWhatsApp(Astro.locals)}>
+  <div class="mx-auto max-w-3xl px-4 pt-8 sm:px-6">
+    <h1 class="display text-[30px] sm:text-[38px]">Your Cart</h1>
 
     {
       priced.removed.length > 0 && (
-        <div role="alert" class="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          <p class="font-semibold">Some items changed</p>
+        <div role="alert" class="mt-4 rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-700">
+          <p class="font-extrabold">Some items changed</p>
           <ul class="mt-1 space-y-0.5">
             {priced.removed.map((removed) => (
               <li>
@@ -52,11 +53,11 @@ const REMOVAL_REASONS = {
 
     {
       priced.lines.length === 0 ? (
-        <div class="mt-8 rounded-lg bg-neutral-50 px-4 py-12 text-center">
-          <p class="text-sm text-ink-muted">Aap ka cart khali hai.</p>
+        <div class="mt-8 rounded-[18px] border border-line bg-surface-sunk px-4 py-14 text-center">
+          <p class="text-sm text-ink-muted">{TRUST.emptyCart}</p>
           <a
             href="/shop"
-            class="tap-target mt-4 inline-flex items-center justify-center rounded-lg bg-brand-600 px-5 py-3 text-sm font-semibold text-white"
+            class="tap-target mt-5 inline-flex items-center justify-center rounded-full bg-ink px-6 text-sm font-extrabold text-surface"
           >
             Start shopping
           </a>
@@ -69,22 +70,22 @@ const REMOVAL_REASONS = {
             ))}
           </ul>
 
-          <div class="mt-6 rounded-lg bg-neutral-50 px-4 py-4">
+          <div class="mt-6 rounded-[16px] bg-surface-sunk px-4 py-4">
             <div class="flex items-baseline justify-between">
               <p class="text-sm text-ink-muted">Subtotal</p>
-              <p class="text-lg font-bold text-ink">{formatPKR(priced.subtotalPkr)}</p>
+              <p class="text-xl font-extrabold text-ink">{formatPKR(priced.subtotalPkr)}</p>
             </div>
-            <p class="mt-1 text-xs text-ink-muted">{TRUST.deliveryFeeNote}</p>
+            <p class="mt-1 text-xs text-ink-soft">{TRUST.deliveryFeeNote}</p>
           </div>
 
           <a
             href="/checkout"
-            class="tap-target mt-4 flex w-full items-center justify-center rounded-lg bg-brand-600 px-5 py-3.5 text-base font-semibold text-white"
+            class="tap-target mt-4 flex h-[54px] w-full items-center justify-center rounded-full bg-ink text-base font-extrabold text-surface"
           >
             Checkout
           </a>
 
-          <a href="/shop" class="mt-3 block text-center text-sm text-brand-600 underline">
+          <a href="/shop" class="mt-3 block text-center text-sm font-bold text-brand-600">
             Continue shopping
           </a>
         </>

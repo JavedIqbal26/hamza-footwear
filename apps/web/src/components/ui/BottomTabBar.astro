@@ -1,0 +1,63 @@
+---
+import { buildWhatsAppContactLink } from '@hamza/shared';
+
+interface Props {
+  shopPhone: string;
+}
+
+const { shopPhone } = Astro.props;
+const path = Astro.url.pathname;
+
+/*
+ * Mobile-only bottom navigation, as in the design.
+ *
+ * WhatsApp sits in the middle and is the only coloured tab: it is a parallel
+ * ordering path, not a nicety, and plenty of customers will never fill in a
+ * form. Hidden from `sm:` upwards, where the header already carries everything.
+ */
+const TABS = [
+  { href: '/', label: 'Home', glyph: '⌂', match: (p: string) => p === '/' },
+  { href: '/shop', label: 'Shop', glyph: '☰', match: (p: string) => p.startsWith('/shop') },
+  {
+    href: buildWhatsAppContactLink(shopPhone),
+    label: 'WhatsApp',
+    glyph: '✆',
+    match: () => false,
+    external: true,
+  },
+  { href: '/saved', label: 'Saved', glyph: '♥', match: (p: string) => p.startsWith('/saved') },
+  { href: '/account', label: 'Account', glyph: '◔', match: (p: string) => p.startsWith('/account') },
+] as const;
+---
+
+<nav
+  aria-label="Main"
+  class="sticky bottom-0 z-30 flex bg-ink px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 sm:hidden"
+>
+  {
+    TABS.map((tab) => {
+      const active = tab.match(path);
+      const isWhatsApp = tab.label === 'WhatsApp';
+      return (
+        <a
+          href={tab.href}
+          rel={'external' in tab && tab.external ? 'noopener' : undefined}
+          aria-current={active ? 'page' : undefined}
+          class:list={[
+            'flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 text-[11px]',
+            isWhatsApp
+              ? 'font-extrabold text-whatsapp'
+              : active
+                ? 'font-bold text-surface'
+                : 'font-medium text-ink-soft',
+          ]}
+        >
+          <span aria-hidden="true" class="text-[17px] leading-none">
+            {tab.glyph}
+          </span>
+          {tab.label}
+        </a>
+      );
+    })
+  }
+</nav>

@@ -1,15 +1,19 @@
 ---
+import { catalogueHref, type CatalogueQuery } from '@hamza/shared';
+
 interface Props {
   page: number;
   pageCount: number;
   /** Path without a page parameter, e.g. "/shop" or "/men". */
   basePath: string;
+  /** Carried through so paging never silently drops the active filters. */
+  query?: CatalogueQuery;
 }
 
-const { page, pageCount, basePath } = Astro.props;
+const { page, pageCount, basePath, query = {} } = Astro.props;
 
 function pageHref(target: number): string {
-  return target <= 1 ? basePath : `${basePath}?page=${target}`;
+  return catalogueHref(basePath, { ...query, page: target }, {});
 }
 
 const hasPrevious = page > 1;
@@ -27,7 +31,7 @@ const hasNext = page < pageCount;
         <a
           href={pageHref(page - 1)}
           rel="prev"
-          class="tap-target flex items-center rounded-lg border border-neutral-300 px-4 text-sm font-medium text-ink"
+          class="tap-target flex items-center rounded-full border border-line-strong px-5 text-sm font-bold text-ink hover:border-ink"
         >
           Previous
         </a>
@@ -43,7 +47,7 @@ const hasNext = page < pageCount;
         <a
           href={pageHref(page + 1)}
           rel="next"
-          class="tap-target flex items-center rounded-lg border border-neutral-300 px-4 text-sm font-medium text-ink"
+          class="tap-target flex items-center rounded-full border border-line-strong px-5 text-sm font-bold text-ink hover:border-ink"
         >
           Next
         </a>

@@ -24,19 +24,18 @@ const { cities, wallets, subtotalPkr, errors = {}, values = {} } = Astro.props;
 const majorCities = cities.filter((city) => city.tier === 'major');
 const otherCities = cities.filter((city) => city.tier !== 'major');
 
-function value(name: string): string {
-  return values[name] ?? '';
-}
+const value = (name: string): string => values[name] ?? '';
+
+const fieldClass =
+  'tap-target mt-1.5 w-full rounded-xl border border-line-strong bg-surface px-3.5 py-3 text-base outline-none focus:border-ink';
 ---
 
-<form method="POST" action="/checkout/submit" class="space-y-6" novalidate>
-  <fieldset class="space-y-4">
-    <legend class="text-lg font-semibold text-ink">Delivery details</legend>
+<form method="POST" action="/checkout/submit" class="flex flex-col gap-7" novalidate>
+  <fieldset class="flex flex-col gap-4">
+    <legend class="display text-[22px]">Delivery details</legend>
 
     <div>
-      <label for="customer_name" class="block text-sm font-medium text-ink">
-        Full name
-      </label>
+      <label for="customer_name" class="eyebrow">Full name</label>
       <input
         id="customer_name"
         name="customer_name"
@@ -46,11 +45,11 @@ function value(name: string): string {
         value={value('customer_name')}
         aria-invalid={errors.customer_name ? 'true' : undefined}
         aria-describedby={errors.customer_name ? 'error-customer_name' : undefined}
-        class="tap-target mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base"
+        class={fieldClass}
       />
       {
         errors.customer_name && (
-          <p id="error-customer_name" role="alert" class="mt-1 text-sm text-red-700">
+          <p id="error-customer_name" role="alert" class="mt-1 text-sm text-brand-700">
             {errors.customer_name}
           </p>
         )
@@ -58,9 +57,7 @@ function value(name: string): string {
     </div>
 
     <div>
-      <label for="phone" class="block text-sm font-medium text-ink">
-        Mobile number
-      </label>
+      <label for="phone" class="eyebrow">Mobile number</label>
       {/*
         `inputmode="numeric"` brings up the number pad on Android. The pattern
         is the same one the server enforces — the browser is a convenience, the
@@ -78,15 +75,15 @@ function value(name: string): string {
         value={value('phone')}
         aria-invalid={errors.phone ? 'true' : undefined}
         aria-describedby={errors.phone ? 'error-phone' : 'hint-phone'}
-        class="tap-target mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base"
+        class={fieldClass}
       />
       {
         errors.phone ? (
-          <p id="error-phone" role="alert" class="mt-1 text-sm text-red-700">
+          <p id="error-phone" role="alert" class="mt-1 text-sm text-brand-700">
             {errors.phone}
           </p>
         ) : (
-          <p id="hint-phone" class="mt-1 text-xs text-ink-muted">
+          <p id="hint-phone" class="mt-1 text-xs text-ink-soft">
             Is number par hum order confirm karenge
           </p>
         )
@@ -94,13 +91,13 @@ function value(name: string): string {
     </div>
 
     <div>
-      <label for="city" class="block text-sm font-medium text-ink">City</label>
+      <label for="city" class="eyebrow">City</label>
       <select
         id="city"
         name="city"
         required
         aria-invalid={errors.city ? 'true' : undefined}
-        class="tap-target mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-base"
+        class={fieldClass}
       >
         <option value="">Choose your city</option>
         <optgroup label="Major cities">
@@ -124,7 +121,7 @@ function value(name: string): string {
       </select>
       {
         errors.city && (
-          <p role="alert" class="mt-1 text-sm text-red-700">
+          <p role="alert" class="mt-1 text-sm text-brand-700">
             {errors.city}
           </p>
         )
@@ -132,7 +129,7 @@ function value(name: string): string {
     </div>
 
     <div>
-      <label for="area" class="block text-sm font-medium text-ink">Area</label>
+      <label for="area" class="eyebrow">Area</label>
       <input
         id="area"
         name="area"
@@ -141,11 +138,11 @@ function value(name: string): string {
         placeholder="e.g. Gulshan-e-Iqbal Block 5"
         value={value('area')}
         aria-invalid={errors.area ? 'true' : undefined}
-        class="tap-target mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base"
+        class={fieldClass}
       />
       {
         errors.area && (
-          <p role="alert" class="mt-1 text-sm text-red-700">
+          <p role="alert" class="mt-1 text-sm text-brand-700">
             {errors.area}
           </p>
         )
@@ -153,9 +150,7 @@ function value(name: string): string {
     </div>
 
     <div>
-      <label for="address_line" class="block text-sm font-medium text-ink">
-        Full address
-      </label>
+      <label for="address_line" class="eyebrow">Full address</label>
       <textarea
         id="address_line"
         name="address_line"
@@ -163,12 +158,12 @@ function value(name: string): string {
         rows="3"
         placeholder="House / flat number, street, nearby landmark"
         aria-invalid={errors.address_line ? 'true' : undefined}
-        class="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base"
+        class="mt-1.5 w-full rounded-xl border border-line-strong bg-surface px-3.5 py-3 text-base outline-none focus:border-ink"
         >{value('address_line')}</textarea
       >
       {
         errors.address_line && (
-          <p role="alert" class="mt-1 text-sm text-red-700">
+          <p role="alert" class="mt-1 text-sm text-brand-700">
             {errors.address_line}
           </p>
         )
@@ -179,31 +174,31 @@ function value(name: string): string {
   <PaymentMethods wallets={wallets} errors={errors} selected={value('payment_method')} />
 
   <div>
-    <label for="notes" class="block text-sm font-medium text-ink">
-      Note for us <span class="font-normal text-ink-muted">(optional)</span>
+    <label for="notes" class="eyebrow">
+      Note for us <span class="normal-case text-ink-soft">(optional)</span>
     </label>
     <textarea
       id="notes"
       name="notes"
       rows="2"
-      class="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base"
+      class="mt-1.5 w-full rounded-xl border border-line-strong bg-surface px-3.5 py-3 text-base outline-none focus:border-ink"
       >{value('notes')}</textarea
     >
   </div>
 
-  <div class="rounded-lg bg-brand-50 px-4 py-3">
+  <div class="rounded-[16px] bg-brand-50 px-4 py-3.5">
     <p class="text-sm text-ink">{TRUST.cod}</p>
     <p class="mt-1 text-sm text-ink-muted">{TRUST.deliveryTime}</p>
   </div>
 
   <button
     type="submit"
-    class="tap-target flex w-full items-center justify-center rounded-lg bg-brand-600 px-5 py-4 text-base font-semibold text-white"
+    class="tap-target flex h-[56px] w-full items-center justify-center rounded-full bg-ink text-base font-extrabold text-surface"
   >
     Place order — {formatPKR(subtotalPkr)} + delivery
   </button>
 
-  <p class="text-center text-xs text-ink-muted">
+  <p class="text-center text-xs text-ink-soft">
     Order karne ke baad hum aap ko call ya WhatsApp par confirm karenge.
   </p>
 </form>

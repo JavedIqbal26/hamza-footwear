@@ -25,14 +25,14 @@ Astro.response.headers.set('Cache-Control', CATALOGUE_CACHE_CONTROL);
   description="Delivery charges and timings for Hamza Footwear across Pakistan. Cash on Delivery available."
 >
   <div class="mx-auto max-w-3xl px-4 pt-8">
-    <h1 class="text-2xl font-bold tracking-tight text-ink">Delivery</h1>
+    <h1 class="display text-[30px] sm:text-[38px]">Delivery</h1>
     <p class="mt-2 text-sm text-ink">{TRUST.deliveryTime}</p>
     <p class="mt-1 text-sm text-ink-muted">{TRUST.deliveryFeeNote}</p>
 
     <section class="mt-8 space-y-6">
       {
         tiers.map((tier) => (
-          <div class="rounded-lg border border-neutral-200 p-4">
+          <div class="rounded-xl border border-line p-4">
             <div class="flex items-baseline justify-between gap-4">
               <h2 class="text-base font-semibold text-ink">
                 {TIER_LABELS[tier.tier] ?? tier.tier}
@@ -48,7 +48,7 @@ Astro.response.headers.set('Cache-Control', CATALOGUE_CACHE_CONTROL);
     </section>
 
     <section class="mt-8">
-      <h2 class="text-lg font-semibold text-ink">Payment</h2>
+      <h2 class="display text-[22px]">Payment</h2>
       <p class="mt-2 text-sm text-ink">{TRUST.cod}</p>
       <p class="mt-2 text-sm text-ink-muted">
         Your city is not on the list? Message us on WhatsApp — hum aap ke liye

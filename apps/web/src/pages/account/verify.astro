@@ -1,0 +1,96 @@
+---
+import { formatPhone } from '@hamza/shared';
+import { OTP_LENGTH } from '@hamza/shared/schemas';
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AuthShell from '../../components/ui/AuthShell.astro';
+import { AUTH } from '../../content/microcopy.js';
+import { NO_STORE } from '../../lib/cache.js';
+import { readPendingPhone, takeAuthError } from '../../lib/auth/error-cookie.js';
+
+export const prerender = false;
+
+/* No number in flight — nothing to verify. */
+const phone = readPendingPhone(Astro.cookies);
+if (!phone) return Astro.redirect('/account/sign-in', 303);
+
+const rejected = takeAuthError(Astro.cookies);
+Astro.response.headers.set('Cache-Control', NO_STORE);
+
+const boxes = Array.from({ length: OTP_LENGTH }, (_, index) => index);
+---
+
+<BaseLayout title="Enter your code" noindex bare>
+  <AuthShell step={2}>
+    <h1 class="display text-[34px]">{AUTH.codeTitle}</h1>
+    <p class="mt-2 text-[15px] leading-relaxed text-ink-body">
+      {OTP_LENGTH}-digit {AUTH.codeSentTo}
+      <span class="font-extrabold text-ink">+92 {formatPhone(phone).slice(1)}</span> par.
+      <a href="/account/sign-in" class="font-bold text-brand-600">{AUTH.changeNumber}</a>
+    </p>
+
+    {
+      rejected?.message && (
+        <p role="alert" class="mt-4 rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-700">
+          {rejected.message}
+        </p>
+      )
+    }
+
+    <form method="POST" action="/account/verify-code" class="mt-6 flex flex-col gap-5">
+      {/*
+        One input per digit, matching the design. `autocomplete="one-time-code"`
+        on the first box lets Android offer the code straight from the SMS
+        notification — the single biggest saver of taps in this whole flow.
+      */}
+      <fieldset data-otp class="flex gap-2.5">
+        <legend class="sr-only">Enter the {OTP_LENGTH}-digit code</legend>
+        {
+          boxes.map((index) => (
+            <input
+              name="code"
+              type="text"
+              inputmode="numeric"
+              maxlength="1"
+              required
+              autocomplete={index === 0 ? 'one-time-code' : 'off'}
+              aria-label={`Digit ${index + 1}`}
+              class="h-[62px] w-full rounded-[14px] border-2 border-ink text-center text-2xl font-extrabold outline-none focus:border-brand-600"
+            />
+          ))
+        }
+      </fieldset>
+
+      <button
+        type="submit"
+        class="tap-target flex h-[54px] items-center justify-center rounded-full bg-ink text-base font-extrabold text-surface"
+      >
+        {AUTH.verify}
+      </button>
+    </form>
+
+    {/*
+      Resend is its own form, deliberately a sibling rather than nested — a form
+      inside a form is invalid HTML and browsers silently drop the inner one.
+      Posting the same number back through step one issues a fresh code and
+      consumes the old one.
+    */}
+    <form
+      method="POST"
+      action="/account/request-code"
+      class="mt-4 flex items-center justify-between gap-4"
+    >
+      <input type="hidden" name="phone" value={phone} />
+      <button type="submit" class="text-[13.5px] font-bold text-ink underline">
+        {AUTH.resend}
+      </button>
+      <span class="text-[13.5px] text-ink-muted">Code 10 minute tak valid hai</span>
+    </form>
+  </AuthShell>
+</BaseLayout>
+
+<script>
+  import { initOtpInput } from '../../scripts/otp-input.js';
+
+  initOtpInput();
+</script>

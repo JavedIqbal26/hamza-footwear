@@ -1,6 +1,7 @@
 ---
-import SiteHeader from '../components/ui/SiteHeader.astro';
+import BottomTabBar from '../components/ui/BottomTabBar.astro';
 import SiteFooter from '../components/ui/SiteFooter.astro';
+import SiteHeader from '../components/ui/SiteHeader.astro';
 import { SITE } from '../lib/site.js';
 import '../styles/global.css';
 
@@ -11,9 +12,29 @@ interface Props {
   image?: string;
   /** Set on pages that should not appear in search results. */
   noindex?: boolean;
+  /** Prefills the header search box on search result pages. */
+  query?: string;
+  /** The shop's WhatsApp number, for the bottom tab bar. */
+  shopPhone?: string;
+  /** Checkout and sign-in hide the chrome to keep the flow single-minded. */
+  bare?: boolean;
+  /**
+   * Product pages hide the tab bar: their own sticky Add-to-cart bar occupies
+   * that space, and two stacked dark bars read as one broken one.
+   */
+  hideTabBar?: boolean;
 }
 
-const { title, description = SITE.description, image, noindex = false } = Astro.props;
+const {
+  title,
+  description = SITE.description,
+  image,
+  noindex = false,
+  query = '',
+  shopPhone = '',
+  bare = false,
+  hideTabBar = false,
+} = Astro.props;
 
 const pageTitle = title === SITE.name ? title : `${title} — ${SITE.name}`;
 const canonical = new URL(Astro.url.pathname, SITE.url).href;
@@ -30,6 +51,19 @@ const socialImage = image ? new URL(image, SITE.url).href : undefined;
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex" />}
 
+    {/*
+      The display face is declared in global.css and self-hosted, so it never
+      touches fonts.googleapis.com.
+
+      No `<link rel="preload">` for it yet: the woff2 is not in the repo (see
+      README), and preloading a missing file 404s on every page load. Once the
+      font is added, add the preload here too — it renders the first heading on
+      most pages, which is usually the LCP element:
+
+        <link rel="preload" href="/fonts/instrument-serif-400.woff2"
+              as="font" type="font/woff2" crossorigin />
+    */}
+
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={SITE.name} />
     <meta property="og:title" content={pageTitle} />
@@ -38,24 +72,25 @@ const socialImage = image ? new URL(image, SITE.url).href : undefined;
     {socialImage && <meta property="og:image" content={socialImage} />}
     <meta name="twitter:card" content="summary_large_image" />
 
-    <meta name="theme-color" content="#7c3f24" />
+    <meta name="theme-color" content="#17120f" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   </head>
 
-  <body class="flex min-h-dvh flex-col">
+  <body class="flex min-h-dvh flex-col bg-surface-sunk">
     <a
       href="#main"
-      class="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:shadow"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-surface focus:px-4 focus:py-2 focus:shadow"
     >
       Skip to content
     </a>
 
-    <SiteHeader />
+    {!bare && <SiteHeader query={query} />}
 
-    <main id="main" class="flex-1">
+    <main id="main" class="flex-1 bg-surface">
       <slot />
     </main>
 
-    <SiteFooter />
+    {!bare && <SiteFooter />}
+    {!bare && !hideTabBar && <BottomTabBar shopPhone={shopPhone} />}
   </body>
 </html>

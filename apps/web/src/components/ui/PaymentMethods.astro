@@ -27,43 +27,46 @@ const walletOptions = [
 
 const isSelected = (value: string): boolean =>
   selected === value || (selected === '' && value === 'cod');
+
+const optionClass =
+  'flex cursor-pointer gap-3 rounded-[16px] border border-line-strong p-4 transition-colors has-[:checked]:border-2 has-[:checked]:border-ink has-[:checked]:bg-brand-50';
 ---
 
-<fieldset class="space-y-3">
-  <legend class="text-lg font-semibold text-ink">Payment</legend>
+<fieldset class="flex flex-col gap-3">
+  <legend class="display text-[22px]">Payment</legend>
 
-  <label class="flex cursor-pointer gap-3 rounded-lg border border-neutral-300 p-4 has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
+  <label class={optionClass}>
     <input
       type="radio"
       name="payment_method"
       value="cod"
       required
       checked={isSelected('cod')}
-      class="mt-0.5 h-5 w-5 shrink-0 accent-brand-600"
+      class="mt-0.5 h-5 w-5 shrink-0 accent-ink"
     />
     <span>
-      <span class="block text-sm font-semibold text-ink">Cash on Delivery</span>
+      <span class="block text-sm font-extrabold text-ink">Cash on Delivery</span>
       <span class="mt-0.5 block text-sm text-ink-muted">{TRUST.cod}</span>
     </span>
   </label>
 
   {
     walletOptions.map((option) => (
-      <label class="flex cursor-pointer gap-3 rounded-lg border border-neutral-300 p-4 has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
+      <label class={optionClass}>
         <input
           type="radio"
           name="payment_method"
           value={option.value}
           checked={isSelected(option.value)}
-          class="mt-0.5 h-5 w-5 shrink-0 accent-brand-600"
+          class="mt-0.5 h-5 w-5 shrink-0 accent-ink"
         />
         <span>
-          <span class="block text-sm font-semibold text-ink">{option.label}</span>
+          <span class="block text-sm font-extrabold text-ink">{option.label}</span>
           <span class="mt-0.5 block text-sm text-ink-muted">
             Is number par bhejein:
-            <strong class="font-semibold text-ink">{formatPhone(option.number)}</strong>
+            <strong class="font-extrabold text-ink">{formatPhone(option.number)}</strong>
           </span>
-          <span class="mt-1 block text-xs text-ink-muted">
+          <span class="mt-1 block text-xs text-ink-soft">
             Paisay bhejne ke baad transaction ID neeche likhein.
           </span>
         </span>
@@ -74,17 +77,17 @@ const isSelected = (value: string): boolean =>
   {
     walletOptions.length > 0 && (
       <div>
-        <label for="payment_reference" class="block text-sm font-medium text-ink">
-          Transaction ID <span class="font-normal text-ink-muted">(wallet payments only)</span>
+        <label for="payment_reference" class="eyebrow">
+          Transaction ID <span class="normal-case text-ink-soft">(wallet payments only)</span>
         </label>
         <input
           id="payment_reference"
           name="payment_reference"
           type="text"
           inputmode="numeric"
-          class="tap-target mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base"
+          class="tap-target mt-1.5 w-full rounded-xl border border-line-strong bg-surface px-3.5 py-3 text-base outline-none focus:border-ink"
         />
-        <p class="mt-1 text-xs text-ink-muted">
+        <p class="mt-1 text-xs text-ink-soft">
           Screenshot order confirm hone ke baad WhatsApp par bhej sakte hain.
         </p>
       </div>
@@ -93,7 +96,7 @@ const isSelected = (value: string): boolean =>
 
   {
     errors.payment_method && (
-      <p role="alert" class="text-sm text-red-700">
+      <p role="alert" class="text-sm text-brand-700">
         {errors.payment_method}
       </p>
     )

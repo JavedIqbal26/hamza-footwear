@@ -1,0 +1,113 @@
+---
+import { createCustomerRepository, createOrderRepository } from '@hamza/db';
+import { firstName, formatPhone, formatPKR, ORDER_STATUS_LABELS } from '@hamza/shared';
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { AUTH } from '../../content/microcopy.js';
+import { NO_STORE } from '../../lib/cache.js';
+import { currentCustomer } from '../../lib/auth/session.js';
+import { getDatabase, getShopWhatsApp } from '../../lib/runtime.js';
+
+export const prerender = false;
+
+const customer = await currentCustomer(Astro.locals, Astro.cookies);
+if (!customer) return Astro.redirect('/account/sign-in', 303);
+
+const db = getDatabase(Astro.locals);
+const customers = createCustomerRepository(db);
+
+const [addresses, orders] = await Promise.all([
+  customers.listAddresses(customer.id),
+  createOrderRepository(db).listForCustomer(customer.id, 5),
+]);
+
+/* Personal data — never cached, never indexed. */
+Astro.response.headers.set('Cache-Control', NO_STORE);
+
+const greeting = firstName(customer);
+const defaultAddress = addresses.find((address) => address.is_default) ?? addresses[0];
+---
+
+<BaseLayout title="Your account" noindex shopPhone={getShopWhatsApp(Astro.locals)}>
+  <div class="mx-auto max-w-2xl px-4 pt-8 sm:px-6">
+    <div class="flex flex-col items-center gap-3 rounded-[18px] bg-brand-50 px-5 py-8 text-center">
+      <span
+        class="flex h-[74px] w-[74px] items-center justify-center rounded-full bg-success-soft text-[32px] font-extrabold text-whatsapp-dark"
+        aria-hidden="true">✓</span
+      >
+      <h1 class="display text-[32px]">
+        {AUTH.welcome}{greeting ? `, ${greeting}` : ''}
+      </h1>
+      <p class="max-w-[30ch] text-[14.5px] leading-relaxed text-ink-body">{AUTH.verified}</p>
+      <p class="text-[13px] text-ink-soft">{formatPhone(customer.phone)}</p>
+    </div>
+
+    {/* The concrete payoff for signing in — the reason to do it again next time. */}
+    <ul class="mt-5 grid grid-cols-3 gap-2.5">
+      <li class="rounded-[14px] border border-line p-3.5 text-center">
+        <span class="block text-xl font-extrabold">{customer.saved_size ?? '—'}</span>
+        <span class="mt-0.5 block text-xs text-ink-soft">{AUTH.savedSize}</span>
+      </li>
+      <li class="rounded-[14px] border border-line p-3.5 text-center">
+        <span class="block text-xl font-extrabold">{orders.length}</span>
+        <span class="mt-0.5 block text-xs text-ink-soft">{AUTH.pastOrders}</span>
+      </li>
+      <li class="rounded-[14px] border border-line p-3.5 text-center">
+        <span class="block text-xl font-extrabold">{addresses.length}</span>
+        <span class="mt-0.5 block text-xs text-ink-soft">{AUTH.addresses}</span>
+      </li>
+    </ul>
+
+    <section class="mt-6 overflow-hidden rounded-[16px] border border-line">
+      {
+        orders.length === 0 ? (
+          <p class="px-4 py-5 text-sm text-ink-muted">Abhi tak koi order nahi.</p>
+        ) : (
+          orders.map((order) => (
+            <a
+              href={`/order/${order.id}`}
+              class="flex min-h-14 items-center gap-3 border-b border-line-soft px-4 py-3.5 last:border-b-0 hover:bg-surface-fill"
+            >
+              <span aria-hidden="true" class="w-5 text-[15px]">
+                ◔
+              </span>
+              <span class="flex-1 text-[15px] font-bold">{order.order_number}</span>
+              <span class="text-[12.5px] font-bold text-brand-600">
+                {ORDER_STATUS_LABELS[order.order_status]}
+              </span>
+              <span class="text-[13px] text-ink-soft">{formatPKR(order.total_pkr)}</span>
+            </a>
+          ))
+        )
+      }
+    </section>
+
+    {
+      defaultAddress && (
+        <section class="mt-4 rounded-[16px] border border-line px-4 py-3.5">
+          <p class="eyebrow">Delivery address</p>
+          <p class="mt-1 text-sm leading-relaxed text-ink">
+            {defaultAddress.address_line}, {defaultAddress.area}, {defaultAddress.city}
+          </p>
+        </section>
+      )
+    }
+
+    <div class="mt-6 flex flex-col gap-2.5">
+      <a
+        href="/shop"
+        class="tap-target flex h-[54px] items-center justify-center rounded-full bg-ink text-base font-extrabold text-surface"
+      >
+        {AUTH.keepShopping}
+      </a>
+      <form method="POST" action="/account/sign-out">
+        <button
+          type="submit"
+          class="tap-target flex h-[54px] w-full items-center justify-center rounded-full border-[1.5px] border-line-strong text-[15px] font-bold text-ink"
+        >
+          {AUTH.signOut}
+        </button>
+      </form>
+    </div>
+  </div>
+</BaseLayout>

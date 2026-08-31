@@ -51,4 +51,36 @@ export interface OrderRow {
   tiktok_video_ref: string | null;
   notes: string;
   created_at: string;
+  customer_id: string | null;
+}
+
+export interface CustomerRow {
+  id: string;
+  phone: string;
+  name: string;
+  saved_size: string | null;
+  created_at: string;
+  last_seen_at: string;
+}
+
+export interface CustomerAddressRow {
+  id: string;
+  customer_id: string;
+  label: string;
+  city: string;
+  area: string;
+  address_line: string;
+  is_default: number;
+  created_at: string;
+}
+
+export interface ReviewRow {
+  id: string;
+  product_id: string;
+  customer_id: string | null;
+  order_id: string | null;
+  author_name: string;
+  rating: number;
+  body: string;
+  created_at: string;
 }

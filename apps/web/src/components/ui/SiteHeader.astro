@@ -2,94 +2,143 @@
 import { PRIMARY_NAV, SITE } from '../../lib/site.js';
 import { TRUST } from '../../content/microcopy.js';
 
+interface Props {
+  /** Prefills the search box when the page is a search result. */
+  query?: string;
+}
+
+const { query = '' } = Astro.props;
 const currentPath = Astro.url.pathname;
 
 /*
- * No cart cookie is read here on purpose. This header appears on pages that are
- * cached at Cloudflare's edge, so anything person-specific baked into it would
- * be served to the next visitor. The badge is filled in on the client by
- * `cart-badge.ts` and starts hidden.
+ * No cart or wishlist cookie is read here on purpose. This header appears on
+ * pages cached at Cloudflare's edge, so anything person-specific baked into it
+ * would be served to the next visitor. Both counts are filled in on the client
+ * by `header-counts.ts` and start hidden.
  */
 function isActive(href: string): boolean {
   return currentPath === href || currentPath.startsWith(`${href}/`);
 }
 ---
 
-<header class="sticky top-0 z-40 border-b border-neutral-200 bg-white">
-  <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
-    {/*
-      `whitespace-nowrap` matters: at 390px the name otherwise wraps to two
-      lines and doubles the height of a sticky header, on the exact device
-      most of this shop's customers use.
-    */}
-    <a
-      href="/"
-      class="whitespace-nowrap text-base font-bold tracking-tight text-brand-700 sm:text-lg"
-    >
-      {SITE.name}
+{/* The promise that decides whether a first-time COD buyer stays at all. */}
+<div
+  class="bg-ink px-4 py-2 text-center text-xs font-medium text-[#f2e7d8] sm:flex sm:justify-center sm:gap-8"
+>
+  <span class="inline-flex items-center gap-2">
+    <span class="inline-block h-1.5 w-1.5 rounded-full bg-whatsapp"></span>
+    {TRUST.cod}
+  </span>
+  <span class="hidden opacity-60 sm:inline">{TRUST.returns}</span>
+  <span class="hidden opacity-60 sm:inline">{TRUST.deliveryTime}</span>
+</div>
+
+<header
+  class="sticky top-0 z-40 border-b border-line bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/90"
+>
+  <div class="mx-auto flex max-w-[1440px] flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3 sm:px-6">
+    <a href="/" class="flex shrink-0 items-baseline gap-2">
+      <span class="display text-2xl text-ink sm:text-[28px]">Hamza</span>
+      <span
+        class="text-[10px] font-extrabold uppercase text-brand-600 sm:text-[11px]"
+        style="letter-spacing: 0.18em;">Footwear</span
+      >
     </a>
 
-    <div class="flex items-center gap-1">
-      <nav aria-label="Categories">
-        <ul class="flex items-center gap-0.5">
-          {
-            PRIMARY_NAV.map((link) => (
-              <li>
-                <a
-                  href={link.href}
-                  aria-current={isActive(link.href) ? 'page' : undefined}
-                  class:list={[
-                    'tap-target flex items-center rounded px-2.5 text-sm font-medium sm:px-3',
-                    isActive(link.href)
-                      ? 'bg-brand-50 text-brand-700'
-                      : 'text-ink-muted hover:text-ink',
-                  ]}
-                >
-                  {link.label}
-                </a>
-              </li>
-            ))
-          }
-        </ul>
-      </nav>
+    {/*
+      Hidden on phones. It cost a second full-width row — about 90px of a 780px
+      screen — to duplicate navigation the bottom tab bar and the home page's
+      category tiles already provide. The design's own mobile header carries no
+      category nav for the same reason.
+    */}
+    <nav aria-label="Categories" class="hidden sm:block">
+      <ul class="flex items-center gap-1 overflow-x-auto">
+        {
+          PRIMARY_NAV.map((link) => (
+            <li>
+              <a
+                href={link.href}
+                aria-current={isActive(link.href) ? 'page' : undefined}
+                class:list={[
+                  'tap-target flex items-center whitespace-nowrap rounded-full px-3.5 text-[15px] font-semibold',
+                  isActive(link.href) ? 'bg-surface-fill text-ink' : 'text-ink hover:bg-surface-fill',
+                ]}
+              >
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+        <li>
+          <a
+            href="/shop?sale=1"
+            class="tap-target flex items-center whitespace-nowrap rounded-full px-3.5 text-[15px] font-semibold text-brand-600 hover:bg-brand-50"
+          >
+            Sale
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="ml-auto flex items-center gap-2">
+      {/* A real GET form: search works with no JavaScript at all. */}
+      <form action="/search" method="GET" class="hidden items-center md:flex">
+        <label for="site-search" class="sr-only">Search products</label>
+        <div class="flex items-center gap-2 rounded-full bg-surface-fill px-4 py-2.5">
+          <span aria-hidden="true" class="text-sm text-ink-soft">⌕</span>
+          <input
+            id="site-search"
+            name="q"
+            type="search"
+            value={query}
+            placeholder="Khussa, sneaker, size 8…"
+            class="w-44 border-none bg-transparent text-sm text-ink outline-none placeholder:text-ink-soft lg:w-52"
+          />
+        </div>
+      </form>
+
+      <a
+        href="/search"
+        aria-label="Search"
+        class="tap-target flex items-center justify-center rounded-full border border-line-strong text-ink-soft hover:bg-surface-fill md:hidden"
+      >
+        <span aria-hidden="true" class="text-base">⌕</span>
+      </a>
+
+      <a
+        href="/saved"
+        data-saved-link
+        aria-label="Saved items"
+        class="tap-target relative flex items-center justify-center rounded-full border border-line-strong text-ink-soft hover:bg-surface-fill"
+      >
+        <span aria-hidden="true" class="text-base">♥</span>
+        <span
+          data-saved-badge
+          hidden
+          class="absolute -right-1 -top-1 min-w-5 rounded-full bg-brand-600 px-1 text-center text-[11px] font-extrabold leading-5 text-white"
+        ></span>
+      </a>
 
       <a
         href="/cart"
         data-cart-link
         aria-label="Cart"
-        class="tap-target relative flex items-center justify-center rounded px-2 text-ink-muted hover:text-ink"
+        class="tap-target relative flex items-center justify-center gap-2 rounded-full bg-ink px-4 text-sm font-bold text-surface hover:bg-[#2c2320]"
       >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.8"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-          class="h-6 w-6"
-        >
-          <path d="M6 6h15l-1.5 9h-12z" />
-          <circle cx="9" cy="20" r="1.4" />
-          <circle cx="18" cy="20" r="1.4" />
-          <path d="M6 6 5 3H3" />
-        </svg>
+        <span class="hidden sm:inline">Cart</span>
+        <span aria-hidden="true" class="sm:hidden">⌂</span>
         <span
           data-cart-badge
           hidden
-          class="absolute right-0 top-0.5 min-w-5 rounded-full bg-brand-600 px-1 text-center text-xs font-bold leading-5 text-white"
+          class="min-w-5 rounded-full bg-brand-600 px-1 text-center text-xs font-extrabold leading-5 text-white"
         ></span>
       </a>
     </div>
   </div>
-
-  <p class="bg-brand-700 px-4 py-1.5 text-center text-xs font-medium text-white">
-    {TRUST.cod}
-  </p>
 </header>
 
 <script>
-  import { initCartBadge } from '../../scripts/cart-badge.js';
+  import { initHeaderCounts } from '../../scripts/header-counts.js';
 
-  initCartBadge();
+  initHeaderCounts();
 </script>

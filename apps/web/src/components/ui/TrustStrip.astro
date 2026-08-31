@@ -2,30 +2,30 @@
 import { TRUST } from '../../content/microcopy.js';
 
 /**
- * The reassurances that decide whether a first-time visitor from TikTok orders
- * at all. Roman Urdu, because this is the trust moment.
+ * The reassurances that decide whether a first-time visitor orders at all.
  *
- * Cash on Delivery is deliberately absent: it already sits in the sticky header
- * banner on every page. Repeating it here word for word cost a third of this
- * strip and taught the eye to skip the whole row. Sizing takes its place —
- * the other thing a first-time buyer hesitates over.
+ * Below the product grid on purpose: a visitor arriving from a TikTok video
+ * wants to see shoes, not read three paragraphs first — and the Cash on
+ * Delivery promise is already in the strip above the header on every page.
  */
 const POINTS = [
-  { title: 'Delivery', body: TRUST.deliveryTime },
-  { title: 'Exchange', body: TRUST.returns },
-  { title: 'Sizing', body: TRUST.sizeHelp },
+  { glyph: '₨', title: 'Cash on Delivery', body: TRUST.cod },
+  { glyph: '⤳', title: '2–4 din delivery', body: TRUST.deliveryTime },
+  { glyph: '⇄', title: '7-day exchange', body: TRUST.returns },
+  { glyph: '✓', title: 'Asli tasveerein', body: 'Jo tasveer mein hai wohi milega.' },
 ] as const;
 ---
 
-<section aria-label="Why order from us" class="mx-auto max-w-5xl px-4 pt-8">
-  <ul class="grid gap-3 sm:grid-cols-3">
+<section aria-label="Why order from us" class="px-4 py-12 sm:px-6">
+  <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
     {
       POINTS.map((point) => (
-        <li class="rounded-lg bg-brand-50 px-4 py-3">
-          <h3 class="text-xs font-semibold uppercase tracking-wide text-brand-700">
-            {point.title}
-          </h3>
-          <p class="mt-1 text-sm text-ink">{point.body}</p>
+        <li class="rounded-xl border border-line p-5">
+          <p aria-hidden="true" class="text-[22px] leading-none text-brand-600">
+            {point.glyph}
+          </p>
+          <p class="mt-2.5 text-[15px] font-extrabold">{point.title}</p>
+          <p class="mt-1 text-[13px] leading-relaxed text-ink-muted">{point.body}</p>
         </li>
       ))
     }

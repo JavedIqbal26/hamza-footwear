@@ -1,12 +1,13 @@
 ---
-import { CATEGORY_LABELS, categoryPath, isCategory, readVideoRef } from '@hamza/shared';
+import { CATEGORY_LABELS, categoryPath, isCategory } from '@hamza/shared';
 
 import BaseLayout from '../layouts/BaseLayout.astro';
+import CatalogueView from '../components/ui/CatalogueView.astro';
 import NotFound from '../components/ui/NotFound.astro';
-import Pagination from '../components/ui/Pagination.astro';
-import ProductGrid from '../components/ui/ProductGrid.astro';
-import { listCatalogue } from '../lib/catalogue.js';
+import { browseCatalogue, parseCatalogueQuery } from '../lib/catalogue.js';
 import { CATALOGUE_CACHE_CONTROL, NO_STORE } from '../lib/cache.js';
+import { getShopWhatsApp } from '../lib/runtime.js';
+import { readWishlist } from '../lib/wishlist/session.js';
 
 export const prerender = false;
 
@@ -18,15 +19,10 @@ export const prerender = false;
 const raw = Astro.params.category;
 const category = raw && isCategory(raw) ? raw : null;
 
-const page = Number.parseInt(Astro.url.searchParams.get('page') ?? '1', 10);
-const result = category
-  ? await listCatalogue(Astro.locals, {
-      category,
-      page: Number.isSafeInteger(page) ? page : 1,
-    })
-  : null;
-
-const videoRef = readVideoRef(Astro.url.searchParams);
+const query = { ...parseCatalogueQuery(Astro.url.searchParams), category: category ?? undefined };
+const view = category ? await browseCatalogue(Astro.locals, query) : null;
+const saved = readWishlist(Astro.cookies);
+const shopPhone = getShopWhatsApp(Astro.locals);
 
 if (category === null) {
   Astro.response.status = 404;
@@ -39,43 +35,23 @@ const label = category ? CATEGORY_LABELS[category] : '';
 ---
 
 {
-  category === null || result === null ? (
-    <BaseLayout title="Page not found" noindex>
+  category === null || view === null ? (
+    <BaseLayout title="Page not found" noindex shopPhone={shopPhone}>
       <NotFound />
     </BaseLayout>
   ) : (
     <BaseLayout
       title={`${label}'s Shoes`}
       description={`${label}'s shoes delivered across Pakistan. Cash on Delivery available.`}
+      shopPhone={shopPhone}
     >
-      <div class="mx-auto max-w-5xl px-4 pt-8">
-        <nav aria-label="Breadcrumb" class="text-sm text-ink-muted">
-          <a href="/" class="hover:text-ink">
-            Home
-          </a>
-          <span aria-hidden="true" class="px-1">
-            /
-          </span>
-          <span aria-current="page" class="text-ink">
-            {label}
-          </span>
-        </nav>
-
-        <h1 class="mt-2 text-2xl font-bold tracking-tight text-ink">{label}</h1>
-        <p class="mt-1 text-sm text-ink-muted">
-          {result.total} {result.total === 1 ? 'style' : 'styles'} available
-        </p>
-
-        <div class="mt-6">
-          <ProductGrid products={result.products} videoRef={videoRef} />
-        </div>
-
-        <Pagination
-          page={result.page}
-          pageCount={result.pageCount}
-          basePath={categoryPath(category)}
-        />
-      </div>
+      <CatalogueView
+        heading={label}
+        basePath={categoryPath(category)}
+        query={query}
+        view={view}
+        saved={saved}
+      />
     </BaseLayout>
   )
 }

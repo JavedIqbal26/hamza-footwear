@@ -1,0 +1,58 @@
+---
+import { readVideoRef, type CatalogueQuery } from '@hamza/shared';
+
+import FilterChips from './FilterChips.astro';
+import Pagination from './Pagination.astro';
+import ProductGrid from './ProductGrid.astro';
+import type { CatalogueView as View } from '../../lib/catalogue.js';
+
+interface Props {
+  heading: string;
+  basePath: string;
+  query: CatalogueQuery;
+  view: View;
+  saved: readonly string[];
+  emptyMessage?: string;
+}
+
+const { heading, basePath, query, view, saved, emptyMessage } = Astro.props;
+const videoRef = readVideoRef(Astro.url.searchParams);
+
+/*
+ * Shared by /shop, the category pages and /search — the three views differ only
+ * in their heading and base path, so the filtering, grid and paging live once.
+ */
+const currentPath = `${Astro.url.pathname}${Astro.url.search}`;
+---
+
+<div class="mx-auto max-w-[1440px] px-4 pt-8 sm:px-6">
+  <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+    <h1 class="display text-[30px] sm:text-[38px]">{heading}</h1>
+    <p class="text-sm text-ink-muted">
+      {view.total}
+      {view.total === 1 ? 'style' : 'styles'}
+    </p>
+  </div>
+
+  <div class="mt-6">
+    <FilterChips
+      basePath={basePath}
+      query={query}
+      availableSizes={view.availableSizes}
+      total={view.total}
+    />
+  </div>
+
+  <div class="mt-7">
+    <ProductGrid
+      products={view.products}
+      ratings={view.ratings}
+      saved={saved}
+      videoRef={videoRef}
+      returnTo={currentPath}
+      emptyMessage={emptyMessage}
+    />
+  </div>
+
+  <Pagination page={view.page} pageCount={view.pageCount} basePath={basePath} query={query} />
+</div>

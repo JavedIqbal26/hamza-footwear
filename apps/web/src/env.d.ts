@@ -16,6 +16,12 @@ interface CloudflareEnv {
   readonly RESEND_API_KEY?: string;
   readonly ORDER_EMAIL_FROM?: string;
   readonly ORDER_EMAIL_TO?: string;
+
+  /* One-time-code delivery. Absent means the dev log sender, which refuses to
+     run in production — see lib/auth/sender.ts for why this cannot be free. */
+  readonly OTP_GATEWAY_URL?: string;
+  readonly OTP_GATEWAY_KEY?: string;
+  readonly OTP_MESSAGE_TEMPLATE?: string;
 }
 
 type CloudflareRuntime = import('@astrojs/cloudflare').Runtime<CloudflareEnv>;

@@ -1,0 +1,37 @@
+---
+interface Props {
+  slug: string;
+  saved: boolean;
+  returnTo: string;
+  /** The floating heart on a product image, or a full-width row action. */
+  variant?: 'overlay' | 'inline';
+}
+
+const { slug, saved, returnTo, variant = 'overlay' } = Astro.props;
+
+/*
+ * A real form posting to a real endpoint, so saving works with JavaScript
+ * disabled. The heart is a submit button rather than a link because it changes
+ * state on the server — a GET that mutates would be re-triggered by every
+ * prefetch and back-navigation.
+ */
+---
+
+<form method="POST" action="/saved/toggle" class={variant === 'overlay' ? 'contents' : ''}>
+  <input type="hidden" name="slug" value={slug} />
+  <input type="hidden" name="return_to" value={returnTo} />
+  <button
+    type="submit"
+    aria-pressed={saved ? 'true' : 'false'}
+    aria-label={saved ? 'Remove from saved' : 'Save for later'}
+    class:list={[
+      variant === 'overlay'
+        ? 'absolute right-2.5 top-2.5 flex h-9 w-9 items-center justify-center rounded-full bg-surface/90 backdrop-blur'
+        : 'tap-target flex w-full items-center justify-center gap-2 rounded-full border border-line-strong px-4 text-sm font-bold',
+      saved ? 'text-brand-600' : 'text-ink-soft hover:text-brand-600',
+    ]}
+  >
+    <span aria-hidden="true" class="text-base leading-none">{saved ? '♥' : '♡'}</span>
+    {variant === 'inline' && <span>{saved ? 'Saved' : 'Save'}</span>}
+  </button>
+</form>

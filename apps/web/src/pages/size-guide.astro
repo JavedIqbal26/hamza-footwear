@@ -31,13 +31,13 @@ const STEPS = [
   description="Measure your foot in centimetres and find your UK shoe size. All Hamza Footwear sizes are UK."
 >
   <div class="mx-auto max-w-3xl px-4 pt-8">
-    <h1 class="text-2xl font-bold tracking-tight text-ink">Size Guide</h1>
+    <h1 class="display text-[30px] sm:text-[38px]">Size Guide</h1>
     <p class="mt-2 text-sm text-ink-muted">
       All our sizes are UK. {TRUST.sizeHelp}
     </p>
 
     <section class="mt-8">
-      <h2 class="text-lg font-semibold text-ink">Measure your foot</h2>
+      <h2 class="display text-[22px]">Measure your foot</h2>
       <ol class="mt-3 space-y-3">
         {
           STEPS.map((step, index) => (
@@ -59,7 +59,7 @@ const STEPS = [
     </section>
 
     <section class="mt-10">
-      <h2 class="text-lg font-semibold text-ink">UK size chart</h2>
+      <h2 class="display text-[22px]">UK size chart</h2>
       <p class="mt-1 text-sm text-ink-muted">
         If your measurement falls between two sizes, choose the larger one.
       </p>
@@ -68,7 +68,7 @@ const STEPS = [
       </div>
     </section>
 
-    <p class="mt-8 rounded-lg bg-brand-50 px-4 py-3 text-sm text-ink">
+    <p class="mt-8 rounded-xl bg-brand-50 px-4 py-3 text-sm text-ink">
       {TRUST.returns}
     </p>
   </div>

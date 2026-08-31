@@ -7,6 +7,8 @@ import { clearCart, readCart } from '../../lib/cart/session.js';
 import { setCheckoutError } from '../../lib/orders/error-cookie.js';
 import { createOrder, UnknownCityError } from '../../lib/orders/create.js';
 import { notifyNewOrder } from '../../lib/notifications/notify.js';
+import { currentCustomer } from '../../lib/auth/session.js';
+import { rememberAddress } from '../../lib/orders/remember-address.js';
 
 export const prerender = false;
 
@@ -76,7 +78,16 @@ export const POST: APIRoute = async ({ request, cookies, locals, redirect, url }
   }
 
   try {
-    const order = await createOrder(locals, parsed.data as CheckoutInput, priced);
+    const customer = await currentCustomer(locals, cookies);
+    const order = await createOrder(
+      locals,
+      parsed.data as CheckoutInput,
+      priced,
+      customer?.id ?? null,
+    );
+
+    /* Saving the address is what makes the next checkout two taps. */
+    if (customer) await rememberAddress(locals, customer.id, parsed.data as CheckoutInput);
 
     /*
      * The order is committed before anything else happens. Notifications are

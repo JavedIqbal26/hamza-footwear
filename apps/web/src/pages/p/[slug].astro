@@ -1,4 +1,5 @@
 ---
+import { createReviewRepository } from '@hamza/db';
 import { imageUrl, isUkSize, primaryImage, productPath, readVideoRef } from '@hamza/shared';
 
 import BaseLayout from '../../layouts/BaseLayout.astro';
@@ -6,9 +7,12 @@ import NotFound from '../../components/ui/NotFound.astro';
 import ProductDetail from '../../components/ui/ProductDetail.astro';
 import ProductGrid from '../../components/ui/ProductGrid.astro';
 import ProductJsonLd from '../../components/ui/ProductJsonLd.astro';
-import { findProduct, listRelatedProducts } from '../../lib/catalogue.js';
+import ReviewSection from '../../components/ui/ReviewSection.astro';
+import { currentCustomer } from '../../lib/auth/session.js';
+import { findProduct, listRelatedProducts, ratingsFor } from '../../lib/catalogue.js';
 import { CATALOGUE_CACHE_CONTROL, NO_STORE } from '../../lib/cache.js';
-import { getShopWhatsApp } from '../../lib/runtime.js';
+import { getDatabase, getShopWhatsApp } from '../../lib/runtime.js';
+import { readWishlist } from '../../lib/wishlist/session.js';
 import { SITE } from '../../lib/site.js';
 
 export const prerender = false;
@@ -18,18 +22,54 @@ const product = slug ? await findProduct(Astro.locals, slug) : null;
 
 const videoRef = readVideoRef(Astro.url.searchParams);
 const shopPhone = getShopWhatsApp(Astro.locals);
+const saved = readWishlist(Astro.cookies);
 
 /* Deep links from TikTok can name a size: /p/derby?size=8 preselects it. */
 const requestedSize = Astro.url.searchParams.get('size');
-const selectedSize = requestedSize && isUkSize(requestedSize) ? requestedSize : null;
 
 /* Set by /cart/add when a no-JS submit arrived without a size. */
 const showSizeError = Astro.url.searchParams.get('error') === 'size';
 
-const related = product ? await listRelatedProducts(Astro.locals, product) : [];
+const customer = await currentCustomer(Astro.locals, Astro.cookies);
+
+let rating = undefined;
+let reviews: Awaited<ReturnType<ReturnType<typeof createReviewRepository>['listForProduct']>> = [];
+let canReview = false;
+let related: Awaited<ReturnType<typeof listRelatedProducts>> = [];
+let relatedRatings = new Map();
+
+if (product) {
+  const db = getDatabase(Astro.locals);
+  const reviewRepo = createReviewRepository(db);
+
+  [rating, reviews, related] = await Promise.all([
+    reviewRepo.summaryFor(product.id),
+    reviewRepo.listForProduct(product.id),
+    listRelatedProducts(Astro.locals, product),
+  ]);
+
+  relatedRatings = new Map(await ratingsFor(Astro.locals, related));
+
+  if (customer) {
+    const orderId = await reviewRepo.findReviewableOrder(customer.id, product.id);
+    canReview = orderId !== null && !(await reviewRepo.hasReviewed(customer.id, product.id));
+  }
+}
+
+/*
+ * A signed-in customer's saved size prefills the picker — the single most
+ * useful thing an account does on this page.
+ */
+const selectedSize =
+  requestedSize && isUkSize(requestedSize)
+    ? requestedSize
+    : (customer?.saved_size ?? null);
 
 if (product === null) {
   Astro.response.status = 404;
+  Astro.response.headers.set('Cache-Control', NO_STORE);
+} else if (customer) {
+  /* Personalised by the saved size and the review form — must not be shared. */
   Astro.response.headers.set('Cache-Control', NO_STORE);
 } else {
   Astro.response.headers.set('Cache-Control', CATALOGUE_CACHE_CONTROL);
@@ -40,11 +80,12 @@ const productUrl = product
   ? new URL(productPath(product.slug, videoRef), SITE.url).href
   : '';
 const cover = product ? primaryImage(product) : null;
+const currentPath = `${Astro.url.pathname}${Astro.url.search}`;
 ---
 
 {
   product === null ? (
-    <BaseLayout title="Product not found" noindex>
+    <BaseLayout title="Product not found" noindex shopPhone={shopPhone}>
       <NotFound message="This product is no longer available. Have a look at what else is in stock." />
     </BaseLayout>
   ) : (
@@ -52,21 +93,39 @@ const cover = product ? primaryImage(product) : null;
       title={product.name}
       description={product.description}
       image={cover ? imageUrl(cover, 'full') : undefined}
+      shopPhone={shopPhone}
+      hideTabBar
     >
-      <ProductJsonLd product={product} url={productUrl} />
+      <ProductJsonLd product={product} url={productUrl} rating={rating} />
       <ProductDetail
         product={product}
         productUrl={productUrl}
         shopPhone={shopPhone}
+        rating={rating}
+        saved={saved.includes(product.slug)}
         selectedSize={selectedSize}
         showSizeError={showSizeError}
       />
 
+      <ReviewSection
+        rating={rating!}
+        reviews={reviews}
+        canReview={canReview}
+        productId={product.id}
+        returnTo={currentPath}
+      />
+
       {related.length > 0 && (
-        <section class="mx-auto mt-14 max-w-5xl px-4">
-          <h2 class="text-lg font-semibold text-ink">More like this</h2>
-          <div class="mt-4">
-            <ProductGrid products={related} videoRef={videoRef} />
+        <section class="mx-auto mt-14 max-w-5xl px-4 sm:px-6">
+          <h2 class="display text-[26px] sm:text-[30px]">More like this</h2>
+          <div class="mt-5">
+            <ProductGrid
+              products={related}
+              ratings={relatedRatings}
+              saved={saved}
+              videoRef={videoRef}
+              returnTo={currentPath}
+            />
           </div>
         </section>
       )}

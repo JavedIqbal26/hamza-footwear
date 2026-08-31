@@ -1,0 +1,36 @@
+---
+import { formatRating, hasRating, starStates, type RatingSummary } from '@hamza/shared';
+
+interface Props {
+  rating: RatingSummary;
+  /** Cards show the number only; the product page shows the star row too. */
+  showStars?: boolean;
+  class?: string;
+}
+
+const { rating, showStars = false, class: className = '' } = Astro.props;
+const states = showStars ? starStates(rating) : [];
+---
+
+{
+  hasRating(rating) && (
+    <span
+      class:list={['inline-flex items-center gap-1.5 text-[13px] text-ink-muted', className]}
+    >
+      {showStars && (
+        <span
+          class="inline-flex gap-0.5 text-brand-600"
+          role="img"
+          aria-label={`${formatRating(rating)} out of 5`}
+        >
+          {states.map((state) => (
+            <span aria-hidden="true">{state === 'full' ? '★' : state === 'half' ? '⯪' : '☆'}</span>
+          ))}
+        </span>
+      )}
+      <span class="font-bold text-ink">{formatRating(rating)}</span>
+      {!showStars && <span aria-hidden="true" class="text-brand-600">★</span>}
+      <span>({rating.count})</span>
+    </span>
+  )
+}

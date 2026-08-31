@@ -54,6 +54,7 @@ export async function createOrder(
   locals: App.Locals,
   input: CheckoutInput,
   priced: PricedCart,
+  customerId: string | null = null,
 ): Promise<Order> {
   if (priced.lines.length === 0) throw new EmptyCartError();
 
@@ -90,6 +91,7 @@ export async function createOrder(
     total_pkr: totalPkr,
     payment_method: input.payment_method,
     payment_proof_key: null,
+    customer_id: customerId,
     tiktok_video_ref: input.tiktok_video_ref,
     notes: buildNotes(input),
   };

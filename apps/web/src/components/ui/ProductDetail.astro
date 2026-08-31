@@ -1,10 +1,13 @@
 ---
 import {
+  buildWhatsAppOrderLink,
   CATEGORY_LABELS,
   categoryPath,
   effectivePricePkr,
   isOrderable,
+  NO_RATING,
   type Product,
+  type RatingSummary,
   type UkSize,
 } from '@hamza/shared';
 
@@ -12,8 +15,8 @@ import AddToCartForm from '../interactive/AddToCartForm.astro';
 import ProductGallery from '../interactive/ProductGallery.astro';
 import Price from './Price.astro';
 import ProductTrustList from './ProductTrustList.astro';
-import StockBadge from './StockBadge.astro';
-import WhatsAppButton from './WhatsAppButton.astro';
+import SaveButton from './SaveButton.astro';
+import Stars from './Stars.astro';
 import { TRUST } from '../../content/microcopy.js';
 
 interface Props {
@@ -21,6 +24,8 @@ interface Props {
   /** Canonical URL of this product, already carrying `?v=` when present. */
   productUrl: string;
   shopPhone: string;
+  rating?: RatingSummary;
+  saved?: boolean;
   selectedSize?: UkSize | null;
   showSizeError?: boolean;
 }
@@ -29,6 +34,8 @@ const {
   product,
   productUrl,
   shopPhone,
+  rating = NO_RATING,
+  saved = false,
   selectedSize = null,
   showSizeError = false,
 } = Astro.props;
@@ -36,10 +43,24 @@ const {
 const price = effectivePricePkr(product);
 const orderable = isOrderable(product.stock_status);
 const hasSizes = product.sizes_available.length > 0;
+
+const stockLine =
+  product.stock_status === 'low'
+    ? { text: TRUST.lowStock, tone: 'text-brand-600' }
+    : product.stock_status === 'out'
+      ? { text: TRUST.outOfStock, tone: 'text-ink-soft' }
+      : { text: TRUST.dispatchToday, tone: 'text-stock' };
+
+const whatsappHref = buildWhatsAppOrderLink({
+  shopPhone,
+  productName: product.name,
+  productUrl,
+  pricePkr: price,
+});
 ---
 
-<div class="mx-auto max-w-5xl px-4 pt-6">
-  <nav aria-label="Breadcrumb" class="text-sm text-ink-muted">
+<div class="mx-auto max-w-5xl px-4 pt-4 sm:px-6 sm:pt-6">
+  <nav aria-label="Breadcrumb" class="pb-3 text-sm text-ink-muted">
     <a href="/" class="hover:text-ink">Home</a>
     <span aria-hidden="true" class="px-1">/</span>
     <a href={categoryPath(product.category)} class="hover:text-ink">
@@ -47,20 +68,29 @@ const hasSizes = product.sizes_available.length > 0;
     </a>
   </nav>
 
-  <div class="mt-4 grid gap-8 lg:grid-cols-2">
-    <ProductGallery images={product.images} productName={product.name} />
+  <div class="grid gap-8 lg:grid-cols-2">
+    <div class="relative">
+      <ProductGallery images={product.images} productName={product.name} />
+      <div class="absolute right-3 top-3">
+        <SaveButton slug={product.slug} saved={saved} returnTo={`/p/${product.slug}`} />
+      </div>
+    </div>
 
-    <div class="space-y-6">
-      <div class="space-y-2">
-        <h1 class="text-xl font-bold tracking-tight text-ink sm:text-2xl">
-          {product.name}
-        </h1>
-        <Price
-          price_pkr={product.price_pkr}
-          sale_price_pkr={product.sale_price_pkr}
-          size="lg"
-        />
-        <StockBadge status={product.stock_status} />
+    <div class="flex flex-col gap-5">
+      <div class="flex flex-col gap-1.5">
+        <p class="eyebrow">{CATEGORY_LABELS[product.category]}</p>
+        <h1 class="display text-[30px] sm:text-[34px]">{product.name}</h1>
+
+        <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <Price
+            price_pkr={product.price_pkr}
+            sale_price_pkr={product.sale_price_pkr}
+            size="lg"
+          />
+          <Stars rating={rating} />
+        </div>
+
+        <p class:list={['text-[13.5px] font-bold', stockLine.tone]}>{stockLine.text}</p>
       </div>
 
       {
@@ -68,37 +98,54 @@ const hasSizes = product.sizes_available.length > 0;
           <AddToCartForm
             slug={product.slug}
             sizes={product.sizes_available}
+            pricePkr={price}
             selectedSize={selectedSize}
             showSizeError={showSizeError}
-          />
+          >
+            {/*
+              The WhatsApp path sits inside the same sticky bar, never behind
+              the cart. Plenty of customers will never fill in a form, and this
+              link works on arrival with no JavaScript at all.
+            */}
+            <a
+              slot="whatsapp"
+              id="whatsapp-order"
+              href={whatsappHref}
+              data-shop-phone={shopPhone}
+              data-product-name={product.name}
+              data-product-url={productUrl}
+              data-price-pkr={String(price)}
+              rel="noopener"
+              aria-label={TRUST.whatsappPrompt}
+              class="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-whatsapp text-[19px] font-extrabold text-whatsapp-ink"
+            >
+              <span aria-hidden="true">✆</span>
+            </a>
+          </AddToCartForm>
         ) : (
-          <p class="rounded-lg bg-neutral-100 px-4 py-3 text-center text-sm font-medium text-ink">
-            {TRUST.outOfStock}
-          </p>
+          <div class="flex flex-col gap-3">
+            <p class="rounded-xl bg-surface-fill px-4 py-3.5 text-center text-sm font-bold text-ink">
+              {TRUST.outOfStock}
+            </p>
+            <a
+              href={whatsappHref}
+              rel="noopener"
+              class="tap-target flex items-center justify-center gap-2 rounded-full bg-whatsapp px-5 text-base font-extrabold text-whatsapp-ink"
+            >
+              <span aria-hidden="true">✆</span>
+              {TRUST.whatsappPrompt}
+            </a>
+          </div>
         )
       }
-
-      {/*
-        The WhatsApp path stays available alongside the cart, never behind it.
-        Plenty of customers will never fill in a form, and this one works on
-        arrival with no JavaScript at all.
-      */}
-      <div class="border-t border-neutral-200 pt-5">
-        <WhatsAppButton
-          shopPhone={shopPhone}
-          productName={product.name}
-          productUrl={productUrl}
-          pricePkr={price}
-        />
-      </div>
 
       <ProductTrustList />
 
       {
         product.description && (
           <div>
-            <h2 class="text-sm font-semibold text-ink">Details</h2>
-            <p class="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink-muted">
+            <h2 class="text-sm font-extrabold">Details</h2>
+            <p class="mt-1.5 whitespace-pre-line text-[13.5px] leading-relaxed text-ink-body">
               {product.description}
             </p>
           </div>

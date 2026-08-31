@@ -71,6 +71,7 @@ export function toOrder(row: OrderRow): Order {
     tiktok_video_ref: row.tiktok_video_ref,
     notes: row.notes,
     created_at: row.created_at,
+    customer_id: row.customer_id,
   };
 }
 

@@ -22,10 +22,13 @@ export * from './money/format.js';
 export * from './money/pricing.js';
 
 export * from './types/cart.js';
+export * from './types/catalogue-query.js';
+export * from './types/customer.js';
 export * from './types/city.js';
 export * from './types/image.js';
 export * from './types/order.js';
 export * from './types/product.js';
+export * from './types/review.js';
 
 export * from './validation/phone.js';
 export * from './validation/slug.js';

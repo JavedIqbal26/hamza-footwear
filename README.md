@@ -40,8 +40,9 @@ or deployed.
 
 ```
 apps/
-  web/      Astro storefront (Cloudflare Pages) — the Phase 1 deliverable
-  api/      Worker for admin/write endpoints — scaffolded, Phase 2
+  web/      Astro storefront (Cloudflare Pages) — the public shop
+  admin/    Vite React SPA at /admin, behind Cloudflare Access
+  api/      Worker for admin endpoints
 packages/
   shared/   Types, constants, money and phone helpers. Zero runtime deps.
   db/       D1 repositories and row mappers. The only place SQL is written.
@@ -65,56 +66,6 @@ Run from the repo root:
 | `npm run db:migrate:remote` | Apply migrations to the live D1 database |
 | `npm run db:seed:remote` | Seed the live D1 database |
 
-## First deployment
-
-The app is written and builds; these are the account-level steps that have not
-been run, because they create billable-tier resources on a real Cloudflare
-account.
-
-1. **Create the database and bucket**
-
-   ```bash
-   npx wrangler d1 create hamza-footwear-db
-   npx wrangler r2 bucket create hamza-footwear-images
-   ```
-
-2. **Paste the database id** returned by the first command into
-   `database_id` in both `apps/web/wrangler.toml` and `apps/api/wrangler.toml`.
-   They are currently `REPLACE_WITH_DATABASE_ID`.
-
-3. **Set up the live schema**
-
-   ```bash
-   npm run db:migrate:remote
-   npm run db:seed:remote
-   ```
-
-4. **Set the shop's WhatsApp number.** `SHOP_WHATSAPP` in
-   `apps/web/wrangler.toml` is a placeholder (`03001234567`). Set the real
-   number there, or override it per-environment in the Pages dashboard.
-
-5. **Create the Pages project** and point it at `apps/web`, build command
-   `npm run build:web`, output directory `apps/web/dist`. Add the `DB` and
-   `IMAGES` bindings in the Pages project settings.
-
-6. **Add the custom domain** `hamzafootwear.com` in the Pages project. SSL is
-   issued automatically.
-
-7. **Turn on Web Analytics** (cookieless) for the domain in the Cloudflare
-   dashboard.
-
-## Verifying the performance budget
-
-The client JavaScript budget is checked by the build itself — the storefront
-currently ships **1.02 kB gzipped** against a 30 kB ceiling. The remaining
-Definition-of-Done items need a deployed URL and a real device:
-
-- Lighthouse mobile ≥ 95 on a throttled 4G profile
-- Loads and is fully usable inside the TikTok in-app browser
-
-Test the second one by putting the live link in a TikTok bio and opening it from
-the app, not by resizing Chrome. Uploads and redirects behave differently there.
-
 ## Phase status
 
 - **Phase 1 — storefront.** Built. Home, `/shop`, category pages, product pages,
@@ -123,26 +74,119 @@ the app, not by resizing Chrome. Uploads and redirects behave differently there.
 - **Phase 2 — admin + orders.** Built. Cart, checkout with COD and manual
   wallet, order creation, Telegram/Resend notifications, admin API behind
   Cloudflare Access, admin SPA with product CRUD and photo upload.
-- **Phase 3.** Not started, and not to be started without being asked.
+- **Phase 3 — redesign, accounts, search, reviews.** Built. See CLAUDE.md.
 
-## Deploying admin (Phase 2)
+## Before you deploy
 
-In addition to the Phase 1 steps:
+Work through these in order. Everything up to step 4 is required; steps 5–7 are
+optional features you can switch on later.
 
-1. **Deploy the API Worker** — `npm run deploy --workspace @hamza/api`, then add
-   its `DB` and `IMAGES` bindings.
-2. **Put Cloudflare Access in front of it.** Create a Zero Trust application
-   covering the Worker's hostname and `/admin`, with a policy allowing the
-   owner's email. **The API Worker must have no public hostname outside that
-   application** — its identity check trusts a header that only Access can be
-   relied on to set. Optionally set `ADMIN_EMAILS` on the Worker as a second
-   allowlist.
-3. **Set the notification secrets** on the storefront's Pages project:
-   `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, and optionally `RESEND_API_KEY`,
-   `ORDER_EMAIL_FROM`, `ORDER_EMAIL_TO`. Missing secrets skip that channel;
-   they never fail an order.
-4. **Set the wallet numbers** — `JAZZCASH_NUMBER` and `EASYPAISA_NUMBER`. A
-   wallet option is hidden at checkout unless its number is configured, so
-   nobody is shown a blank number to send money to.
-5. **Build and upload admin** to `/admin` on the same domain, so its `/api` and
-   `/img` requests stay same-origin.
+### 1. Create the Cloudflare resources
+
+```bash
+npx wrangler d1 create hamza-footwear-db
+npx wrangler r2 bucket create hamza-footwear-images
+```
+
+Paste the returned database id into `database_id` in **both**
+`apps/web/wrangler.toml` and `apps/api/wrangler.toml` — they are currently
+`REPLACE_WITH_DATABASE_ID`.
+
+### 2. Set up the live schema
+
+```bash
+npm run db:migrate:remote
+npm run db:seed:remote
+```
+
+`db:seed:remote` loads the cities table and a sample catalogue. **Do not load
+`db/seed/0003_reviews.sql` on the live shop** — those are development fixtures,
+and real ratings must come from real delivered orders.
+
+### 3. Replace every placeholder
+
+| Where | Setting | Currently |
+|---|---|---|
+| `apps/web/wrangler.toml` | `SHOP_WHATSAPP` | `03001234567` |
+| `apps/web/wrangler.toml` | `JAZZCASH_NUMBER`, `EASYPAISA_NUMBER` | placeholders — delete the lines to hide those payment options |
+| `apps/web/src/lib/site.ts` | `SITE.address` | "Delivering across Pakistan." |
+| `db/seed/0001_cities.sql` | delivery fees | Rs 200 major / Rs 300 elsewhere, pending the real courier rate card |
+
+### 4. Deploy the storefront
+
+Create a Pages project pointing at this repo: build command `npm run build:web`,
+output directory `apps/web/dist`. Add the `DB` and `IMAGES` bindings in the
+project settings, then attach `hamzafootwear.com` — SSL is issued automatically.
+
+Turn on **Cloudflare Web Analytics** (cookieless) for the domain.
+
+### 5. Deploy admin (optional, but you will want it)
+
+```bash
+npm run deploy --workspace @hamza/api
+```
+
+Then **put Cloudflare Access in front of it**. Create a Zero Trust application
+covering the Worker's hostname and `/admin`, with a policy allowing the owner's
+email.
+
+> **The API Worker must have no public hostname outside that Access
+> application.** Its identity check trusts a header that only Access can be
+> relied on to set. Optionally set `ADMIN_EMAILS` on the Worker as a second
+> allowlist.
+
+Build the admin SPA (`npm run build --workspace @hamza/admin`) and upload it to
+`/admin` on the same domain, so its `/api` and `/img` requests stay same-origin.
+
+### 6. Order notifications (optional)
+
+Set as secrets on the storefront's Pages project:
+
+```
+TELEGRAM_BOT_TOKEN   TELEGRAM_CHAT_ID
+RESEND_API_KEY       ORDER_EMAIL_FROM   ORDER_EMAIL_TO
+```
+
+A missing channel is skipped and logged; it never fails an order. Telegram is
+the primary channel — Resend's free tier caps at 100 emails/day.
+
+### 7. Phone sign-in (optional — this one costs money)
+
+Customer accounts need a way to send the one-time code, and that is the only
+part of this project with a running cost. Set:
+
+```
+OTP_GATEWAY_URL   OTP_GATEWAY_KEY   OTP_MESSAGE_TEMPLATE (optional)
+```
+
+The gateway must accept `POST {to, text}` with a bearer token — most Pakistani
+SMS providers do. Without these, sign-in falls back to a development sender that
+**refuses to run in production**, so the flow fails loudly rather than silently
+locking customers out. Leaving it unset simply means guest checkout only, which
+is a perfectly good place to start.
+
+### 8. The display font
+
+The design's headings use **Instrument Serif** (SIL Open Font License). Download
+`instrument-serif-400.woff2` and place it at:
+
+```
+apps/web/public/fonts/instrument-serif-400.woff2
+```
+
+Then add the preload to `apps/web/src/layouts/BaseLayout.astro` (the exact line
+is in a comment there). Until you do, headings render in Georgia — the site is
+not broken, only less distinctive.
+
+## Verifying before launch
+
+The JavaScript budget is checked by the build itself — the storefront ships
+**2.6 kB gzipped** on a product page against a 30 kB ceiling. Two
+Definition-of-Done items need a deployed URL and a real device:
+
+- Lighthouse mobile ≥ 95 on a throttled 4G profile
+- Loads and is fully usable inside the **TikTok in-app browser**
+
+Test the second by putting the live link in a TikTok bio and opening it from the
+app. Resizing Chrome does not reproduce it — file uploads and redirects behave
+differently in that webview.
