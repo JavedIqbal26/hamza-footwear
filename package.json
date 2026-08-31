@@ -19,7 +19,8 @@
     "db:migrate": "npm run db:migrate --workspace @hamza/web",
     "db:seed": "npm run db:seed --workspace @hamza/web",
     "db:migrate:remote": "npm run db:migrate:remote --workspace @hamza/web",
-    "db:seed:remote": "npm run db:seed:remote --workspace @hamza/web"
+    "db:seed:remote": "npm run db:seed:remote --workspace @hamza/web",
+    "dev:admin": "npm run dev --workspace @hamza/admin"
   },
   "devDependencies": {
     "typescript": "^5.7.2",

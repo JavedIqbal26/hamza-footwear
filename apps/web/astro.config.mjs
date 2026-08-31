@@ -19,7 +19,21 @@ export default defineConfig({
   site: 'https://hamzafootwear.com',
   output: 'static',
   adapter: cloudflare({
-    platformProxy: { enabled: true },
+    platformProxy: {
+      enabled: true,
+      /*
+       * Shared with the admin Worker (see the apps/api dev script), so one
+       * local D1 and R2 back the whole system: a product added in admin
+       * appears on the storefront immediately, exactly as in production.
+       *
+       * The `/v3` is required and easy to get wrong. `wrangler dev` and
+       * `wrangler d1 execute --persist-to <dir>` both store under `<dir>/v3`,
+       * but `getPlatformProxy` — which this option feeds — treats the path as
+       * the store root and would otherwise create a second, empty database
+       * one level up.
+       */
+      persist: { path: '../../.wrangler-local/v3' },
+    },
     imageService: 'passthrough',
   }),
   vite: {

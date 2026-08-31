@@ -1,0 +1,29 @@
+@import 'tailwindcss';
+
+/* Same palette and system-font stack as the storefront, so admin looks like
+   the same shop rather than a different product. */
+@theme {
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans', sans-serif;
+
+  --color-brand-50: oklch(0.97 0.02 40);
+  --color-brand-600: oklch(0.54 0.15 38);
+  --color-brand-700: oklch(0.46 0.13 38);
+
+  --color-ink: oklch(0.22 0.01 250);
+  --color-ink-muted: oklch(0.48 0.01 250);
+
+  --color-whatsapp-dark: oklch(0.58 0.17 152);
+}
+
+@layer base {
+  body {
+    @apply bg-white text-ink antialiased;
+    font-family: var(--font-sans);
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-600;
+  }
+}

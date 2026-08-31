@@ -8,8 +8,8 @@
     "build": "astro build",
     "preview": "wrangler pages dev ./dist",
     "typecheck": "astro check",
-    "db:migrate": "wrangler d1 migrations apply hamza-footwear-db --local",
-    "db:seed": "wrangler d1 execute hamza-footwear-db --local --file=../../db/seed/0001_cities.sql && wrangler d1 execute hamza-footwear-db --local --file=../../db/seed/0002_products.sql",
+    "db:migrate": "wrangler d1 migrations apply hamza-footwear-db --local --persist-to ../../.wrangler-local",
+    "db:seed": "wrangler d1 execute hamza-footwear-db --local --persist-to ../../.wrangler-local --file=../../db/seed/0001_cities.sql && wrangler d1 execute hamza-footwear-db --local --persist-to ../../.wrangler-local --file=../../db/seed/0002_products.sql",
     "db:reset": "npm run db:migrate && npm run db:seed",
     "db:migrate:remote": "wrangler d1 migrations apply hamza-footwear-db --remote",
     "db:seed:remote": "wrangler d1 execute hamza-footwear-db --remote --file=../../db/seed/0001_cities.sql && wrangler d1 execute hamza-footwear-db --remote --file=../../db/seed/0002_products.sql"

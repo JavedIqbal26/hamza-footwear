@@ -32,12 +32,21 @@ export const GET: APIRoute = async ({ params, locals }) => {
   const object = await getImageBucket(locals).get(key);
   if (!object) return notFound();
 
+  /*
+   * Buffered rather than streamed. Variants are capped at a few megabytes by
+   * the upload endpoint, so holding one in memory is cheap — and an R2 stream
+   * cannot cross the `getPlatformProxy` boundary that backs `astro dev`, which
+   * would make this route work in production but fail locally. Identical
+   * behaviour in both is worth more here than streaming a 200KB image.
+   */
+  const body = await object.arrayBuffer();
+
   const headers = new Headers();
-  object.writeHttpMetadata(headers);
   headers.set('Cache-Control', IMAGE_CACHE_CONTROL);
   headers.set('Content-Type', object.httpMetadata?.contentType ?? 'image/webp');
+  headers.set('Content-Length', String(body.byteLength));
   headers.set('ETag', object.httpEtag);
   headers.set('X-Content-Type-Options', 'nosniff');
 
-  return new Response(object.body, { headers });
+  return new Response(body, { headers });
 };

@@ -17,13 +17,24 @@ changes to this repo — read that before making one.
 ```bash
 npm install
 npm run db:reset      # apply migrations + seed the local D1 database
-npm run dev:web       # http://localhost:4321
+npm run dev:web       # storefront  → http://localhost:4321
 ```
 
-`npm run db:reset` creates a local SQLite database under
-`apps/web/.wrangler/state`, applies `db/migrations`, and loads the sample
-catalogue from `db/seed`. `astro dev` binds to that same local database through
-Miniflare, so development exercises the real query paths.
+For the admin side, run all three in separate terminals:
+
+```bash
+npm run dev:api       # admin API   → http://localhost:8787
+npm run dev:admin     # admin SPA   → http://localhost:5173/admin/
+```
+
+`npm run db:reset` creates a local SQLite database under `.wrangler-local`,
+applies `db/migrations`, and loads the sample catalogue from `db/seed`. **All
+three dev servers share that one store**, so a product added in admin shows up
+on the storefront immediately — the same way it will in production.
+
+The admin dev server stands in for Cloudflare Access by injecting the identity
+header Access would add. That is in the Vite dev config only; it is never built
+or deployed.
 
 ## Layout
 
@@ -106,8 +117,32 @@ the app, not by resizing Chrome. Uploads and redirects behave differently there.
 
 ## Phase status
 
-- **Phase 1 — storefront.** Built. Home, category pages, product pages, size
-  guide, delivery, returns, WhatsApp ordering, `?v=` video attribution,
+- **Phase 1 — storefront.** Built. Home, `/shop`, category pages, product pages,
+  size guide, delivery, returns, WhatsApp ordering, `?v=` video attribution,
   sitemap, R2 image route.
-- **Phase 2 — admin + orders.** Not started. `apps/api` holds the skeleton.
+- **Phase 2 — admin + orders.** Built. Cart, checkout with COD and manual
+  wallet, order creation, Telegram/Resend notifications, admin API behind
+  Cloudflare Access, admin SPA with product CRUD and photo upload.
 - **Phase 3.** Not started, and not to be started without being asked.
+
+## Deploying admin (Phase 2)
+
+In addition to the Phase 1 steps:
+
+1. **Deploy the API Worker** — `npm run deploy --workspace @hamza/api`, then add
+   its `DB` and `IMAGES` bindings.
+2. **Put Cloudflare Access in front of it.** Create a Zero Trust application
+   covering the Worker's hostname and `/admin`, with a policy allowing the
+   owner's email. **The API Worker must have no public hostname outside that
+   application** — its identity check trusts a header that only Access can be
+   relied on to set. Optionally set `ADMIN_EMAILS` on the Worker as a second
+   allowlist.
+3. **Set the notification secrets** on the storefront's Pages project:
+   `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, and optionally `RESEND_API_KEY`,
+   `ORDER_EMAIL_FROM`, `ORDER_EMAIL_TO`. Missing secrets skip that channel;
+   they never fail an order.
+4. **Set the wallet numbers** — `JAZZCASH_NUMBER` and `EASYPAISA_NUMBER`. A
+   wallet option is hidden at checkout unless its number is configured, so
+   nobody is shown a blank number to send money to.
+5. **Build and upload admin** to `/admin` on the same domain, so its `/api` and
+   `/img` requests stay same-origin.

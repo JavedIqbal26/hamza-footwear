@@ -79,6 +79,14 @@ the admin API routes. Do not write login screens, session handling, password
 hashing, or JWT logic. If admin auth seems to need code, that is a signal the
 Access config is wrong.
 
+The Worker's `requireAccess` middleware only reads the identity header Access
+injects, and **fails closed** when it is absent so a broken policy breaks admin
+loudly rather than opening it. That header is trustworthy *only* because Access
+terminates the request first and strips any client-supplied copy — so every
+route of the API Worker must sit behind an Access application, and the Worker
+must have no other public hostname. If that ever changes, the header check must
+be replaced with real verification of the `Cf-Access-Jwt-Assertion` JWT.
+
 ---
 
 ## Repo layout
@@ -87,8 +95,8 @@ Access config is wrong.
 /
 ├── apps/
 │   ├── web/          # Astro storefront (Pages) — owns its wrangler.toml
-│   ├── admin/        # Vite React SPA at /admin — Phase 2, not created yet
-│   └── api/          # Worker for writes/admin — owns its wrangler.toml
+│   ├── admin/        # Vite React SPA at /admin, behind Cloudflare Access
+│   └── api/          # Worker: admin API only — owns its wrangler.toml
 ├── packages/
 │   ├── shared/       # Types, constants, money/phone helpers. Zero runtime deps.
 │   └── db/           # D1 repositories and row mappers. The only home for SQL.
@@ -97,6 +105,16 @@ Access config is wrong.
 │   └── seed/         # Cities and sample catalogue
 └── CLAUDE.md
 ```
+
+### Which app owns which write
+
+- **The storefront owns the public order flow.** Add-to-cart and checkout post
+  to the storefront's own origin, so they are native form POSTs that work with
+  JavaScript disabled, need no CORS preflight, and put no second origin in the
+  checkout path.
+- **The Worker owns admin.** Product CRUD, image upload, order management —
+  everything behind Access. It never creates orders.
+- **Both go through `packages/db`**, so the query exists once.
 
 Two deliberate departures from the original sketch:
 
@@ -118,11 +136,23 @@ Run from the repo root.
 
 | Command | Does |
 |---|---|
-| `npm run dev:web` | Storefront dev server, real D1/R2 bindings via Miniflare |
-| `npm run build:web` | Production build |
+| `npm run dev:web` | Storefront (4321), real D1/R2 bindings via Miniflare |
+| `npm run dev:api` | Admin API Worker (8787) |
+| `npm run dev:admin` | Admin SPA (5173), proxying `/api` and `/img` |
+| `npm run build` | Build every app |
 | `npm run typecheck` | Every workspace |
 | `npm run db:reset` | Migrate + seed the local database |
 | `npm run db:migrate:remote` / `db:seed:remote` | The live D1 database |
+
+All three dev servers share **one** local D1 and R2 store at `.wrangler-local`,
+so a product added in admin appears on the storefront immediately. Note the
+`/v3` in the storefront's `platformProxy.persist.path`: `wrangler` writes under
+`<dir>/v3`, but `getPlatformProxy` treats the path as the store root, and
+without it you silently get two databases.
+
+The admin dev server injects the Cloudflare Access identity header that Access
+would add in production. That lives in the Vite dev config only and is never
+built or deployed.
 
 ---
 
@@ -313,7 +343,7 @@ Safepay — one integration covers cards plus both wallets.
 
 ## Images
 
-Shop photos come off a phone at 3–6MB. **Compress client-side before upload** with
+Shop photos come off a phone at 3–6MB. **Resize client-side before upload** with
 `browser-image-compression` (admin bundle only — it must never reach the
 storefront). Generate three WebP variants and upload each to R2:
 
@@ -323,8 +353,22 @@ storefront). Generate three WebP variants and upload each to R2:
 | product | 800px |
 | full | 1600px |
 
-**Never upload the original.** This is what keeps us inside the R2 free tier and off
-Cloudflare Images ($5/mo).
+**Never upload the original.**
+
+**Quality is set directly; file size is allowed to land where it lands.** This is
+a shop — if the shoes look bad, nothing else here matters. R2 charges nothing for
+egress, so a bigger file costs no more to serve; the only constraint is the 10GB
+free storage tier, and at WebP quality 0.86 a photo's three variants come to
+roughly 600KB. Five photos on each of 400 products is about 1.2GB.
+
+Do **not** reintroduce a `maxSizeMB` compression *target*. An earlier version
+used one, which made the encoder degrade quality to hit a number that storage
+never required. The remaining size caps are runaway guards against an
+uncompressed original, and admin's guard must stay at or below the Worker's
+`MAX_VARIANT_BYTES` or valid uploads get rejected.
+
+R2 is also simply the right store: S3 charges $0.09/GB egress, and cheaper
+per-GB options mean a second origin, which rule 3 forbids.
 
 ---
 
@@ -384,9 +428,27 @@ only. Deploy to the live domain and get the link into the TikTok bio.
 > `wrangler.toml` files, set the real `SHOP_WHATSAPP`, create the Pages project,
 > attach the domain. Steps are in [README.md](./README.md).
 
-**Phase 2 — admin + orders.** Admin PWA behind Cloudflare Access, product CRUD with
-image upload, order form with COD + manual wallet, notifications, order list with
-status updates.
+**Phase 2 — admin + orders.** Admin behind Cloudflare Access, product CRUD with
+image upload, cart and checkout with COD + manual wallet, notifications, order
+list with status updates.
+
+> **Built.** Cart, checkout, order creation, notifications, the admin API and the
+> admin SPA. Verified against a shared local D1: a tampered checkout submit was
+> ignored in favour of database prices, an admin-uploaded photo reached the
+> storefront, and the order lifecycle moved through admin.
+>
+> **Cart is a cookie, not localStorage** — so `/cart` and `/checkout` render
+> server-side and add-to-cart is a native form POST that works with no
+> JavaScript. The cookie holds slug, size and quantity only; every price is read
+> from D1 on the request that uses it.
+>
+> **Order confirmation is addressed by the order UUID**, never by `HF-1042`.
+> Order numbers are sequential, so a readable URL would let anyone walk the
+> sequence and read other customers' names, phones and addresses.
+>
+> **The cart badge is filled in on the client.** Server-rendering it would bake
+> one shopper's count into an edge-cached page and serve it to the next visitor.
+> Anything person-specific must stay out of cacheable HTML.
 
 **Phase 3 — later, only when asked.** Safepay, stock tracking, discount codes,
 courier integration (PostEx or Trax).
