@@ -142,7 +142,7 @@ export function ProductFormPage({ productId }: Props) {
 
   return (
     <form
-      className="space-y-6 pb-24"
+      className="space-y-6 pb-24 sm:pb-6"
       onSubmit={(event) => {
         event.preventDefault();
         void save();
@@ -250,14 +250,22 @@ export function ProductFormPage({ productId }: Props) {
         <span className="text-sm text-ink">Show on the website</span>
       </label>
 
-      {/* Fixed to the bottom so Save is always in thumb reach on a long form. */}
-      <div className="fixed inset-x-0 bottom-0 z-10 flex gap-2 border-t border-neutral-200 bg-white p-3">
-        <Button variant="secondary" onClick={() => navigate({ name: 'products' })}>
-          Cancel
-        </Button>
+      {/*
+        Fixed to the bottom on a phone so Save stays in thumb reach on a long
+        form; inline from sm: up, where the whole form is visible at once and a
+        floating bar would just cover content.
+      */}
+      <div className="fixed inset-x-0 bottom-0 z-10 flex gap-2 border-t border-neutral-200 bg-white p-3 sm:static sm:justify-end sm:border-0 sm:p-0">
+        <div className="flex-1 sm:max-w-[160px]">
+          <Button variant="secondary" onClick={() => navigate({ name: 'products' })}>
+            Cancel
+          </Button>
+        </div>
+        <div className="flex-1 sm:max-w-[220px]">
         <Button type="submit" disabled={saving}>
           {saving ? 'Saving…' : 'Save product'}
         </Button>
+        </div>
       </div>
     </form>
   );

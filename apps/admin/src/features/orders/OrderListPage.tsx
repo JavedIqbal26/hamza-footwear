@@ -83,7 +83,7 @@ export function OrderListPage() {
       ) : orders.length === 0 ? (
         <p className="py-10 text-center text-sm text-ink-muted">No orders here yet.</p>
       ) : (
-        <div>
+        <div className="sm:grid sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
           {orders.map((order) => (
             <OrderCard
               key={order.id}

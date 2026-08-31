@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
-  formatPKR,
   effectivePricePkr,
+  formatPKR,
   imageUrl,
   primaryImage,
   STOCK_STATUS_LABELS,
@@ -17,6 +17,10 @@ import { Button, ErrorBanner, Spinner } from '../../components/ui/controls.jsx';
  *
  * Shows hidden products too, greyed out — the owner needs to find and unhide
  * something without wondering where it went.
+ *
+ * One row per product on a phone; a two- or three-up grid of cards from `sm:`
+ * up, so a laptop shows the whole catalogue at a glance instead of a single
+ * narrow column.
  */
 export function ProductListPage() {
   const [products, setProducts] = useState<Product[] | null>(null);
@@ -46,8 +50,8 @@ export function ProductListPage() {
         product.id,
         !product.is_active,
       );
-      setProducts((current) =>
-        current?.map((item) => (item.id === updated.id ? updated : item)) ?? null,
+      setProducts(
+        (current) => current?.map((item) => (item.id === updated.id ? updated : item)) ?? null,
       );
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Could not update');
@@ -58,7 +62,9 @@ export function ProductListPage() {
     <div className="space-y-4">
       <ErrorBanner message={error} />
 
-      <Button onClick={() => navigate({ name: 'product-new' })}>+ Add product</Button>
+      <div className="sm:max-w-xs">
+        <Button onClick={() => navigate({ name: 'product-new' })}>+ Add product</Button>
+      </div>
 
       {products === null ? (
         <Spinner label="Loading products…" />
@@ -67,11 +73,14 @@ export function ProductListPage() {
           No products yet. Add your first one.
         </p>
       ) : (
-        <ul className="divide-y divide-neutral-200">
+        <ul className="divide-y divide-neutral-200 sm:grid sm:grid-cols-2 sm:gap-4 sm:divide-y-0 lg:grid-cols-3">
           {products.map((product) => {
             const cover = primaryImage(product);
             return (
-              <li key={product.id} className="flex gap-3 py-3">
+              <li
+                key={product.id}
+                className="flex gap-3 py-3 sm:rounded-xl sm:border sm:border-neutral-200 sm:p-3"
+              >
                 {cover ? (
                   <img
                     src={imageUrl(cover, 'thumb')}
@@ -89,7 +98,7 @@ export function ProductListPage() {
                 <div className="min-w-0 flex-1">
                   <a
                     href={hrefFor({ name: 'product-edit', id: product.id })}
-                    className="block truncate text-sm font-medium text-ink"
+                    className="block truncate text-sm font-medium text-ink hover:underline"
                   >
                     {product.name}
                   </a>
@@ -106,7 +115,7 @@ export function ProductListPage() {
                 <button
                   type="button"
                   onClick={() => void toggleVisibility(product)}
-                  className="min-h-11 shrink-0 rounded-lg border border-neutral-300 px-3 text-xs font-medium"
+                  className="min-h-11 shrink-0 self-start rounded-lg border border-neutral-300 px-3 text-xs font-medium hover:bg-neutral-50"
                 >
                   {product.is_active ? 'Hide' : 'Show'}
                 </button>

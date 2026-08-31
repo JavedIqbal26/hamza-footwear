@@ -1,15 +1,10 @@
 ---
-import {
-  buildWhatsAppContactLink,
-  primaryImage,
-  productPath,
-  readVideoRef,
-} from '@hamza/shared';
+import { buildWhatsAppContactLink, readVideoRef } from '@hamza/shared';
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CategoryTiles from '../components/ui/CategoryTiles.astro';
 import ProductGrid from '../components/ui/ProductGrid.astro';
-import ProductImage from '../components/ui/ProductImage.astro';
+import HomeHero from '../components/ui/HomeHero.astro';
 import TrustStrip from '../components/ui/TrustStrip.astro';
 import { TRUST } from '../content/microcopy.js';
 import { listFeaturedProducts, ratingsFor } from '../lib/catalogue.js';
@@ -34,96 +29,23 @@ Astro.response.headers.set('Cache-Control', CATALOGUE_CACHE_CONTROL);
 ---
 
 <BaseLayout title={SITE.name} description={SITE.description} shopPhone={shopPhone}>
+  <HomeHero product={heroProduct} shopPhone={shopPhone} videoRef={videoRef} />
+
   {/*
-    The hero. Copy and CTAs come straight from the design; the stat row the mock
-    showed ("12,400 orders delivered", "4.8★ from 1,900 reviews") is deliberately
-    absent — those were placeholder figures, and inventing social proof on a real
-    shop's live page is not something a redesign gets to do.
+    Desktop only. On a phone the header chip row is the category navigation —
+    repeating it here just pushed the products off the first screen, which is
+    the whole thing the design gets right.
   */}
-  <section class="grid border-b border-line lg:grid-cols-2">
-    <div
-      class="flex flex-col items-start gap-6 px-4 py-10 sm:px-8 sm:py-14 lg:justify-center lg:py-16"
-    >
-      <span
-        class="inline-flex items-center gap-2 rounded-full bg-brand-50 px-3.5 py-2 text-xs font-bold uppercase text-brand-600"
-        style="letter-spacing: 0.12em;"
-      >
-        Naya stock — abhi live
-      </span>
-
-      <h1 class="display max-w-[12ch] text-[38px] sm:text-6xl lg:text-[76px]">
-        {SITE.tagline}
-      </h1>
-
-      <p class="max-w-[44ch] text-[17px] leading-relaxed text-ink-body sm:text-lg">
-        Khussa, everyday sneakers and school shoes — delivered anywhere in Pakistan
-        in 2–4 days. Pay cash when you get them.
-      </p>
-
-      <div class="flex flex-wrap gap-3 pt-1">
-        <a
-          href="/shop"
-          class="tap-target flex items-center gap-2 rounded-full bg-brand-600 px-6 text-base font-bold text-white transition-colors hover:bg-brand-700"
-        >
-          Shop new arrivals →
-        </a>
-        <a
-          href={buildWhatsAppContactLink(shopPhone)}
-          rel="noopener"
-          class="tap-target flex items-center gap-2 rounded-full border-[1.5px] border-ink px-6 text-base font-bold text-ink transition-colors hover:bg-ink hover:text-surface"
-        >
-          {TRUST.whatsappPrompt}
-        </a>
-      </div>
-    </div>
-
-    {/*
-      The hero image is the newest product's own photo, not a stock photograph.
-      The mock used an Unsplash shot; putting someone else's shoes on a real
-      shop's home page misrepresents what is for sale, and it would be an
-      off-origin request besides.
-    */}
-    <div class="relative min-h-64 bg-surface-warm lg:min-h-[560px]">
-      {
-        heroProduct ? (
-          <a href={productPath(heroProduct.slug, videoRef)} class="block h-full">
-            <ProductImage
-              baseKey={primaryImage(heroProduct)}
-              alt={heroProduct.name}
-              variant="full"
-              sizes="(min-width: 1024px) 50vw, 100vw"
-              loading="eager"
-              class="h-full lg:aspect-auto lg:min-h-[560px]"
-            />
-            <span class="absolute bottom-5 left-5 right-5 max-w-[260px] rounded-xl bg-surface/95 px-4 py-3.5 backdrop-blur">
-              <span class="eyebrow block">Handmade in Lahore</span>
-              <span class="mt-1 block text-sm leading-relaxed text-ink-body">
-                Leather uppers, stitched soles — not glued.
-              </span>
-            </span>
-          </a>
-        ) : (
-          <div class="flex h-full items-center justify-center px-6 py-12">
-            <p class="max-w-[26ch] text-center text-sm text-ink-muted">
-              <span class="eyebrow block pb-2">Handmade in Lahore</span>
-              Leather uppers, stitched soles — not glued.
-            </p>
-          </div>
-        )
-      }
-    </div>
-  </section>
-
-  <section class="px-4 pt-10 sm:px-6">
-    <h2 class="display text-[28px] sm:text-[34px]">Shop by category</h2>
+  <section class="hidden px-4 pt-8 sm:px-6 lg:block">
+    <h2 class="display text-[26px] sm:text-[34px]">Shop by category</h2>
     <div class="mt-5">
       <CategoryTiles />
     </div>
   </section>
 
-  <section class="px-4 pt-12 sm:px-6">
+  <section class="px-4 pt-7 sm:px-6 lg:pt-12">
     <div class="flex items-baseline justify-between gap-4">
-      <h2 class="display text-[28px] sm:text-[34px]">New arrivals</h2>
+      <h2 class="display text-[26px] sm:text-[34px]">New arrivals</h2>
       <a href="/shop" class="text-sm font-bold text-brand-600">See all →</a>
     </div>
     <div class="mt-5">

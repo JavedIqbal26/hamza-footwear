@@ -1,0 +1,139 @@
+---
+import { buildWhatsAppContactLink, primaryImage, productPath, type Product } from '@hamza/shared';
+
+import ProductImage from './ProductImage.astro';
+import { TRUST } from '../../content/microcopy.js';
+import { SITE } from '../../lib/site.js';
+
+interface Props {
+  /** The newest product with a photo, used as the hero image. */
+  product: Product | null;
+  shopPhone: string;
+  videoRef?: string | null;
+}
+
+const { product, shopPhone, videoRef = null } = Astro.props;
+
+/*
+ * Two layouts, because the design uses two.
+ *
+ * On a phone the copy is overlaid on the photo as one compact card — stacking
+ * text above a full-width image pushes "Shop by category" clean off the screen,
+ * which is exactly the problem this component exists to solve.
+ *
+ * From `lg:` up there is room for the side-by-side split, and the photo gets a
+ * definite height so a square image cannot force a 640px row.
+ */
+const EYEBROW = 'Naya stock — abhi live';
+const BODY =
+  'Khussa, everyday sneakers and school shoes — delivered anywhere in Pakistan in 2–4 days. Pay cash when you get them.';
+
+const href = product ? productPath(product.slug, videoRef) : '/shop';
+const whatsapp = buildWhatsAppContactLink(shopPhone);
+const cover = product ? primaryImage(product) : null;
+---
+
+{/* ---------- Phone: copy over the photo ---------- */}
+<section class="relative mx-4 mt-4 h-[230px] overflow-hidden rounded-[18px] bg-surface-warm lg:hidden">
+  {
+    cover && (
+      <ProductImage
+        baseKey={cover}
+        alt={product?.name ?? ''}
+        variant="full"
+        sizes="100vw"
+        loading="eager"
+        ratio="fill"
+        class="absolute inset-0"
+      />
+    )
+  }
+
+  {/* Dark wash so the copy stays legible over any photo the owner uploads. */}
+  <div
+    class="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/25 to-transparent"
+    aria-hidden="true"
+  >
+  </div>
+
+  <div class="absolute inset-x-0 bottom-0 flex flex-col items-start gap-2.5 p-4">
+    <span class="text-[10.5px] font-extrabold uppercase text-[#f0c9b8]" style="letter-spacing: 0.14em;">
+      {EYEBROW}
+    </span>
+    <h1 class="display max-w-[16ch] text-[30px] leading-[1.05] text-surface">{SITE.tagline}</h1>
+    <a
+      href="/shop"
+      class="flex h-11 items-center justify-center rounded-full bg-surface px-5 text-sm font-extrabold text-ink"
+    >
+      Shop new arrivals →
+    </a>
+  </div>
+</section>
+
+{/* ---------- Laptop: side-by-side split ---------- */}
+<section class="hidden border-b border-line lg:grid lg:grid-cols-2">
+  <div class="flex flex-col items-start justify-center gap-5 px-8 py-12">
+    <span
+      class="inline-flex items-center rounded-full bg-brand-50 px-3.5 py-2 text-xs font-bold uppercase text-brand-600"
+      style="letter-spacing: 0.12em;"
+    >
+      {EYEBROW}
+    </span>
+
+    <h1 class="display max-w-[13ch] text-[56px]">{SITE.tagline}</h1>
+
+    <p class="max-w-[42ch] text-[17px] leading-relaxed text-ink-body">{BODY}</p>
+
+    <div class="flex flex-wrap gap-3 pt-1">
+      <a
+        href="/shop"
+        class="tap-target flex items-center gap-2 rounded-full bg-brand-600 px-6 text-base font-bold text-white transition-colors hover:bg-brand-700"
+      >
+        Shop new arrivals →
+      </a>
+      <a
+        href={whatsapp}
+        rel="noopener"
+        class="tap-target flex items-center gap-2 rounded-full border-[1.5px] border-ink px-6 text-base font-bold text-ink transition-colors hover:bg-ink hover:text-surface"
+      >
+        {TRUST.whatsappPrompt}
+      </a>
+    </div>
+  </div>
+
+  {/*
+    A definite height, not min-height: the shop's photos are square, and at
+    640px wide a square would force a 640px row and push the category tiles
+    below the fold — the whole reason this hero was rebuilt.
+  */}
+  <div class="relative h-[420px] overflow-hidden bg-surface-warm">
+    {
+      cover ? (
+        <a href={href} class="absolute inset-0 block">
+          <ProductImage
+            baseKey={cover}
+            alt={product?.name ?? ''}
+            variant="full"
+            sizes="50vw"
+            loading="eager"
+            ratio="fill"
+            class="absolute inset-0"
+          />
+          <span class="absolute bottom-5 left-5 max-w-[260px] rounded-xl bg-surface/95 px-4 py-3.5 backdrop-blur">
+            <span class="eyebrow block">Handmade in Lahore</span>
+            <span class="mt-1 block text-sm leading-relaxed text-ink-body">
+              Leather uppers, stitched soles — not glued.
+            </span>
+          </span>
+        </a>
+      ) : (
+        <div class="flex h-full items-center justify-center px-6">
+          <p class="max-w-[26ch] text-center text-sm text-ink-muted">
+            <span class="eyebrow block pb-2">Handmade in Lahore</span>
+            Leather uppers, stitched soles — not glued.
+          </p>
+        </div>
+      )
+    }
+  </div>
+</section>

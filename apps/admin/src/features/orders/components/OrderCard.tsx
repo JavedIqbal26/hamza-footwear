@@ -41,7 +41,7 @@ export function OrderCard({ order, onStatusChange, busy }: Props) {
   const isCod = order.payment_method === 'cod';
 
   return (
-    <article className="space-y-3 border-b border-neutral-200 py-4">
+    <article className="space-y-3 border-b border-neutral-200 py-4 sm:rounded-xl sm:border sm:p-4">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-base font-bold text-ink">{order.order_number}</h2>
         <p className="text-base font-bold text-ink">{formatPKR(order.total_pkr)}</p>
