@@ -20,7 +20,7 @@ const onSale = isOnSale(product);
   repeating it beside the price crowds the line the eye actually reads.
 */}
 <p class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-  <span class:list={['font-extrabold text-ink', size === 'lg' ? 'text-[25px]' : 'text-base']}>
+  <span class:list={['font-extrabold text-ink', size === 'lg' ? 'text-[25px]' : 'text-base sm:text-[19px]']}>
     {formatPKR(now)}
   </span>
 
@@ -29,7 +29,7 @@ const onSale = isOnSale(product);
       <span
         class:list={[
           'text-ink-label line-through',
-          size === 'lg' ? 'text-[15px]' : 'text-xs',
+          size === 'lg' ? 'text-[15px]' : 'text-xs sm:text-sm',
         ]}
       >
         {formatPKR(price_pkr)}

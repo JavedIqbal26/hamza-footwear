@@ -145,8 +145,8 @@
 
   /* Small uppercase label above a heading or beside a value. */
   .eyebrow {
-    @apply text-xs font-extrabold uppercase text-ink-label;
-    letter-spacing: 0.12em;
+    @apply text-xs font-bold uppercase text-ink-label;
+    letter-spacing: 0.1em;
   }
 
   /* The pill used for every primary and secondary action in the design. */

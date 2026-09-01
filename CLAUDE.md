@@ -497,10 +497,11 @@ our own origin instead. Body text stays on the **system stack** — a second
 webfont would cost LCP and a flash of unstyled body text on exactly the device
 this shop is built for.
 
-If the woff2 is absent the `@font-face` fails silently and Georgia takes over,
-so the site is never broken by a missing font — only slightly less distinctive.
-There is deliberately **no `<link rel="preload">`** for it until the file exists;
-preloading a missing file 404s on every page load. Add both together.
+The woff2 is committed (21KB, latin subset, SIL Open Font License) and
+preloaded, since it renders the first heading on most pages. If it is ever
+removed the `@font-face` fails silently and Georgia takes over — the site
+degrades rather than breaks — but drop the preload at the same time, or it
+404s on every page load.
 
 ### What was deliberately NOT taken from the design
 

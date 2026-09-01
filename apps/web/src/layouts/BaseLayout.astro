@@ -52,17 +52,17 @@ const socialImage = image ? new URL(image, SITE.url).href : undefined;
     {noindex && <meta name="robots" content="noindex" />}
 
     {/*
-      The display face is declared in global.css and self-hosted, so it never
-      touches fonts.googleapis.com.
-
-      No `<link rel="preload">` for it yet: the woff2 is not in the repo (see
-      README), and preloading a missing file 404s on every page load. Once the
-      font is added, add the preload here too — it renders the first heading on
-      most pages, which is usually the LCP element:
-
-        <link rel="preload" href="/fonts/instrument-serif-400.woff2"
-              as="font" type="font/woff2" crossorigin />
+      Self-hosted display face, never fetched from fonts.googleapis.com.
+      Preloaded because it renders the first heading on most pages, which is
+      usually the LCP element.
     */}
+    <link
+      rel="preload"
+      href="/fonts/instrument-serif-400.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={SITE.name} />

@@ -167,16 +167,10 @@ is a perfectly good place to start.
 
 ### 8. The display font
 
-The design's headings use **Instrument Serif** (SIL Open Font License). Download
-`instrument-serif-400.woff2` and place it at:
-
-```
-apps/web/public/fonts/instrument-serif-400.woff2
-```
-
-Then add the preload to `apps/web/src/layouts/BaseLayout.astro` (the exact line
-is in a comment there). Until you do, headings render in Georgia — the site is
-not broken, only less distinctive.
+Nothing to do — **Instrument Serif is already self-hosted** at
+`apps/web/public/fonts/instrument-serif-400.woff2` (21KB, latin subset, SIL
+Open Font License) and preloaded. It is never fetched from
+fonts.googleapis.com.
 
 ## Verifying before launch
 
