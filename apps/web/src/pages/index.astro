@@ -22,14 +22,11 @@ const videoRef = readVideoRef(Astro.url.searchParams);
 const saved = readWishlist(Astro.cookies);
 const shopPhone = getShopWhatsApp(Astro.locals);
 
-/* The newest product doubles as the hero image. */
-const heroProduct = products.find((product) => product.images.length > 0) ?? null;
-
 Astro.response.headers.set('Cache-Control', CATALOGUE_CACHE_CONTROL);
 ---
 
 <BaseLayout title={SITE.name} description={SITE.description} shopPhone={shopPhone}>
-  <HomeHero product={heroProduct} shopPhone={shopPhone} videoRef={videoRef} />
+  <HomeHero shopPhone={shopPhone} />
 
   {/*
     Desktop only. On a phone the header chip row is the category navigation —

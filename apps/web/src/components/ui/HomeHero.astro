@@ -1,18 +1,14 @@
 ---
-import { buildWhatsAppContactLink, primaryImage, productPath, type Product } from '@hamza/shared';
+import { buildWhatsAppContactLink } from '@hamza/shared';
 
-import ProductImage from './ProductImage.astro';
 import { TRUST } from '../../content/microcopy.js';
 import { SITE } from '../../lib/site.js';
 
 interface Props {
-  /** The newest product with a photo, used as the hero image. */
-  product: Product | null;
   shopPhone: string;
-  videoRef?: string | null;
 }
 
-const { product, shopPhone, videoRef = null } = Astro.props;
+const { shopPhone } = Astro.props;
 
 /*
  * One DOM tree, two layouts.
@@ -23,13 +19,22 @@ const { product, shopPhone, videoRef = null } = Astro.props;
  * crawlers. The copy block is first in source order, so the desktop grid places
  * it in column one with no reordering.
  *
- * The photo sits in a box with a definite height because the shop's photos are
- * square: at 640px wide a square would otherwise force a 640px row and push the
- * rest of the page off the screen.
+ * ---------------------------------------------------------------------------
+ * The photo is a STOCK IMAGE, self-hosted at `public/hero/`.
+ *
+ * Self-hosted, never hotlinked from images.unsplash.com: an off-origin fetch is
+ * a reliability risk in Pakistan, and it is the LCP image on the busiest page.
+ * Served as WebP at two widths — 74KB and 135KB — cropped 3:2 to match the box
+ * so the browser never downloads pixels it will crop away.
+ *
+ * It is deliberately NOT a link and carries an empty alt: it sets the mood for
+ * the shop, it is not merchandise. Linking a stock photo to a real product, or
+ * describing it as one, would tell a customer they can buy shoes that are not
+ * in the catalogue. Replace it with the owner's own storefront photography when
+ * that exists — nothing else needs to change.
+ * ---------------------------------------------------------------------------
  */
-const href = product ? productPath(product.slug, videoRef) : '/shop';
 const whatsapp = buildWhatsAppContactLink(shopPhone);
-const cover = product ? primaryImage(product) : null;
 ---
 
 <section
@@ -77,28 +82,18 @@ const cover = product ? primaryImage(product) : null;
 
   {/* Photo — full-bleed behind the copy below lg, second column above it. */}
   <div class="absolute inset-0 lg:relative lg:overflow-hidden">
-    {
-      cover ? (
-        <a href={href} class="absolute inset-0 block" tabindex="-1" aria-hidden="true">
-          <ProductImage
-            baseKey={cover}
-            alt={product?.name ?? ''}
-            variant="full"
-            sizes="(min-width: 1024px) 50vw, 100vw"
-            loading="eager"
-            ratio="fill"
-            class="absolute inset-0"
-          />
-        </a>
-      ) : (
-        <div class="hidden h-full items-center justify-center px-6 lg:flex">
-          <p class="max-w-[26ch] text-center text-sm text-ink-muted">
-            <span class="eyebrow block pb-2">Handmade in Lahore</span>
-            Leather uppers, stitched soles — not glued.
-          </p>
-        </div>
-      )
-    }
+    <img
+      src="/hero/storefront-1280.webp"
+      srcset="/hero/storefront-800.webp 800w, /hero/storefront-1280.webp 1280w"
+      sizes="(min-width: 1024px) 50vw, 100vw"
+      alt=""
+      width="1280"
+      height="853"
+      loading="eager"
+      fetchpriority="high"
+      decoding="async"
+      class="absolute inset-0 h-full w-full object-cover"
+    />
 
     {/* Dark wash keeps the overlaid copy legible; unnecessary once split. */}
     <div
@@ -107,15 +102,13 @@ const cover = product ? primaryImage(product) : null;
     >
     </div>
 
-    {
-      cover && (
-        <span class="absolute bottom-5 left-5 hidden max-w-[260px] rounded-xl bg-surface/95 px-4 py-3.5 backdrop-blur lg:block">
-          <span class="eyebrow block">Handmade in Lahore</span>
-          <span class="mt-1 block text-sm leading-relaxed text-ink-body">
-            Leather uppers, stitched soles — not glued.
-          </span>
-        </span>
-      )
-    }
+    <span
+      class="absolute bottom-5 left-5 hidden max-w-[260px] rounded-xl bg-surface/95 px-4 py-3.5 backdrop-blur lg:block"
+    >
+      <span class="eyebrow block">Handmade in Lahore</span>
+      <span class="mt-1 block text-sm leading-relaxed text-ink-body">
+        Leather uppers, stitched soles — not glued.
+      </span>
+    </span>
   </div>
 </section>

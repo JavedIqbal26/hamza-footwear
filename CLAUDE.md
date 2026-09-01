@@ -475,7 +475,8 @@ would be easy to add now.
 | React on the storefront? | No. ~47KB gzipped against a 30KB budget. |
 | A webfont for body text? | No. System stack — zero bytes, zero CLS. |
 | Instrument Serif for headings? | Yes, self-hosted only. Never via Google Fonts. |
-| Stock photography? | No. Only the shop own photos, uploaded through admin. |
+| Stock photography on product cards? | No. Only the shop own photos, via admin. |
+| Stock photography in the home hero? | Yes, self-hosted, unlinked, empty alt. Mood, not merchandise. |
 | Invented ratings or order counts? | No. Every star comes from a delivered order. |
 | pnpm? | No. npm workspaces; nothing here needs more. |
 | Serve images from an R2 public URL? | No. Same-origin `/img/` route. |
