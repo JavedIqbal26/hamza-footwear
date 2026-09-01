@@ -22,7 +22,8 @@ const saved = readWishlist(Astro.cookies);
 
 Astro.response.headers.set('Cache-Control', NO_STORE);
 
-const heading = query.q ? `"${query.q}"` : 'Search';
+/* Typographic quotes: straight ones read as tick marks in the serif face. */
+const heading = query.q ? `“${query.q}”` : 'Search';
 ---
 
 <BaseLayout

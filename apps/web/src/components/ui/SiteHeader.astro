@@ -1,7 +1,7 @@
 ---
 import { CATEGORIES, CATEGORY_LABELS, categoryPath } from '@hamza/shared';
 
-import { PRIMARY_NAV, SITE } from '../../lib/site.js';
+import { PRIMARY_NAV } from '../../lib/site.js';
 import { TRUST } from '../../content/microcopy.js';
 
 interface Props {
@@ -25,7 +25,7 @@ function isActive(href: string): boolean {
 }
 
 const chip =
-  'flex h-9 shrink-0 items-center whitespace-nowrap rounded-full border px-4 text-sm font-semibold';
+  'flex h-11 shrink-0 items-center whitespace-nowrap rounded-full border px-4 text-sm font-semibold';
 ---
 
 {/* The promise that decides whether a first-time COD buyer stays at all. */}
@@ -42,7 +42,7 @@ const chip =
 <header
   class="sticky top-0 z-40 border-b border-line bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/90"
 >
-  <div class="mx-auto max-w-[1440px] px-4 py-3 sm:px-6">
+  <div class="mx-auto max-w-[1440px] px-4 py-2.5 sm:px-6 sm:py-3">
     <div class="flex items-center gap-3">
       <a href="/" class="flex shrink-0 items-baseline gap-2">
         <span class="display text-2xl text-ink sm:text-[28px]">Hamza</span>
@@ -85,8 +85,11 @@ const chip =
 
       {/* Search sits inline from md: up; on a phone it gets its own row below. */}
       <form action="/search" method="GET" class="ml-auto hidden items-center md:flex">
-        <label for="site-search" class="sr-only">Search products</label>
-        <div class="flex items-center gap-2 rounded-full bg-surface-fill px-4 py-2.5">
+        <label
+          for="site-search"
+          class="flex cursor-text items-center gap-2 rounded-full bg-surface-fill px-4 py-2.5"
+        >
+          <span class="sr-only">Search products</span>
           <span aria-hidden="true" class="text-sm text-ink-soft">⌕</span>
           <input
             id="site-search"
@@ -96,7 +99,7 @@ const chip =
             placeholder="Khussa, sneaker, size 8…"
             class="w-44 border-none bg-transparent text-sm text-ink outline-none placeholder:text-ink-soft lg:w-52"
           />
-        </div>
+        </label>
       </form>
 
       <div class="ml-auto flex shrink-0 items-center gap-2 md:ml-0">
@@ -136,9 +139,12 @@ const chip =
       design's home screen has them. Search has to be reachable without a tap
       into another page — it is how a returning customer finds a size.
     */}
-    <form action="/search" method="GET" class="mt-3 md:hidden">
-      <label for="site-search-mobile" class="sr-only">Search products</label>
-      <div class="flex items-center gap-2.5 rounded-[14px] bg-surface-fill px-3.5 py-3">
+    <form action="/search" method="GET" class="mt-2.5 md:hidden">
+      <label
+        for="site-search-mobile"
+        class="flex min-h-11 cursor-text items-center gap-2.5 rounded-[14px] bg-surface-fill px-3.5 py-2.5"
+      >
+        <span class="sr-only">Search products</span>
         <span aria-hidden="true" class="text-[15px] text-ink-soft">⌕</span>
         <input
           id="site-search-mobile"
@@ -148,13 +154,17 @@ const chip =
           placeholder="Khussa, sneaker, size 8…"
           class="w-full border-none bg-transparent text-[15px] text-ink outline-none placeholder:text-ink-soft"
         />
-      </div>
+      </label>
     </form>
   </div>
+</header>
 
-  {
+{
     showChips && (
-      <nav aria-label="Categories" class="-mb-px overflow-x-auto px-4 pb-3 md:hidden">
+      <nav
+        aria-label="Categories"
+        class="overflow-x-auto border-b border-line bg-surface px-4 py-3 md:hidden"
+      >
         <ul class="flex w-max gap-2">
           <li>
             <a
@@ -195,8 +205,7 @@ const chip =
         </ul>
       </nav>
     )
-  }
-</header>
+}
 
 <script>
   import { initHeaderCounts } from '../../scripts/header-counts.js';

@@ -86,7 +86,16 @@ const socialImage = image ? new URL(image, SITE.url).href : undefined;
 
     {!bare && <SiteHeader query={query} />}
 
-    <main id="main" class="flex-1 bg-surface">
+    {/*
+      The bottom tab bar is sticky, so it paints over whatever is beneath it.
+      Without this clearance it covered the primary action on short pages —
+      Checkout on the cart, Place order on checkout. Only applied when the bar
+      is actually rendered.
+    */}
+    <main
+      id="main"
+      class:list={['flex-1 bg-surface', !bare && !hideTabBar && 'pb-20 sm:pb-0']}
+    >
       <slot />
     </main>
 

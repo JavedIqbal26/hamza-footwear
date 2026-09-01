@@ -1,6 +1,7 @@
 ---
-import { readVideoRef, type CatalogueQuery } from '@hamza/shared';
+import { catalogueHref, hasFilters, readVideoRef, type CatalogueQuery } from '@hamza/shared';
 
+import EmptyResults from './EmptyResults.astro';
 import FilterChips from './FilterChips.astro';
 import Pagination from './Pagination.astro';
 import ProductGrid from './ProductGrid.astro';
@@ -23,6 +24,10 @@ const videoRef = readVideoRef(Astro.url.searchParams);
  * in their heading and base path, so the filtering, grid and paging live once.
  */
 const currentPath = `${Astro.url.pathname}${Astro.url.search}`;
+
+/* An empty grid is a fork in the road, not a dead end — see EmptyResults. */
+const isEmpty = view.products.length === 0;
+const filtered = hasFilters(query);
 ---
 
 <div class="mx-auto max-w-[1440px] px-4 pt-8 sm:px-6">
@@ -39,14 +44,24 @@ const currentPath = `${Astro.url.pathname}${Astro.url.search}`;
   </div>
 
   <div class="mt-7">
-    <ProductGrid
-      products={view.products}
-      ratings={view.ratings}
-      saved={saved}
-      videoRef={videoRef}
-      returnTo={currentPath}
-      emptyMessage={emptyMessage}
-    />
+    {
+      isEmpty ? (
+        <EmptyResults
+          query={query.q ?? ''}
+          filtered={filtered}
+          clearHref={catalogueHref(basePath, { q: query.q }, {})}
+        />
+      ) : (
+        <ProductGrid
+          products={view.products}
+          ratings={view.ratings}
+          saved={saved}
+          videoRef={videoRef}
+          returnTo={currentPath}
+          emptyMessage={emptyMessage}
+        />
+      )
+    }
   </div>
 
   <Pagination page={view.page} pageCount={view.pageCount} basePath={basePath} query={query} />

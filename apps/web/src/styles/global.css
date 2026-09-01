@@ -43,9 +43,22 @@
   --color-ink: #17120f;
   --color-ink-muted: #6f6152;
   --color-ink-body: #5c5148;
-  --color-ink-soft: #8a7c6c;
-  --color-ink-label: #a2907c;
-  --color-ink-disabled: #c4b8a8;
+
+  /*
+   * The three steps below were darkened from the mock's #8a7c6c / #a2907c /
+   * #c4b8a8, which measured 3.99 / 3.03 / 1.92 against the page surface — all
+   * short of the 4.5 WCAG AA needs for body-sized text. The hue is unchanged;
+   * only luminance moved, so the palette still reads as warm paper.
+   *
+   * This matters commercially as much as legally: #a2907c carried the
+   * struck-through original price, and a discount nobody can read is not a
+   * discount. Judged in a shop doorway in daylight, not on a calibrated
+   * monitor.
+   */
+  --color-ink-soft: #807364;
+  --color-ink-label: #827363;
+  /* Disabled sizes: 3.0, with the strikethrough doing the real signalling. */
+  --color-ink-disabled: #9c9286;
 
   /* ---- Surfaces --------------------------------------------------------
    * Warm white on a warm ground. Nothing here is pure #fff — that is what

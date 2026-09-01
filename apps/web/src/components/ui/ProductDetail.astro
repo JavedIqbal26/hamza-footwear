@@ -61,9 +61,12 @@ const whatsappHref = buildWhatsAppOrderLink({
 
 <div class="mx-auto max-w-5xl px-4 pt-4 sm:px-6 sm:pt-6">
   <nav aria-label="Breadcrumb" class="pb-3 text-sm text-ink-muted">
-    <a href="/" class="hover:text-ink">Home</a>
+    <a href="/" class="-my-2 inline-flex min-h-9 items-center hover:text-ink">Home</a>
     <span aria-hidden="true" class="px-1">/</span>
-    <a href={categoryPath(product.category)} class="hover:text-ink">
+    <a
+      href={categoryPath(product.category)}
+      class="-my-2 inline-flex min-h-9 items-center hover:text-ink"
+    >
       {CATEGORY_LABELS[product.category]}
     </a>
   </nav>

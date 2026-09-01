@@ -1,0 +1,80 @@
+---
+import { CATEGORIES, CATEGORY_LABELS, categoryPath } from '@hamza/shared';
+
+interface Props {
+  /** The search term, when this is a search with no matches. */
+  query?: string;
+  /** True when filters are applied and could be the reason nothing matched. */
+  filtered?: boolean;
+  /** Where "clear filters" should lead. */
+  clearHref?: string;
+}
+
+const { query = '', filtered = false, clearHref = '/shop' } = Astro.props;
+
+/*
+ * An empty result is a fork in the road, not a dead end.
+ *
+ * The previous version was a single grey box saying nothing matched, which
+ * leaves the shopper to work out their own next move — on a phone, on mobile
+ * data, that is where they leave. Every route out is offered here: relax the
+ * filters, browse a category, or ask a human on WhatsApp, which is often the
+ * fastest answer to "do you have this in 8?".
+ */
+---
+
+<div class="rounded-[18px] border border-line bg-surface-sunk px-5 py-10 text-center">
+  <p aria-hidden="true" class="text-3xl">⌕</p>
+
+  <h2 class="display mt-3 text-[22px]">
+    {query ? `Kuch nahi mila “${query}” ke liye` : 'Yahan abhi kuch nahi hai'}
+  </h2>
+
+  <p class="mx-auto mt-2 max-w-[38ch] text-sm text-ink-muted">
+    {
+      filtered
+        ? 'Filters thore kam karein, ya neeche se koi category dekhein.'
+        : 'Spelling check karein ya neeche se koi category dekhein.'
+    }
+  </p>
+
+  <div class="mt-5 flex flex-wrap justify-center gap-2">
+    {
+      filtered && (
+        <a
+          href={clearHref}
+          class="tap-target flex items-center rounded-full bg-ink px-5 text-sm font-extrabold text-surface"
+        >
+          Clear filters
+        </a>
+      )
+    }
+    <a
+      href="/shop"
+      class:list={[
+        'tap-target flex items-center rounded-full px-5 text-sm font-extrabold',
+        filtered ? 'border border-line-strong text-ink' : 'bg-ink text-surface',
+      ]}
+    >
+      Browse all shoes
+    </a>
+  </div>
+
+  <div class="mt-6 border-t border-line pt-5">
+    <p class="eyebrow">Or try a category</p>
+    <ul class="mt-3 flex flex-wrap justify-center gap-2">
+      {
+        CATEGORIES.map((category) => (
+          <li>
+            <a
+              href={categoryPath(category)}
+              class="flex h-11 items-center rounded-full border border-line-strong bg-surface px-5 text-sm font-semibold text-ink hover:border-ink"
+            >
+              {CATEGORY_LABELS[category]}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</div>
