@@ -47,3 +47,17 @@ export function toWhatsAppNumber(value: string): string {
   const normalised = normalisePhone(value);
   return isValidPkMobile(normalised) ? `92${normalised.slice(1)}` : normalised;
 }
+
+/**
+ * `tel:` form, in full international notation.
+ *
+ * The `+92` matters: a stored `03001234567` dialled from a phone roaming on a
+ * foreign network, or from a laptop softphone, resolves to the wrong country
+ * without it. Falls back to whatever digits it has rather than refusing to
+ * produce a link — a slightly wrong number the owner can see and correct beats
+ * no way to call at all.
+ */
+export function toTelNumber(value: string): string {
+  const normalised = normalisePhone(value);
+  return isValidPkMobile(normalised) ? `+92${normalised.slice(1)}` : normalised;
+}

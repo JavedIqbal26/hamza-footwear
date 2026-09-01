@@ -1,0 +1,63 @@
+---
+import { CATEGORIES, CATEGORY_LABELS, categoryPath } from '@hamza/shared';
+
+interface Props {
+  /** So the chip for the page you are on reads as selected. */
+  currentPath: string;
+}
+
+const { currentPath } = Astro.props;
+
+/*
+ * The phone category row, below the header rather than inside it.
+ *
+ * Deliberately NOT part of the sticky region. Sticking the brand row, the
+ * search field and this together took 15% of a 360px screen before any
+ * product appeared. The header stays pinned; these scroll away.
+ *
+ * The row wraps instead of scrolling horizontally: at 360px the five chips
+ * need two lines, and a chip you have to discover by swiping is a chip most
+ * people never find. An earlier version hid them behind a <details>
+ * disclosure, which is what made the shop owner point out that categories
+ * were invisible by default.
+ */
+const chip =
+  'flex h-11 shrink-0 items-center whitespace-nowrap rounded-full border px-4 text-sm font-semibold';
+
+const selected = 'border-ink bg-ink text-surface';
+const unselected = 'border-line-strong bg-surface text-ink';
+
+function isActive(href: string): boolean {
+  return currentPath === href || currentPath.startsWith(`${href}/`);
+}
+---
+
+<nav aria-label="Categories" class="border-b border-line bg-surface px-4 py-3 sm:hidden">
+  <ul class="flex flex-wrap gap-2">
+    <li>
+      <a
+        href="/shop"
+        class:list={[chip, currentPath === '/shop' ? selected : unselected]}
+      >
+        All
+      </a>
+    </li>
+    {
+      CATEGORIES.map((category) => (
+        <li>
+          <a
+            href={categoryPath(category)}
+            class:list={[chip, isActive(categoryPath(category)) ? selected : unselected]}
+          >
+            {CATEGORY_LABELS[category]}
+          </a>
+        </li>
+      ))
+    }
+    <li>
+      <a href="/shop?sale=1" class:list={[chip, 'border-line-strong bg-surface text-brand-600']}>
+        Sale
+      </a>
+    </li>
+  </ul>
+</nav>

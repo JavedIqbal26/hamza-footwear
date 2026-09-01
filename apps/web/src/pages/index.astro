@@ -7,7 +7,7 @@ import ProductGrid from '../components/ui/ProductGrid.astro';
 import HomeHero from '../components/ui/HomeHero.astro';
 import TrustStrip from '../components/ui/TrustStrip.astro';
 import { TRUST } from '../content/microcopy.js';
-import { listFeaturedProducts, ratingsFor } from '../lib/catalogue.js';
+import { listCategoryTiles, listFeaturedProducts, ratingsFor } from '../lib/catalogue.js';
 import { CATALOGUE_CACHE_CONTROL } from '../lib/cache.js';
 import { getShopWhatsApp } from '../lib/runtime.js';
 import { readWishlist } from '../lib/wishlist/session.js';
@@ -17,7 +17,10 @@ import { SITE } from '../lib/site.js';
 export const prerender = false;
 
 const products = await listFeaturedProducts(Astro.locals);
-const ratings = await ratingsFor(Astro.locals, products);
+const [ratings, categoryTiles] = await Promise.all([
+  ratingsFor(Astro.locals, products),
+  listCategoryTiles(Astro.locals),
+]);
 const videoRef = readVideoRef(Astro.url.searchParams);
 const saved = readWishlist(Astro.cookies);
 const shopPhone = getShopWhatsApp(Astro.locals);
@@ -36,20 +39,25 @@ Astro.response.headers.set('Cache-Control', CATALOGUE_CACHE_CONTROL);
   <section class="hidden px-4 pt-8 sm:px-6 lg:block">
     <h2 class="display text-[26px] sm:text-[34px]">Shop by category</h2>
     <div class="mt-5">
-      <CategoryTiles />
+      <CategoryTiles tiles={categoryTiles} />
     </div>
   </section>
 
   <section class="px-4 pt-7 sm:px-6 lg:pt-12">
     <div class="flex items-baseline justify-between gap-4">
       <h2 class="display text-[26px] sm:text-[34px]">New arrivals</h2>
-      <a href="/shop" class="text-sm font-bold text-brand-600">See all →</a>
+      <a
+        href="/shop"
+        class="-my-2 -mr-2 inline-flex min-h-11 items-center px-2 text-sm font-bold text-brand-600"
+        >See all →</a
+      >
     </div>
     <div class="mt-5">
       <ProductGrid
         products={products}
         ratings={ratings}
         saved={saved}
+        shopPhone={shopPhone}
         videoRef={videoRef}
         returnTo="/"
       />
@@ -77,7 +85,7 @@ Astro.response.headers.set('Cache-Control', CATALOGUE_CACHE_CONTROL);
         >
           {TRUST.whatsappPrompt}
         </a>
-        <span class="text-center text-[13px] text-ink-soft">Ya call karein — same number</span>
+        <span class="text-center text-[13px] text-ink-on-ink">Ya call karein — same number</span>
       </div>
     </div>
   </section>

@@ -81,10 +81,17 @@ const boxes = Array.from({ length: OTP_LENGTH }, (_, index) => index);
       class="mt-4 flex items-center justify-between gap-4"
     >
       <input type="hidden" name="phone" value={phone} />
-      <button type="submit" class="text-[13.5px] font-bold text-ink underline">
+      <button
+        type="submit"
+        data-resend
+        class="text-[13.5px] font-bold text-ink underline disabled:no-underline disabled:opacity-50"
+      >
         {AUTH.resend}
       </button>
-      <span class="text-[13.5px] text-ink-muted">Code 10 minute tak valid hai</span>
+      <span class="flex items-center gap-2 text-[13.5px] text-ink-muted">
+        <span data-resend-label class="font-extrabold text-ink"></span>
+        Code 10 minute tak valid hai
+      </span>
     </form>
   </AuthShell>
 </BaseLayout>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   effectivePricePkr,
   formatPKR,
@@ -11,6 +11,12 @@ import {
 import { api } from '../../lib/api-client.js';
 import { hrefFor, navigate } from '../../lib/router.js';
 import { Button, ErrorBanner, Spinner } from '../../components/ui/controls.jsx';
+import {
+  applyProductFilter,
+  NO_FILTER,
+  ProductFilterBar,
+  type ProductFilter,
+} from './components/ProductFilterBar.jsx';
 
 /**
  * The product list.
@@ -21,10 +27,20 @@ import { Button, ErrorBanner, Spinner } from '../../components/ui/controls.jsx';
  * One row per product on a phone; a two- or three-up grid of cards from `sm:`
  * up, so a laptop shows the whole catalogue at a glance instead of a single
  * narrow column.
+ *
+ * A search and category filter sit above the list. At the catalogue size this
+ * shop is planning for — a few hundred styles — scrolling to find one product
+ * on a phone is not a workable way to fix a price.
  */
 export function ProductListPage() {
   const [products, setProducts] = useState<Product[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<ProductFilter>(NO_FILTER);
+
+  const visible = useMemo(
+    () => (products === null ? [] : applyProductFilter(products, filter)),
+    [products, filter],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -66,15 +82,28 @@ export function ProductListPage() {
         <Button onClick={() => navigate({ name: 'product-new' })}>+ Add product</Button>
       </div>
 
+      {products !== null && products.length > 0 && (
+        <ProductFilterBar
+          filter={filter}
+          onChange={setFilter}
+          shown={visible.length}
+          total={products.length}
+        />
+      )}
+
       {products === null ? (
         <Spinner label="Loading products…" />
       ) : products.length === 0 ? (
         <p className="py-10 text-center text-sm text-ink-muted">
           No products yet. Add your first one.
         </p>
+      ) : visible.length === 0 ? (
+        <p className="py-10 text-center text-sm text-ink-muted">
+          Nothing matches that. Try a shorter search.
+        </p>
       ) : (
         <ul className="divide-y divide-neutral-200 sm:grid sm:grid-cols-2 sm:gap-4 sm:divide-y-0 lg:grid-cols-3">
-          {products.map((product) => {
+          {visible.map((product) => {
             const cover = primaryImage(product);
             return (
               <li

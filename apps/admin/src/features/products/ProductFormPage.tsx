@@ -1,142 +1,34 @@
-import { useEffect, useState } from 'react';
 import {
   CATEGORIES,
   CATEGORY_LABELS,
-  slugify,
   STOCK_STATUSES,
   STOCK_STATUS_LABELS,
   type Category,
   type StockStatus,
-  type UkSize,
 } from '@hamza/shared';
 
-import { api, ApiError } from '../../lib/api-client.js';
 import { navigate } from '../../lib/router.js';
 import { Button, ErrorBanner, Field, inputClass, Spinner } from '../../components/ui/controls.jsx';
 import { ImageUploader } from './components/ImageUploader.jsx';
 import { SizePicker } from './components/SizePicker.jsx';
+import { useProductForm } from './hooks/useProductForm.js';
 
 /**
  * Add or edit a product.
  *
  * Ordered by what the owner actually knows first: photos, name, price. The slug
- * is derived from the name and never shown as a required field — it is a URL
- * detail, not something a shopkeeper should have to think about.
+ * is derived from the name and never shown as a field — it is a URL detail, not
+ * something a shopkeeper should have to think about.
+ *
+ * Rendering only. Loading, editing and saving live in `useProductForm`.
  */
 
 interface Props {
   productId?: string;
 }
 
-interface FormState {
-  name: string;
-  slug: string;
-  description: string;
-  price_pkr: string;
-  sale_price_pkr: string;
-  category: Category;
-  sizes_available: UkSize[];
-  images: string[];
-  is_active: boolean;
-  stock_status: StockStatus;
-}
-
-const EMPTY: FormState = {
-  name: '',
-  slug: '',
-  description: '',
-  price_pkr: '',
-  sale_price_pkr: '',
-  category: 'men',
-  sizes_available: [],
-  images: [],
-  is_active: true,
-  stock_status: 'in_stock',
-};
-
 export function ProductFormPage({ productId }: Props) {
-  const [form, setForm] = useState<FormState>(EMPTY);
-  const [loading, setLoading] = useState(productId !== undefined);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [fields, setFields] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    if (!productId) return;
-
-    let cancelled = false;
-    api
-      .getProduct(productId)
-      .then(({ product }) => {
-        if (cancelled) return;
-        setForm({
-          name: product.name,
-          slug: product.slug,
-          description: product.description,
-          price_pkr: String(product.price_pkr),
-          sale_price_pkr:
-            product.sale_price_pkr === null ? '' : String(product.sale_price_pkr),
-          category: product.category,
-          sizes_available: [...product.sizes_available],
-          images: [...product.images],
-          is_active: product.is_active,
-          stock_status: product.stock_status,
-        });
-      })
-      .catch((cause: unknown) => {
-        if (!cancelled) setError(cause instanceof Error ? cause.message : 'Could not load');
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [productId]);
-
-  function update<K extends keyof FormState>(key: K, value: FormState[K]): void {
-    setForm((current) => ({ ...current, [key]: value }));
-  }
-
-  async function save(): Promise<void> {
-    setSaving(true);
-    setError(null);
-    setFields({});
-
-    const body = {
-      slug: form.slug || slugify(form.name),
-      name: form.name.trim(),
-      description: form.description.trim(),
-      price_pkr: Number.parseInt(form.price_pkr, 10) || 0,
-      sale_price_pkr: form.sale_price_pkr
-        ? Number.parseInt(form.sale_price_pkr, 10) || null
-        : null,
-      category: form.category,
-      sizes_available: form.sizes_available,
-      images: form.images,
-      is_active: form.is_active,
-      stock_status: form.stock_status,
-    };
-
-    try {
-      if (productId) {
-        await api.updateProduct(productId, body);
-      } else {
-        await api.createProduct(body);
-      }
-      navigate({ name: 'products' });
-    } catch (cause) {
-      if (cause instanceof ApiError) {
-        setError(cause.message);
-        setFields(cause.fields);
-      } else {
-        setError('Could not save. Check your connection and try again.');
-      }
-    } finally {
-      setSaving(false);
-    }
-  }
+  const { form, loading, saving, error, fields, update, save } = useProductForm(productId);
 
   if (loading) return <Spinner label="Loading product…" />;
 
@@ -240,7 +132,7 @@ export function ProductFormPage({ productId }: Props) {
         />
       </Field>
 
-      <label className="flex items-center gap-3">
+      <label className="flex min-h-11 items-center gap-3">
         <input
           type="checkbox"
           className="h-5 w-5 accent-brand-600"
@@ -262,9 +154,9 @@ export function ProductFormPage({ productId }: Props) {
           </Button>
         </div>
         <div className="flex-1 sm:max-w-[220px]">
-        <Button type="submit" disabled={saving}>
-          {saving ? 'Saving…' : 'Save product'}
-        </Button>
+          <Button type="submit" disabled={saving}>
+            {saving ? 'Saving…' : 'Save product'}
+          </Button>
         </div>
       </div>
     </form>

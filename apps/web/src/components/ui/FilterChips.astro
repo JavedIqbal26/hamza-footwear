@@ -39,7 +39,7 @@ const chip = (on: boolean) =>
   on ? 'bg-ink text-surface border-ink' : 'bg-surface text-ink border-line-strong hover:border-ink';
 
 const base =
-  'flex h-10 shrink-0 items-center whitespace-nowrap rounded-full border px-4 text-sm font-semibold';
+  'flex h-11 shrink-0 items-center whitespace-nowrap rounded-full border px-4 text-sm font-semibold';
 ---
 
 <div class="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:overflow-visible sm:px-0">
@@ -103,7 +103,7 @@ const base =
               size: query.size === size ? undefined : size,
             })}
             class:list={[
-              'flex h-9 min-w-10 shrink-0 items-center justify-center rounded-full border px-3 text-sm font-bold',
+              'flex h-11 min-w-11 shrink-0 items-center justify-center rounded-full border px-3 text-sm font-bold',
               chip(query.size === size),
             ]}
           >

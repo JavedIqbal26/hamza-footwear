@@ -43,7 +43,16 @@ export const checkoutSchema = z.object({
   city: z.string().trim().min(1, 'Please choose your city').max(60),
   area: z.string().trim().min(2, 'Please enter your area').max(80),
   address_line: z.string().trim().min(5, 'Please enter your full address').max(300),
-  payment_method: paymentMethodSchema,
+  /*
+   * Its own enum rather than `paymentMethodSchema`, purely for the message.
+   * Zod's default reads "Invalid enum value. Expected 'cod' | 'jazzcash' |
+   * 'easypaisa', received ''" — developer English, shown to a shopper in a
+   * village who has just been told their order failed. The admin API keeps the
+   * precise message, because there the reader is a developer.
+   */
+  payment_method: z.enum(PAYMENT_METHODS, {
+    errorMap: () => ({ message: 'Please choose how you will pay' }),
+  }),
   /** Wallet transaction id, when the customer paid by JazzCash or Easypaisa. */
   payment_reference: z.string().trim().max(60).optional(),
   notes: z.string().trim().max(500).default(''),

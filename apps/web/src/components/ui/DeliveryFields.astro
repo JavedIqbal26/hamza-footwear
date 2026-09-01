@@ -1,0 +1,173 @@
+---
+import { formatPKR, PK_MOBILE_PATTERN, type City } from '@hamza/shared';
+
+interface Props {
+  cities: readonly City[];
+  errors: Readonly<Record<string, string>>;
+  values: Readonly<Record<string, string>>;
+}
+
+const { cities, errors, values } = Astro.props;
+
+/*
+ * Where the order is going.
+ *
+ * Field order is fixed by the brief and by how people actually recite an
+ * address here: name -> mobile -> city -> area -> address. **No postal code** —
+ * it will not be filled in correctly, so asking costs a field and buys nothing.
+ *
+ * The city dropdown is what drives the delivery fee, and it shows each city's
+ * fee inline: a customer outside the major cities should learn the cost here,
+ * not be surprised by it on the summary.
+ */
+const majorCities = cities.filter((city) => city.tier === 'major');
+const otherCities = cities.filter((city) => city.tier !== 'major');
+
+const value = (name: string): string => values[name] ?? '';
+
+const fieldClass =
+  'tap-target mt-1.5 w-full rounded-xl border border-line-strong bg-surface px-3.5 py-3 text-base outline-none focus:border-ink';
+---
+
+<fieldset class="flex flex-col gap-4">
+  <legend class="display text-[22px]">Delivery details</legend>
+
+  <div>
+    <label for="customer_name" class="eyebrow">Full name</label>
+    <input
+      id="customer_name"
+      name="customer_name"
+      type="text"
+      required
+      autocomplete="name"
+      value={value('customer_name')}
+      aria-invalid={errors.customer_name ? 'true' : undefined}
+      aria-describedby={errors.customer_name ? 'error-customer_name' : undefined}
+      class={fieldClass}
+    />
+    {
+      errors.customer_name && (
+        <p id="error-customer_name" role="alert" class="mt-1 text-sm text-brand-700">
+          {errors.customer_name}
+        </p>
+      )
+    }
+  </div>
+
+  <div>
+    <label for="phone" class="eyebrow">Mobile number</label>
+    {/*
+      `inputmode="numeric"` brings up the number pad on Android. The pattern
+      is the same one the server enforces — the browser is a convenience, the
+      server is the authority.
+    */}
+    <input
+      id="phone"
+      name="phone"
+      type="tel"
+      required
+      inputmode="numeric"
+      autocomplete="tel"
+      placeholder="03001234567"
+      pattern={PK_MOBILE_PATTERN.source}
+      value={value('phone')}
+      aria-invalid={errors.phone ? 'true' : undefined}
+      aria-describedby={errors.phone ? 'error-phone' : 'hint-phone'}
+      class={fieldClass}
+    />
+    {
+      errors.phone ? (
+        <p id="error-phone" role="alert" class="mt-1 text-sm text-brand-700">
+          {errors.phone}
+        </p>
+      ) : (
+        <p id="hint-phone" class="mt-1 text-xs text-ink-soft">
+          Is number par hum order confirm karenge
+        </p>
+      )
+    }
+  </div>
+
+  <div>
+    <label for="city" class="eyebrow">City</label>
+    <select
+      id="city"
+      name="city"
+      required
+      aria-invalid={errors.city ? 'true' : undefined}
+      aria-describedby={errors.city ? 'error-city' : undefined}
+      class={fieldClass}
+    >
+      <option value="">Choose your city</option>
+      <optgroup label="Major cities">
+        {
+          majorCities.map((city) => (
+            <option value={city.name} selected={value('city') === city.name}>
+              {city.name} — {formatPKR(city.delivery_fee_pkr)} delivery
+            </option>
+          ))
+        }
+      </optgroup>
+      <optgroup label="Rest of Pakistan">
+        {
+          otherCities.map((city) => (
+            <option value={city.name} selected={value('city') === city.name}>
+              {city.name} — {formatPKR(city.delivery_fee_pkr)} delivery
+            </option>
+          ))
+        }
+      </optgroup>
+    </select>
+    {
+      errors.city && (
+        <p id="error-city" role="alert" class="mt-1 text-sm text-brand-700">
+          {errors.city}
+        </p>
+      )
+    }
+  </div>
+
+  <div>
+    <label for="area" class="eyebrow">Area</label>
+    <input
+      id="area"
+      name="area"
+      type="text"
+      required
+      placeholder="e.g. Gulshan-e-Iqbal Block 5"
+      value={value('area')}
+      aria-invalid={errors.area ? 'true' : undefined}
+      aria-describedby={errors.area ? 'error-area' : undefined}
+      class={fieldClass}
+    />
+    {
+      errors.area && (
+        <p id="error-area" role="alert" class="mt-1 text-sm text-brand-700">
+          {errors.area}
+        </p>
+      )
+    }
+  </div>
+
+  <div>
+    <label for="address_line" class="eyebrow">Full address</label>
+    <textarea
+      id="address_line"
+      name="address_line"
+      required
+      rows="3"
+      placeholder="House / flat number, street, nearby landmark"
+      aria-invalid={errors.address_line ? 'true' : undefined}
+      aria-describedby={errors.address_line ? 'error-address_line' : undefined}
+      class="mt-1.5 w-full rounded-xl border border-line-strong bg-surface px-3.5 py-3 text-base outline-none focus:border-ink"
+      >{value('address_line')}</textarea
+    >
+    {
+      errors.address_line && (
+        <p id="error-address_line" role="alert" class="mt-1 text-sm text-brand-700">
+          {errors.address_line}
+        </p>
+      )
+    }
+  </div>
+</fieldset>

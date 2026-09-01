@@ -1,4 +1,5 @@
 ---
+import Icon from '../icons/Icon.astro';
 import { TRUST } from '../../content/microcopy.js';
 
 /**
@@ -9,9 +10,9 @@ import { TRUST } from '../../content/microcopy.js';
  * before they have decided the shop is safe to order from.
  */
 const PROMISES = [
-  { glyph: '₨', title: 'Cash on Delivery', body: TRUST.cod },
-  { glyph: '⤳', title: '2–4 din delivery', body: TRUST.deliveryFeeNote },
-  { glyph: '⇄', title: '7-day free exchange', body: TRUST.returnsCondition },
+  { icon: 'rupee' as const, title: 'Cash on Delivery', body: TRUST.cod },
+  { icon: 'truck' as const, title: '2–4 din delivery', body: TRUST.deliveryFeeNote },
+  { icon: 'exchange' as const, title: '7-day free exchange', body: TRUST.returnsCondition },
 ] as const;
 ---
 
@@ -19,9 +20,7 @@ const PROMISES = [
   {
     PROMISES.map((promise) => (
       <li class="flex gap-3 border-b border-line-soft px-4 py-3.5 last:border-b-0">
-        <span aria-hidden="true" class="w-4 shrink-0 text-[15px] text-brand-600">
-          {promise.glyph}
-        </span>
+        <Icon name={promise.icon} size={18} class="mt-0.5 text-brand-600" />
         <span>
           <span class="block text-sm font-extrabold">{promise.title}</span>
           <span class="mt-0.5 block text-[13px] leading-relaxed text-ink-muted">

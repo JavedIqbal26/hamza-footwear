@@ -336,6 +336,19 @@ No payment gateway. JazzCash/Easypaisa APIs require a registered business
   goes to R2 and appears next to the order in admin for manual verification before
   dispatch.
 
+**A payment proof is not a catalogue photo.** Proofs are written under the
+`proofs/` prefix, which the storefront's public `/img/[key]` route can never
+serve — that route only matches generated variant keys (`…-800.webp`). They are
+read back solely through `GET /api/admin/orders/:id/proof` on the Worker,
+behind Cloudflare Access, with `no-store`. An unguessable key is not an access
+control, and this is a customer's payment record. Do not move proof serving onto
+the storefront origin.
+
+The upload is optional and allowed to fail silently: it happens *after* the order
+is committed, so a rejected or oversized file costs the shop one WhatsApp
+message, never a sale. The typed transaction ID is the primary record; the
+screenshot is what settles a dispute.
+
 **Do not build gateway integration until explicitly asked.** When we do, it will be
 Safepay — one integration covers cards plus both wallets.
 

@@ -88,8 +88,28 @@ const optionClass =
           class="tap-target mt-1.5 w-full rounded-xl border border-line-strong bg-surface px-3.5 py-3 text-base outline-none focus:border-ink"
         />
         <p class="mt-1 text-xs text-ink-soft">
-          Screenshot order confirm hone ke baad WhatsApp par bhej sakte hain.
+          Ya screenshot neeche lagayein — dono mein se ek kaafi hai.
         </p>
+
+        {/*
+          Optional, and deliberately second to the typed id: a screenshot is a
+          multi-megabyte upload over mobile data, and a customer on a weak
+          signal must never be blocked by it. `capture` is left off so the
+          picker opens the gallery, where the screenshot already is, rather
+          than the camera.
+        */}
+        <div class="mt-3">
+          <label for="payment_proof" class="eyebrow">
+            Payment screenshot <span class="normal-case text-ink-soft">(optional)</span>
+          </label>
+          <input
+            id="payment_proof"
+            name="payment_proof"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            class="tap-target mt-1.5 w-full rounded-xl border border-line-strong bg-surface px-3.5 py-2.5 text-sm file:mr-3 file:rounded-full file:border-0 file:bg-ink file:px-4 file:py-2 file:text-sm file:font-bold file:text-surface"
+          />
+        </div>
       </div>
     )
   }

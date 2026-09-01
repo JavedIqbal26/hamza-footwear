@@ -1,4 +1,5 @@
 ---
+import Icon from '../icons/Icon.astro';
 import { buildWhatsAppContactLink } from '@hamza/shared';
 
 import { TRUST } from '../../content/microcopy.js';
@@ -66,9 +67,10 @@ const whatsapp = buildWhatsAppContactLink(shopPhone);
     <div class="flex flex-wrap gap-3 lg:pt-1">
       <a
         href="/shop"
-        class="flex h-11 items-center justify-center rounded-full bg-surface px-5 text-sm font-extrabold text-ink lg:bg-brand-600 lg:px-6 lg:text-base lg:text-white lg:transition-colors lg:hover:bg-brand-700"
+        class="flex h-11 items-center justify-center gap-1.5 rounded-full bg-surface px-5 text-sm font-extrabold text-ink lg:bg-brand-600 lg:px-6 lg:text-base lg:text-white lg:transition-colors lg:hover:bg-brand-700"
       >
-        Shop new arrivals →
+        Shop new arrivals
+        <Icon name="arrow-right" size={16} />
       </a>
       <a
         href={whatsapp}

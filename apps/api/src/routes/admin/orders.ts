@@ -33,6 +33,43 @@ orderRoutes.get('/orders/:id', async (c) => {
   }
 });
 
+/**
+ * The wallet payment screenshot.
+ *
+ * Served from here, behind Cloudflare Access, and deliberately not from the
+ * storefront's public `/img/` route — that route only serves generated
+ * catalogue variants, and a customer's payment record is not a catalogue photo.
+ * An unguessable key is not an access control.
+ *
+ * `no-store` for the same reason: this must not sit in a shared cache, and the
+ * owner checking an order twice should see the current object, not a copy from
+ * before a re-upload.
+ */
+orderRoutes.get('/orders/:id/proof', async (c) => {
+  let order;
+  try {
+    order = await createOrderService(c.env.DB).get(c.req.param('id'));
+  } catch (error) {
+    if (error instanceof OrderNotFoundError) return notFound(c, 'Order not found');
+    throw error;
+  }
+
+  if (!order.payment_proof_key) return notFound(c, 'No payment proof on this order');
+
+  const object = await c.env.IMAGES.get(order.payment_proof_key);
+  if (!object) return notFound(c, 'Payment proof is no longer stored');
+
+  /* Buffered, not streamed — same reason as the storefront's image route. */
+  const body = await object.arrayBuffer();
+
+  return c.body(body, 200, {
+    'Content-Type': object.httpMetadata?.contentType ?? 'image/jpeg',
+    'Content-Length': String(body.byteLength),
+    'Cache-Control': 'no-store',
+    'X-Content-Type-Options': 'nosniff',
+  });
+});
+
 orderRoutes.patch('/orders/:id', async (c) => {
   const parsed = orderStatusUpdateSchema.safeParse(await c.req.json());
   if (!parsed.success) return validationFailed(c, parsed.error);

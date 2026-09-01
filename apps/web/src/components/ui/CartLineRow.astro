@@ -66,7 +66,7 @@ const fieldId = `qty-${product.slug}-${entry.size}`;
         <button
           type="submit"
           data-cart-qty-submit
-          class="rounded-full border border-line-strong px-3 py-1.5 text-xs font-bold text-ink-muted"
+          class="tap-target flex items-center rounded-full border border-line-strong px-3 text-xs font-bold text-ink-muted"
         >
           Update
         </button>
@@ -77,7 +77,11 @@ const fieldId = `qty-${product.slug}-${entry.size}`;
         <input type="hidden" name="size" value={entry.size} />
         <input type="hidden" name="action" value="remove" />
         <input type="hidden" name="return_to" value={returnTo} />
-        <button type="submit" class="text-xs font-bold text-brand-700 underline">Remove</button>
+        <button
+          type="submit"
+          class="tap-target flex items-center rounded-full px-3 text-xs font-bold text-brand-700 underline hover:bg-brand-50"
+          >Remove</button
+        >
       </form>
     </div>
   </div>

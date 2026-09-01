@@ -1,4 +1,5 @@
 ---
+import Icon from '../icons/Icon.astro';
 import {
   buildWhatsAppOrderLink,
   CATEGORY_LABELS,
@@ -61,11 +62,11 @@ const whatsappHref = buildWhatsAppOrderLink({
 
 <div class="mx-auto max-w-5xl px-4 pt-4 sm:px-6 sm:pt-6">
   <nav aria-label="Breadcrumb" class="pb-3 text-sm text-ink-muted">
-    <a href="/" class="-my-2 inline-flex min-h-9 items-center hover:text-ink">Home</a>
+    <a href="/" class="-my-2 inline-flex min-h-11 items-center hover:text-ink">Home</a>
     <span aria-hidden="true" class="px-1">/</span>
     <a
       href={categoryPath(product.category)}
-      class="-my-2 inline-flex min-h-9 items-center hover:text-ink"
+      class="-my-2 inline-flex min-h-11 items-center hover:text-ink"
     >
       {CATEGORY_LABELS[product.category]}
     </a>
@@ -122,7 +123,7 @@ const whatsappHref = buildWhatsAppOrderLink({
               aria-label={TRUST.whatsappPrompt}
               class="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-whatsapp text-[19px] font-extrabold text-whatsapp-ink"
             >
-              <span aria-hidden="true">✆</span>
+              <Icon name="whatsapp" size={22} />
             </a>
           </AddToCartForm>
         ) : (
@@ -135,7 +136,7 @@ const whatsappHref = buildWhatsAppOrderLink({
               rel="noopener"
               class="tap-target flex items-center justify-center gap-2 rounded-full bg-whatsapp px-5 text-base font-extrabold text-whatsapp-ink"
             >
-              <span aria-hidden="true">✆</span>
+              <Icon name="whatsapp" size={20} />
               {TRUST.whatsappPrompt}
             </a>
           </div>

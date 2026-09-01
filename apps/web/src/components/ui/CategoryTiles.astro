@@ -1,31 +1,77 @@
 ---
-import { CATEGORIES, CATEGORY_LABELS, categoryPath } from '@hamza/shared';
+import { CATEGORY_LABELS, categoryPath, type Category } from '@hamza/shared';
+
+import Icon from '../icons/Icon.astro';
+import ProductImage from './ProductImage.astro';
+
+export interface CategoryTile {
+  readonly category: Category;
+  /** R2 base key of a product photo from this category, when one exists. */
+  readonly cover: string | null;
+  readonly count: number;
+}
+
+interface Props {
+  tiles: readonly CategoryTile[];
+}
+
+const { tiles } = Astro.props;
 
 /** The one-line promise under each category name, as in the design. */
-const META: Record<string, string> = {
+const META: Readonly<Record<string, string>> = {
   women: 'Khussa, heels, flats',
   men: 'Sneakers, loafers, formal',
   kids: 'School shoes, sandals',
 };
+
+/*
+ * The design fills each tile with a cover photograph and lays a plate over it.
+ *
+ * The cover is the newest photographed product in that category rather than a
+ * separately managed asset: the owner already uploads product photos through
+ * admin, and a category image nobody remembers to set is a category image that
+ * goes stale. A category with no photos yet falls back to the flat warm tile.
+ */
 ---
 
 <nav aria-label="Shop by category">
-  <ul class="grid gap-3 sm:grid-cols-3">
+  <ul class="grid gap-3 sm:grid-cols-3 sm:gap-4">
     {
-      CATEGORIES.map((category) => (
+      tiles.map(({ category, cover, count }) => (
         <li>
           <a
             href={categoryPath(category)}
-            class="flex items-center justify-between gap-3 rounded-[14px] border border-line bg-surface-warm px-5 py-5 transition-colors hover:border-brand-600"
+            class="group relative flex h-[180px] flex-col justify-end overflow-hidden rounded-[14px] border border-line bg-surface-warm p-4 transition-colors hover:border-brand-600 sm:h-[260px]"
           >
-            <span>
-              <span class="block text-[19px] font-extrabold text-ink">
-                {CATEGORY_LABELS[category]}
+            {cover && (
+              <>
+                <ProductImage
+                  baseKey={cover}
+                  alt=""
+                  variant="product"
+                  sizes="(min-width: 640px) 33vw, 100vw"
+                  ratio="fill"
+                  class="absolute inset-0 transition-transform duration-300 group-hover:scale-[1.04]"
+                />
+                {/* Scrim so the plate never sits on a busy part of the photo. */}
+                <span
+                  aria-hidden="true"
+                  class="absolute inset-0 bg-gradient-to-t from-ink/35 to-transparent to-55%"
+                />
+              </>
+            )}
+
+            <span class="relative flex items-center justify-between gap-3 rounded-[10px] bg-surface px-4 py-3.5">
+              <span>
+                <span class="block text-[19px] font-extrabold text-ink">
+                  {CATEGORY_LABELS[category]}
+                </span>
+                <span class="mt-0.5 block text-[13px] text-ink-soft">
+                  {META[category]}
+                  {count > 0 && ` · ${count} styles`}
+                </span>
               </span>
-              <span class="mt-0.5 block text-[13px] text-ink-soft">{META[category]}</span>
-            </span>
-            <span aria-hidden="true" class="text-lg font-extrabold text-brand-600">
-              →
+              <Icon name="arrow-right" size={20} class="text-brand-600" />
             </span>
           </a>
         </li>

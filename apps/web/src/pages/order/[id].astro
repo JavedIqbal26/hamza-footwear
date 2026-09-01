@@ -1,4 +1,5 @@
 ---
+import Icon from '../../components/icons/Icon.astro';
 import { createOrderRepository } from '@hamza/db';
 import {
   buildWhatsAppContactLink,
@@ -112,7 +113,7 @@ const isMine = Boolean(order && customer && order.customer_id === customer.id);
           rel="noopener"
           class="tap-target mt-4 flex h-[54px] w-full items-center justify-center gap-2 rounded-full bg-whatsapp text-base font-extrabold text-whatsapp-ink"
         >
-          <span aria-hidden="true">✆</span>
+          <Icon name="whatsapp" size={20} />
           WhatsApp par rabta karein
         </a>
 

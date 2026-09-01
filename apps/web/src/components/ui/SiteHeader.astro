@@ -1,5 +1,6 @@
 ---
-import { CATEGORIES, CATEGORY_LABELS, categoryPath } from '@hamza/shared';
+import Icon from '../icons/Icon.astro';
+import CategoryChipRow from './CategoryChipRow.astro';
 
 import { PRIMARY_NAV } from '../../lib/site.js';
 import { TRUST } from '../../content/microcopy.js';
@@ -23,9 +24,6 @@ const currentPath = Astro.url.pathname;
 function isActive(href: string): boolean {
   return currentPath === href || currentPath.startsWith(`${href}/`);
 }
-
-const chip =
-  'flex h-11 shrink-0 items-center whitespace-nowrap rounded-full border px-4 text-sm font-semibold';
 ---
 
 {/* The promise that decides whether a first-time COD buyer stays at all. */}
@@ -44,7 +42,7 @@ const chip =
 >
   <div class="mx-auto max-w-[1440px] px-4 py-2.5 sm:px-6 sm:py-3">
     <div class="flex items-center gap-3">
-      <a href="/" class="flex shrink-0 items-baseline gap-2">
+      <a href="/" class="flex min-h-11 shrink-0 items-baseline gap-2 py-1.5">
         <span class="display text-[25px] text-ink sm:text-[28px]">Hamza</span>
         <span
           class="text-[9.5px] font-bold uppercase text-brand-600 sm:text-[11px]"
@@ -90,10 +88,10 @@ const chip =
       <form action="/search" method="GET" class="ml-auto hidden items-center lg:flex">
         <label
           for="site-search"
-          class="flex cursor-text items-center gap-2 rounded-full bg-surface-fill px-4 py-2.5"
+          class="flex min-h-11 cursor-text items-center gap-2 rounded-full bg-surface-fill px-4 py-2.5"
         >
           <span class="sr-only">Search products</span>
-          <span aria-hidden="true" class="text-sm text-ink-soft">⌕</span>
+          <Icon name="search" size={18} class="text-ink-soft" />
           <input
             id="site-search"
             name="q"
@@ -112,7 +110,7 @@ const chip =
           aria-label="Saved items"
           class="tap-target relative flex items-center justify-center rounded-full border border-line text-ink-soft hover:bg-surface-fill"
         >
-          <span aria-hidden="true" class="text-base">♥</span>
+          <Icon name="heart" size={20} />
           <span
             data-saved-badge
             hidden
@@ -127,7 +125,7 @@ const chip =
           class="tap-target relative flex items-center justify-center gap-2 rounded-full bg-ink px-3 text-sm font-bold text-surface hover:bg-[#2c2320] sm:px-4"
         >
           <span class="hidden sm:inline">Cart</span>
-          <span aria-hidden="true" class="sm:hidden">⌂</span>
+          <Icon name="cart" size={20} class="sm:hidden" />
           <span
             data-cart-badge
             hidden
@@ -148,7 +146,7 @@ const chip =
         class="flex min-h-11 cursor-text items-center gap-2.5 rounded-[14px] bg-surface-fill px-3.5 py-2.5"
       >
         <span class="sr-only">Search products</span>
-        <span aria-hidden="true" class="text-[15px] text-ink-soft">⌕</span>
+        <Icon name="search" size={20} class="text-ink-soft" />
         <input
           id="site-search-mobile"
           name="q"
@@ -162,53 +160,7 @@ const chip =
   </div>
 </header>
 
-{
-    showChips && (
-      <nav
-        aria-label="Categories"
-        class="overflow-x-auto border-b border-line bg-surface px-4 py-3 sm:hidden"
-      >
-        <ul class="flex w-max gap-2">
-          <li>
-            <a
-              href="/shop"
-              class:list={[
-                chip,
-                currentPath === '/shop'
-                  ? 'border-ink bg-ink text-surface'
-                  : 'border-line-strong bg-surface text-ink',
-              ]}
-            >
-              All
-            </a>
-          </li>
-          {CATEGORIES.map((category) => (
-            <li>
-              <a
-                href={categoryPath(category)}
-                class:list={[
-                  chip,
-                  isActive(categoryPath(category))
-                    ? 'border-ink bg-ink text-surface'
-                    : 'border-line-strong bg-surface text-ink',
-                ]}
-              >
-                {CATEGORY_LABELS[category]}
-              </a>
-            </li>
-          ))}
-          <li>
-            <a
-              href="/shop?sale=1"
-              class:list={[chip, 'border-line-strong bg-surface text-brand-600']}
-            >
-              Sale
-            </a>
-          </li>
-        </ul>
-      </nav>
-    )
-}
+{showChips && <CategoryChipRow currentPath={currentPath} />}
 
 <script>
   import { initHeaderCounts } from '../../scripts/header-counts.js';

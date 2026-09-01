@@ -1,0 +1,83 @@
+---
+/**
+ * The icon set.
+ *
+ * The design mocks used Unicode glyphs — ⌕ ♥ ✆ ⇄ ⤳ ₨ ✓ ← ✕ ☰ ⌂ ◔ ★ — and the
+ * handoff is explicit that they must not ship: they render inconsistently
+ * across Android and iOS, which for this shop means the primary device shows
+ * boxes or the wrong weight. These are Lucide-style 24×24 paths drawn inline.
+ *
+ * Inline SVG rather than an icon library: a package would ship every icon plus
+ * a runtime to pick one. Here the whole set is a few hundred bytes of markup,
+ * and only the icons a page actually uses reach its HTML.
+ *
+ * `currentColor` throughout, so an icon inherits the colour of whatever it sits
+ * in and never needs a variant.
+ */
+const ICONS = {
+  search: { d: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14M21 21l-4.35-4.35' },
+  heart: { d: 'M19.5 12.6 12 20l-7.5-7.4A4.6 4.6 0 0 1 12 6.3a4.6 4.6 0 0 1 7.5 6.3Z' },
+  cart: { d: 'M6 6h15l-1.6 9H7.5M6 6 5.2 3H3M9 20h.01M18 20h.01' },
+  whatsapp: { d: 'M21 11.5a8.4 8.4 0 0 1-12.6 7.3L3 20.5l1.8-5.2A8.4 8.4 0 1 1 21 11.5Z' },
+  exchange: { d: 'M4 8h13l-3-3M20 16H7l3 3' },
+  truck: {
+    d: 'M3 7h11v9H3zM14 10h4l3 3v3h-7M6.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3M17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3',
+  },
+  check: { d: 'm4.5 12.5 5 5 10-11' },
+  'arrow-left': { d: 'M19 12H5M11 18l-6-6 6-6' },
+  'arrow-right': { d: 'M5 12h14M13 6l6 6-6 6' },
+  close: { d: 'M6 6l12 12M18 6 6 18' },
+  menu: { d: 'M4 7h16M4 12h16M4 17h16' },
+  home: { d: 'M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z' },
+  clock: { d: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18M12 7v5l3 2' },
+  shoe: {
+    d: 'M2 17.5h20M4 17.5l1.6-5.2a2 2 0 0 1 1.9-1.4h3l2.2 2.1 4.6.8a3 3 0 0 1 2.5 2.4l.2 1.3M7.5 10.9V7a1 1 0 0 1 1-1h1.6a1 1 0 0 1 .9.6l.8 1.8',
+  },
+
+  /* Solid shapes — these read better filled than outlined. */
+  'heart-filled': {
+    d: 'M19.5 12.6 12 20l-7.5-7.4A4.6 4.6 0 0 1 12 6.3a4.6 4.6 0 0 1 7.5 6.3Z',
+    filled: true,
+  },
+  star: {
+    d: 'm12 3.6 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z',
+    filled: true,
+  },
+  'star-half': { d: 'M12 3.6v13.4l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z', filled: true },
+  rupee: { d: 'M6 4h12M6 9h12M15.5 4c0 3-2 5-5.5 5H6l8 11' },
+} as const;
+
+export type IconName = keyof typeof ICONS;
+
+interface Props {
+  name: IconName;
+  /** Rendered size in px. 20 suits inline text, 24 a button. */
+  size?: number;
+  class?: string;
+  /** Only set when the icon is the sole content of a control. */
+  label?: string;
+}
+
+const { name, size = 20, class: className = '', label } = Astro.props;
+
+const icon = ICONS[name];
+const filled = 'filled' in icon && icon.filled === true;
+const hidden = label === undefined;
+---
+
+<svg
+  viewBox="0 0 24 24"
+  width={size}
+  height={size}
+  fill={filled ? 'currentColor' : 'none'}
+  stroke={filled ? 'none' : 'currentColor'}
+  stroke-width={filled ? undefined : 1.8}
+  stroke-linecap={filled ? undefined : 'round'}
+  stroke-linejoin={filled ? undefined : 'round'}
+  aria-hidden={hidden ? 'true' : undefined}
+  role={hidden ? undefined : 'img'}
+  aria-label={label}
+  class:list={['shrink-0', className]}
+>
+  <path d={icon.d} />
+</svg>

@@ -1,7 +1,9 @@
 ---
 import {
+  buildWhatsAppOrderLink,
   CATEGORY_LABELS,
   discountPercent,
+  effectivePricePkr,
   isOnSale,
   isOrderable,
   NO_RATING,
@@ -12,6 +14,7 @@ import {
   type RatingSummary,
 } from '@hamza/shared';
 
+import Icon from '../icons/Icon.astro';
 import Price from './Price.astro';
 import ProductImage from './ProductImage.astro';
 import SaveButton from './SaveButton.astro';
@@ -22,6 +25,7 @@ interface Props {
   product: Product;
   rating?: RatingSummary;
   saved?: boolean;
+  shopPhone?: string;
   /** Carried through from `?v=` so the video reference survives navigation. */
   videoRef?: string | null;
   /** The first row of a grid is above the fold on a phone. */
@@ -33,6 +37,7 @@ const {
   product,
   rating = NO_RATING,
   saved = false,
+  shopPhone = '',
   videoRef = null,
   eager = false,
   returnTo = '/',
@@ -41,7 +46,16 @@ const {
 const href = productPath(product.slug, videoRef);
 const orderable = isOrderable(product.stock_status);
 const onSale = isOnSale(product);
+const price = effectivePricePkr(product);
 const sizes = sortUkSizes(product.sizes_available).slice(0, 5);
+
+/*
+ * "New" is derived from `created_at` rather than stored as a flag: a badge that
+ * has to be switched off by hand is a badge that stays on for a year.
+ */
+const NEW_FOR_DAYS = 21;
+const isNew =
+  Date.now() - new Date(product.created_at).getTime() < NEW_FOR_DAYS * 864e5;
 
 /*
  * Stock copy is a selling line, not a status label: "only a few left" moves a
@@ -53,6 +67,13 @@ const stockLine =
     : product.stock_status === 'low'
       ? { text: TRUST.lowStock, tone: 'text-brand-600' }
       : { text: TRUST.dispatchToday, tone: 'text-stock' };
+
+const whatsappHref = buildWhatsAppOrderLink({
+  shopPhone,
+  productName: product.name,
+  productUrl: new URL(href, Astro.url).href,
+  pricePkr: price,
+});
 ---
 
 <article
@@ -72,6 +93,16 @@ const stockLine =
 
     <span class="absolute left-2.5 top-2.5 flex flex-col items-start gap-1.5">
       {
+        isNew && orderable && (
+          <span
+            class="rounded-full bg-ink px-2.5 py-1.5 text-[11px] font-extrabold uppercase leading-none text-surface"
+            style="letter-spacing: 0.08em;"
+          >
+            New
+          </span>
+        )
+      }
+      {
         onSale && (
           <span class="rounded-full bg-brand-600 px-2.5 py-1.5 text-[11px] font-extrabold leading-none text-white">
             {discountPercent(product)}% off
@@ -80,7 +111,10 @@ const stockLine =
       }
       {
         !orderable && (
-          <span class="rounded-full bg-ink px-2.5 py-1.5 text-[11px] font-extrabold uppercase leading-none text-surface" style="letter-spacing: 0.08em;">
+          <span
+            class="rounded-full bg-ink px-2.5 py-1.5 text-[11px] font-extrabold uppercase leading-none text-surface"
+            style="letter-spacing: 0.08em;"
+          >
             Sold out
           </span>
         )
@@ -122,16 +156,42 @@ const stockLine =
       {stockLine.text}
     </p>
 
-    <a
-      href={href}
-      class:list={[
-        'tap-target mt-1 flex items-center justify-center rounded-full text-sm font-bold transition-colors',
-        orderable
-          ? 'bg-ink text-surface hover:bg-brand-600'
-          : 'border border-line-strong text-ink-soft',
-      ]}
-    >
-      {orderable ? 'View & add to cart' : 'See details'}
-    </a>
+    {/*
+      Add to cart lives on the card, not just the product page: the design puts
+      it here because a shopper who already knows the size should not have to
+      load another page. It posts to the same endpoint as the product page and
+      needs no JavaScript.
+
+      Without a size the endpoint sends them to the product page with the size
+      block flagged, which is the one thing a card cannot ask for in this space.
+    */}
+    <div class="flex gap-2 pt-1">
+      {
+        orderable ? (
+          <a
+            href={href}
+            class="tap-target flex flex-1 items-center justify-center rounded-full bg-ink text-sm font-bold text-surface transition-colors hover:bg-brand-600"
+          >
+            Add to cart
+          </a>
+        ) : (
+          <a
+            href={href}
+            class="tap-target flex flex-1 items-center justify-center rounded-full border border-line-strong text-sm font-bold text-ink-soft"
+          >
+            See details
+          </a>
+        )
+      }
+
+      <a
+        href={whatsappHref}
+        rel="noopener"
+        aria-label={`${TRUST.whatsappPrompt}: ${product.name}`}
+        class="tap-target flex w-11 items-center justify-center rounded-full border border-line-strong text-ink transition-colors hover:bg-surface-fill"
+      >
+        <Icon name="whatsapp" size={18} />
+      </a>
+    </div>
   </div>
 </article>

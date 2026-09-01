@@ -17,3 +17,8 @@ coverage/
 
 # Shared local D1/R2 state for development
 .wrangler-local/
+
+# Design handoff bundles are references, not source. Kept locally only.
+Online shoe store redesign/
+Online shoe store redesign.zip
+design_handoff_hamza_footwear/

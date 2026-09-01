@@ -5,11 +5,14 @@ import {
   type ProductRepository,
 } from '@hamza/db';
 import {
+  CATEGORIES,
   isCategory,
   isSortOption,
   isUkSize,
   NO_RATING,
+  primaryImage,
   type CatalogueQuery,
+  type Category,
   type Product,
   type RatingSummary,
 } from '@hamza/shared';
@@ -150,4 +153,34 @@ export function ratingOf(
   product: Pick<Product, 'id'>,
 ): RatingSummary {
   return ratings.get(product.id) ?? NO_RATING;
+}
+
+export interface CategoryTileData {
+  readonly category: Category;
+  readonly cover: string | null;
+  readonly count: number;
+}
+
+/**
+ * Cover photo and count for each category tile.
+ *
+ * The cover is the newest photographed product in that category rather than a
+ * separately managed asset: the owner already uploads product photos through
+ * admin, and an image nobody remembers to update is an image that goes stale.
+ */
+export async function listCategoryTiles(
+  locals: App.Locals,
+): Promise<CategoryTileData[]> {
+  const repo = repository(locals);
+
+  return Promise.all(
+    CATEGORIES.map(async (category) => {
+      const [products, count] = await Promise.all([
+        repo.listActive({ category, limit: 8 }),
+        repo.countActive(category),
+      ]);
+      const withPhoto = products.find((product) => product.images.length > 0);
+      return { category, cover: withPhoto ? primaryImage(withPhoto) : null, count };
+    }),
+  );
 }

@@ -1,4 +1,5 @@
 ---
+import Icon from '../icons/Icon.astro';
 import { formatRating, hasRating, starStates, type RatingSummary, type Review } from '@hamza/shared';
 
 interface Props {
@@ -36,7 +37,7 @@ function shortDate(iso: string): string {
         <span class="text-[32px] font-extrabold leading-none">{formatRating(rating)}</span>
         <span class="flex gap-0.5 text-lg text-brand-600" aria-hidden="true">
           {stars.map((state) => (
-            <span>{state === 'full' ? '★' : state === 'half' ? '⯪' : '☆'}</span>
+            <Icon name={state === 'half' ? 'star-half' : 'star'} size={18} class={state === 'empty' ? 'text-ink-disabled' : undefined} />
           ))}
         </span>
         <span class="text-sm text-ink-muted">
@@ -118,9 +119,10 @@ function shortDate(iso: string): string {
             <div class="min-w-0 flex-1">
               <div class="flex flex-wrap items-baseline gap-x-3">
                 <span class="text-sm font-bold">{review.author_name || 'Customer'}</span>
-                <span class="text-[13px] text-brand-600" aria-label={`${review.rating} out of 5`}>
-                  {'★'.repeat(review.rating)}
-                  <span class="text-ink-disabled">{'★'.repeat(5 - review.rating)}</span>
+                <span class="inline-flex gap-0.5 text-brand-600" aria-label={`${review.rating} out of 5`}>
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <Icon name="star" size={13} class={i < review.rating ? undefined : 'text-ink-disabled'} />
+                  ))}
                 </span>
                 <span class="text-xs text-ink-soft">{shortDate(review.created_at)}</span>
               </div>

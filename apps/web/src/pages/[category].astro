@@ -46,6 +46,7 @@ const label = category ? CATEGORY_LABELS[category] : '';
       shopPhone={shopPhone}
     >
       <CatalogueView
+        shopPhone={getShopWhatsApp(Astro.locals)}
         heading={label}
         basePath={categoryPath(category)}
         query={query}

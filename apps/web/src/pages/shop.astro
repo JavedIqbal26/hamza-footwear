@@ -27,5 +27,7 @@ Astro.response.headers.set('Cache-Control', CATALOGUE_CACHE_CONTROL);
   description="Browse every style Hamza Footwear has in stock — men, women and kids. Delivered across Pakistan with Cash on Delivery."
   shopPhone={getShopWhatsApp(Astro.locals)}
 >
-  <CatalogueView heading="All Shoes" basePath="/shop" query={query} view={view} saved={saved} />
+  <CatalogueView
+ shopPhone={getShopWhatsApp(Astro.locals)}
+ heading="All Shoes" basePath="/shop" query={query} view={view} saved={saved} />
 </BaseLayout>

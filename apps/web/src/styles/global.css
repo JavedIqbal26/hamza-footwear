@@ -10,12 +10,17 @@
  *   SELF-HOSTED, never fetched from fonts.googleapis.com: that host is
  *   intermittently blocked or throttled in Pakistan, and an off-origin font is a
  *   reliability risk, not just a perf one.
- * - Body stays on the system stack. Zero bytes, zero layout shift, and text
- *   paints on the first frame — which matters more than a second typeface on a
- *   mid-range Android arriving from TikTok.
+ * - Body (Manrope) is the design's other half. Variable 400–800 in a single
+ *   24.8KB latin subset.
  *
- * If the woff2 below is missing, the browser silently falls through to Georgia
- * and the design still reads correctly. See README for the one file to add.
+ * Both are SELF-HOSTED, never fetched from fonts.googleapis.com: that host is
+ * intermittently blocked or throttled in Pakistan, and an off-origin font is a
+ * reliability risk, not just a perf one.
+ *
+ * Only the serif is preloaded — it renders the LCP heading. Manrope is left to
+ * `swap`, so the system stack paints body text on the first frame and Manrope
+ * replaces it when it lands. Text is never invisible; the cost is one weight
+ * shift rather than a blocked render.
  */
 @font-face {
   font-family: 'Instrument Serif';
@@ -29,10 +34,20 @@
     U+2074, U+20A8-20AC, U+2122, U+2191, U+2193, U+2212, U+2215;
 }
 
+@font-face {
+  font-family: 'Manrope';
+  src: url('/fonts/manrope-var.woff2') format('woff2-variations');
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215;
+}
+
 @theme {
   --font-sans:
-    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    'Noto Sans', sans-serif;
+    'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, 'Noto Sans', sans-serif;
 
   --font-display: 'Instrument Serif', Georgia, 'Times New Roman', serif;
 
@@ -55,10 +70,22 @@
    * discount. Judged in a shop doorway in daylight, not on a calibrated
    * monitor.
    */
-  --color-ink-soft: #807364;
-  --color-ink-label: #827363;
+  --color-ink-soft: #6f6458;
+  --color-ink-label: #776a5b;
   /* Disabled sizes: 3.0, with the strikethrough doing the real signalling. */
   --color-ink-disabled: #9c9286;
+
+  /*
+   * Secondary text on the ink surfaces — the bottom tab bar's inactive labels
+   * and the WhatsApp strip's second line.
+   *
+   * The ramp above is tuned against warm paper; the same tone on #17120f
+   * measures 4.03, which is a fail. Inverting a ramp is not a matter of picking
+   * a step from the other end, so this is its own token: 5.5:1 on ink, bright
+   * enough to read on a cheap panel in daylight and still clearly subordinate
+   * to the active label in #fffdf9.
+   */
+  --color-ink-on-ink: #97897a;
 
   /* ---- Surfaces --------------------------------------------------------
    * Warm white on a warm ground. Nothing here is pure #fff — that is what

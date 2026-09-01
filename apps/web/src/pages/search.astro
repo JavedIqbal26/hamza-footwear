@@ -33,6 +33,7 @@ const heading = query.q ? `“${query.q}”` : 'Search';
   shopPhone={getShopWhatsApp(Astro.locals)}
 >
   <CatalogueView
+    shopPhone={getShopWhatsApp(Astro.locals)}
     heading={heading}
     basePath="/search"
     query={query}

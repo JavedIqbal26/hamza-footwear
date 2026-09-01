@@ -6,6 +6,9 @@ import { priceCart } from '../../lib/cart/pricing.js';
 import { clearCart, readCart } from '../../lib/cart/session.js';
 import { setCheckoutError } from '../../lib/orders/error-cookie.js';
 import { createOrder, UnknownCityError } from '../../lib/orders/create.js';
+import { storePaymentProof } from '../../lib/orders/payment-proof.js';
+import { createOrderRepository } from '@hamza/db';
+import { getDatabase } from '../../lib/runtime.js';
 import { notifyNewOrder } from '../../lib/notifications/notify.js';
 import { currentCustomer } from '../../lib/auth/session.js';
 import { rememberAddress } from '../../lib/orders/remember-address.js';
@@ -90,6 +93,18 @@ export const POST: APIRoute = async ({ request, cookies, locals, redirect, url }
     if (customer) await rememberAddress(locals, customer.id, parsed.data as CheckoutInput);
 
     /*
+     * The screenshot is stored after the order exists, never before. Uploading
+     * first would leave an orphaned object in R2 whenever order creation fails,
+     * and a proof that no order points at is litter nobody will ever clean up.
+     *
+     * It is also allowed to fail quietly: the order is already committed, the
+     * customer already has their confirmation, and the typed transaction id is
+     * on the order. A failed upload costs the shop one manual WhatsApp message,
+     * not a sale.
+     */
+    await attachPaymentProof(locals, order.id, form.get('payment_proof'));
+
+    /*
      * The order is committed before anything else happens. Notifications are
      * fired after and can never fail the order.
      */
@@ -133,4 +148,25 @@ function fieldErrors(issues: readonly { path: PropertyKey[]; message: string }[]
     }
   }
   return errors;
+}
+
+/**
+ * Stores the wallet screenshot against an order that already exists.
+ *
+ * Wrapped so that nothing here can reach the caller: by this point the order is
+ * committed and the customer is one redirect from their confirmation page.
+ */
+async function attachPaymentProof(
+  locals: App.Locals,
+  orderId: string,
+  file: FormDataEntryValue | null,
+): Promise<void> {
+  if (file === null) return;
+
+  try {
+    const key = await storePaymentProof(locals, orderId, file);
+    if (key) await createOrderRepository(getDatabase(locals)).attachPaymentProof(orderId, key);
+  } catch (error) {
+    console.error('Could not attach the payment proof', error);
+  }
 }

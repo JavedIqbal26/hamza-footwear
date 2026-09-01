@@ -1,5 +1,5 @@
 ---
-import CategoryTiles from './CategoryTiles.astro';
+import { CATEGORIES, CATEGORY_LABELS, categoryPath } from '@hamza/shared';
 
 interface Props {
   /** Overridden on the product page, where "sold out" is the likelier cause. */
@@ -18,9 +18,19 @@ const {
   </h1>
   <p class="mt-2 text-sm text-ink-muted">{message}</p>
 
-  <div class="mt-8 text-left">
-    <CategoryTiles />
-  </div>
+  {/* Plain links here: the not-found page has no catalogue data to build tiles from. */}
+  <ul class="mt-7 flex flex-wrap justify-center gap-2">
+    {CATEGORIES.map((category) => (
+      <li>
+        <a
+          href={categoryPath(category)}
+          class="flex h-11 items-center rounded-full border border-line-strong bg-surface px-5 text-sm font-semibold text-ink hover:border-ink"
+        >
+          {CATEGORY_LABELS[category]}
+        </a>
+      </li>
+    ))}
+  </ul>
 
   <a
     href="/"

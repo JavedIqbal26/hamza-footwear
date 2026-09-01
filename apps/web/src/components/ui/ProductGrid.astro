@@ -8,6 +8,7 @@ interface Props {
   products: readonly Product[];
   ratings?: ReadonlyMap<string, RatingSummary>;
   saved?: readonly string[];
+  shopPhone?: string;
   videoRef?: string | null;
   returnTo?: string;
   emptyMessage?: string;
@@ -17,6 +18,7 @@ const {
   products,
   ratings,
   saved = [],
+  shopPhone = '',
   videoRef = null,
   returnTo = '/',
   emptyMessage = TRUST.noResults,
@@ -44,6 +46,7 @@ const savedSet = new Set(saved);
               product={product}
               rating={ratings?.get(product.id) ?? NO_RATING}
               saved={savedSet.has(product.slug)}
+              shopPhone={shopPhone}
               videoRef={videoRef}
               returnTo={returnTo}
               eager={index < EAGER_COUNT}

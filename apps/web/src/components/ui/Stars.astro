@@ -1,4 +1,5 @@
 ---
+import Icon from '../icons/Icon.astro';
 import { formatRating, hasRating, starStates, type RatingSummary } from '@hamza/shared';
 
 interface Props {
@@ -24,12 +25,12 @@ const states = showStars ? starStates(rating) : [];
           aria-label={`${formatRating(rating)} out of 5`}
         >
           {states.map((state) => (
-            <span aria-hidden="true">{state === 'full' ? '★' : state === 'half' ? '⯪' : '☆'}</span>
+            <Icon name={state === 'half' ? 'star-half' : 'star'} size={14} class={state === 'empty' ? 'text-ink-disabled' : undefined} />
           ))}
         </span>
       )}
       <span class="font-bold text-ink">{formatRating(rating)}</span>
-      {!showStars && <span aria-hidden="true" class="text-brand-600">★</span>}
+      {!showStars && <Icon name="star" size={13} class="text-brand-600" />}
       <span>({rating.count})</span>
     </span>
   )

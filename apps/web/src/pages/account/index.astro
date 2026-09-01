@@ -1,4 +1,5 @@
 ---
+import Icon from '../../components/icons/Icon.astro';
 import { createCustomerRepository, createOrderRepository } from '@hamza/db';
 import { firstName, formatPhone, formatPKR, ORDER_STATUS_LABELS } from '@hamza/shared';
 
@@ -32,9 +33,10 @@ const defaultAddress = addresses.find((address) => address.is_default) ?? addres
   <div class="mx-auto max-w-2xl px-4 pt-8 sm:px-6">
     <div class="flex flex-col items-center gap-3 rounded-[18px] bg-brand-50 px-5 py-8 text-center">
       <span
-        class="flex h-[74px] w-[74px] items-center justify-center rounded-full bg-success-soft text-[32px] font-extrabold text-whatsapp-dark"
-        aria-hidden="true">✓</span
+        class="flex h-[74px] w-[74px] items-center justify-center rounded-full bg-success-soft text-whatsapp-dark"
       >
+        <Icon name="check" size={34} />
+      </span>
       <h1 class="display text-[32px]">
         {AUTH.welcome}{greeting ? `, ${greeting}` : ''}
       </h1>
@@ -68,9 +70,7 @@ const defaultAddress = addresses.find((address) => address.is_default) ?? addres
               href={`/order/${order.id}`}
               class="flex min-h-14 items-center gap-3 border-b border-line-soft px-4 py-3.5 last:border-b-0 hover:bg-surface-fill"
             >
-              <span aria-hidden="true" class="w-5 text-[15px]">
-                ◔
-              </span>
+              <Icon name="clock" size={18} class="text-ink-soft" />
               <span class="flex-1 text-[15px] font-bold">{order.order_number}</span>
               <span class="text-[12.5px] font-bold text-brand-600">
                 {ORDER_STATUS_LABELS[order.order_status]}

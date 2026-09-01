@@ -1,4 +1,5 @@
 ---
+import Icon from '../icons/Icon.astro';
 import { TRUST } from '../../content/microcopy.js';
 
 /**
@@ -9,10 +10,10 @@ import { TRUST } from '../../content/microcopy.js';
  * Delivery promise is already in the strip above the header on every page.
  */
 const POINTS = [
-  { glyph: '₨', title: 'Cash on Delivery', body: TRUST.cod },
-  { glyph: '⤳', title: '2–4 din delivery', body: TRUST.deliveryTime },
-  { glyph: '⇄', title: '7-day exchange', body: TRUST.returns },
-  { glyph: '✓', title: 'Asli tasveerein', body: 'Jo tasveer mein hai wohi milega.' },
+  { icon: 'rupee' as const, title: 'Cash on Delivery', body: TRUST.cod },
+  { icon: 'truck' as const, title: '2–4 din delivery', body: TRUST.deliveryTime },
+  { icon: 'exchange' as const, title: '7-day exchange', body: TRUST.returns },
+  { icon: 'check' as const, title: 'Asli tasveerein', body: 'Jo tasveer mein hai wohi milega.' },
 ] as const;
 ---
 
@@ -21,9 +22,7 @@ const POINTS = [
     {
       POINTS.map((point) => (
         <li class="rounded-xl border border-line p-5">
-          <p aria-hidden="true" class="text-[22px] leading-none text-brand-600">
-            {point.glyph}
-          </p>
+          <Icon name={point.icon} size={22} class="text-brand-600" />
           <p class="mt-2.5 text-[15px] font-extrabold">{point.title}</p>
           <p class="mt-1 text-[13px] leading-relaxed text-ink-muted">{point.body}</p>
         </li>

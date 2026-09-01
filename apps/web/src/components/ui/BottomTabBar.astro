@@ -1,4 +1,5 @@
 ---
+import Icon from '../icons/Icon.astro';
 import { buildWhatsAppContactLink } from '@hamza/shared';
 
 interface Props {
@@ -16,17 +17,17 @@ const path = Astro.url.pathname;
  * form. Hidden from `sm:` upwards, where the header already carries everything.
  */
 const TABS = [
-  { href: '/', label: 'Home', glyph: '⌂', match: (p: string) => p === '/' },
-  { href: '/shop', label: 'Shop', glyph: '☰', match: (p: string) => p.startsWith('/shop') },
+  { href: '/', label: 'Home', icon: 'home' as const, match: (p: string) => p === '/' },
+  { href: '/shop', label: 'Shop', icon: 'menu' as const, match: (p: string) => p.startsWith('/shop') },
   {
     href: buildWhatsAppContactLink(shopPhone),
     label: 'WhatsApp',
-    glyph: '✆',
+    icon: 'whatsapp' as const,
     match: () => false,
     external: true,
   },
-  { href: '/saved', label: 'Saved', glyph: '♥', match: (p: string) => p.startsWith('/saved') },
-  { href: '/account', label: 'Orders', glyph: '◔', match: (p: string) => p.startsWith('/account') },
+  { href: '/saved', label: 'Saved', icon: 'heart' as const, match: (p: string) => p.startsWith('/saved') },
+  { href: '/account', label: 'Orders', icon: 'clock' as const, match: (p: string) => p.startsWith('/account') },
 ] as const;
 ---
 
@@ -49,12 +50,10 @@ const TABS = [
               ? 'font-extrabold text-whatsapp'
               : active
                 ? 'font-bold text-surface'
-                : 'font-medium text-ink-soft',
+                : 'font-medium text-ink-on-ink',
           ]}
         >
-          <span aria-hidden="true" class="text-[17px] leading-none">
-            {tab.glyph}
-          </span>
+          <Icon name={tab.icon} size={20} />
           {tab.label}
         </a>
       );
