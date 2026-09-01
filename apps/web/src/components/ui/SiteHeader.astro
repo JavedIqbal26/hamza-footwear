@@ -83,8 +83,11 @@ const chip =
         </ul>
       </nav>
 
-      {/* Search sits inline from md: up; on a phone it gets its own row below. */}
-      <form action="/search" method="GET" class="ml-auto hidden items-center md:flex">
+      {/*
+        Search goes inline only from lg:. At 768 it sat beside the category
+        nav and pushed the cart button off the right edge of the page.
+      */}
+      <form action="/search" method="GET" class="ml-auto hidden items-center lg:flex">
         <label
           for="site-search"
           class="flex cursor-text items-center gap-2 rounded-full bg-surface-fill px-4 py-2.5"
@@ -102,7 +105,7 @@ const chip =
         </label>
       </form>
 
-      <div class="ml-auto flex shrink-0 items-center gap-2 md:ml-0">
+      <div class="ml-auto flex shrink-0 items-center gap-2 lg:ml-0">
         <a
           href="/saved"
           data-saved-link
@@ -139,7 +142,7 @@ const chip =
       design's home screen has them. Search has to be reachable without a tap
       into another page — it is how a returning customer finds a size.
     */}
-    <form action="/search" method="GET" class="mt-2.5 md:hidden">
+    <form action="/search" method="GET" class="mt-2.5 lg:hidden">
       <label
         for="site-search-mobile"
         class="flex min-h-11 cursor-text items-center gap-2.5 rounded-[14px] bg-surface-fill px-3.5 py-2.5"
@@ -163,7 +166,7 @@ const chip =
     showChips && (
       <nav
         aria-label="Categories"
-        class="overflow-x-auto border-b border-line bg-surface px-4 py-3 md:hidden"
+        class="overflow-x-auto border-b border-line bg-surface px-4 py-3 sm:hidden"
       >
         <ul class="flex w-max gap-2">
           <li>

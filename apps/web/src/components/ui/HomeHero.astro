@@ -15,124 +15,106 @@ interface Props {
 const { product, shopPhone, videoRef = null } = Astro.props;
 
 /*
- * Two layouts, because the design uses two.
+ * One DOM tree, two layouts.
  *
- * On a phone the copy is overlaid on the photo as one compact card — stacking
- * text above a full-width image pushes "Shop by category" clean off the screen,
- * which is exactly the problem this component exists to solve.
+ * On a phone the copy is overlaid on the photo as an inset card; from `lg:` up
+ * it becomes a side-by-side split. An earlier version rendered two sections and
+ * hid one, which put a second <h1> in the document and repeated the tagline for
+ * crawlers. The copy block is first in source order, so the desktop grid places
+ * it in column one with no reordering.
  *
- * From `lg:` up there is room for the side-by-side split, and the photo gets a
- * definite height so a square image cannot force a 640px row.
+ * The photo sits in a box with a definite height because the shop's photos are
+ * square: at 640px wide a square would otherwise force a 640px row and push the
+ * rest of the page off the screen.
  */
-const EYEBROW = 'Naya stock — abhi live';
-const BODY =
-  'Khussa, everyday sneakers and school shoes — delivered anywhere in Pakistan in 2–4 days. Pay cash when you get them.';
-
 const href = product ? productPath(product.slug, videoRef) : '/shop';
 const whatsapp = buildWhatsAppContactLink(shopPhone);
 const cover = product ? primaryImage(product) : null;
 ---
 
-{/* ---------- Phone: copy over the photo ---------- */}
-<section class="relative mx-4 mt-4 h-[230px] overflow-hidden rounded-[18px] bg-surface-warm lg:hidden">
-  {
-    cover && (
-      <ProductImage
-        baseKey={cover}
-        alt={product?.name ?? ''}
-        variant="full"
-        sizes="100vw"
-        loading="eager"
-        ratio="fill"
-        class="absolute inset-0"
-      />
-    )
-  }
-
-  {/* Dark wash so the copy stays legible over any photo the owner uploads. */}
+<section
+  class="relative mx-4 mt-4 h-[230px] overflow-hidden rounded-[18px] bg-surface-warm lg:mx-0 lg:mt-0 lg:grid lg:h-[420px] lg:grid-cols-2 lg:rounded-none lg:border-b lg:border-line lg:bg-surface"
+>
+  {/* Copy — overlaid on the photo below lg, first column above it. */}
   <div
-    class="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/25 to-transparent"
-    aria-hidden="true"
+    class="absolute inset-x-0 bottom-0 z-10 flex flex-col items-start gap-2.5 p-4 lg:static lg:justify-center lg:gap-5 lg:p-8"
   >
-  </div>
-
-  <div class="absolute inset-x-0 bottom-0 flex flex-col items-start gap-2.5 p-4">
-    <span class="text-[10.5px] font-extrabold uppercase text-[#f0c9b8]" style="letter-spacing: 0.14em;">
-      {EYEBROW}
-    </span>
-    <h1 class="display max-w-[16ch] text-[30px] leading-[1.05] text-surface">{SITE.tagline}</h1>
-    <a
-      href="/shop"
-      class="flex h-11 items-center justify-center rounded-full bg-surface px-5 text-sm font-extrabold text-ink"
-    >
-      Shop new arrivals →
-    </a>
-  </div>
-</section>
-
-{/* ---------- Laptop: side-by-side split ---------- */}
-<section class="hidden border-b border-line lg:grid lg:grid-cols-2">
-  <div class="flex flex-col items-start justify-center gap-5 px-8 py-12">
     <span
-      class="inline-flex items-center rounded-full bg-brand-50 px-3.5 py-2 text-xs font-bold uppercase text-brand-600"
-      style="letter-spacing: 0.12em;"
+      class="text-[10.5px] font-extrabold uppercase text-[#f0c9b8] lg:rounded-full lg:bg-brand-50 lg:px-3.5 lg:py-2 lg:text-xs lg:text-brand-600"
+      style="letter-spacing: 0.13em;"
     >
-      {EYEBROW}
+      Naya stock — abhi live
     </span>
 
-    <h1 class="display max-w-[13ch] text-[56px]">{SITE.tagline}</h1>
+    <h1
+      class="display max-w-[16ch] text-[30px] leading-[1.05] text-surface lg:max-w-[13ch] lg:text-[56px] lg:text-ink"
+    >
+      {SITE.tagline}
+    </h1>
 
-    <p class="max-w-[42ch] text-[17px] leading-relaxed text-ink-body">{BODY}</p>
+    {/* The supporting sentence only earns its space once there is a column. */}
+    <p class="hidden max-w-[42ch] text-[17px] leading-relaxed text-ink-body lg:block">
+      Khussa, everyday sneakers and school shoes — delivered anywhere in Pakistan
+      in 2–4 days. Pay cash when you get them.
+    </p>
 
-    <div class="flex flex-wrap gap-3 pt-1">
+    <div class="flex flex-wrap gap-3 lg:pt-1">
       <a
         href="/shop"
-        class="tap-target flex items-center gap-2 rounded-full bg-brand-600 px-6 text-base font-bold text-white transition-colors hover:bg-brand-700"
+        class="flex h-11 items-center justify-center rounded-full bg-surface px-5 text-sm font-extrabold text-ink lg:bg-brand-600 lg:px-6 lg:text-base lg:text-white lg:transition-colors lg:hover:bg-brand-700"
       >
         Shop new arrivals →
       </a>
       <a
         href={whatsapp}
         rel="noopener"
-        class="tap-target flex items-center gap-2 rounded-full border-[1.5px] border-ink px-6 text-base font-bold text-ink transition-colors hover:bg-ink hover:text-surface"
+        class="hidden h-11 items-center gap-2 rounded-full border-[1.5px] border-ink px-6 text-base font-bold text-ink transition-colors hover:bg-ink hover:text-surface lg:flex"
       >
         {TRUST.whatsappPrompt}
       </a>
     </div>
   </div>
 
-  {/*
-    A definite height, not min-height: the shop's photos are square, and at
-    640px wide a square would force a 640px row and push the category tiles
-    below the fold — the whole reason this hero was rebuilt.
-  */}
-  <div class="relative h-[420px] overflow-hidden bg-surface-warm">
+  {/* Photo — full-bleed behind the copy below lg, second column above it. */}
+  <div class="absolute inset-0 lg:relative lg:overflow-hidden">
     {
       cover ? (
-        <a href={href} class="absolute inset-0 block">
+        <a href={href} class="absolute inset-0 block" tabindex="-1" aria-hidden="true">
           <ProductImage
             baseKey={cover}
             alt={product?.name ?? ''}
             variant="full"
-            sizes="50vw"
+            sizes="(min-width: 1024px) 50vw, 100vw"
             loading="eager"
             ratio="fill"
             class="absolute inset-0"
           />
-          <span class="absolute bottom-5 left-5 max-w-[260px] rounded-xl bg-surface/95 px-4 py-3.5 backdrop-blur">
-            <span class="eyebrow block">Handmade in Lahore</span>
-            <span class="mt-1 block text-sm leading-relaxed text-ink-body">
-              Leather uppers, stitched soles — not glued.
-            </span>
-          </span>
         </a>
       ) : (
-        <div class="flex h-full items-center justify-center px-6">
+        <div class="hidden h-full items-center justify-center px-6 lg:flex">
           <p class="max-w-[26ch] text-center text-sm text-ink-muted">
             <span class="eyebrow block pb-2">Handmade in Lahore</span>
             Leather uppers, stitched soles — not glued.
           </p>
         </div>
+      )
+    }
+
+    {/* Dark wash keeps the overlaid copy legible; unnecessary once split. */}
+    <div
+      class="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/25 to-transparent lg:hidden"
+      aria-hidden="true"
+    >
+    </div>
+
+    {
+      cover && (
+        <span class="absolute bottom-5 left-5 hidden max-w-[260px] rounded-xl bg-surface/95 px-4 py-3.5 backdrop-blur lg:block">
+          <span class="eyebrow block">Handmade in Lahore</span>
+          <span class="mt-1 block text-sm leading-relaxed text-ink-body">
+            Leather uppers, stitched soles — not glued.
+          </span>
+        </span>
       )
     }
   </div>
