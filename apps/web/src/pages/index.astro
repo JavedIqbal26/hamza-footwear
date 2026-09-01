@@ -21,6 +21,19 @@ const [ratings, categoryTiles] = await Promise.all([
   ratingsFor(Astro.locals, products),
   listCategoryTiles(Astro.locals),
 ]);
+/*
+ * The catalogue size shown beside "Shop by category".
+ *
+ * Summed from the tiles rather than counted again: `category` is CHECK-
+ * constrained to exactly these three, so the sum is the total active product
+ * count, and the home page does not pay for a fourth query to learn it.
+ *
+ * The design mocked this as "View all 240 styles". 240 is an invented number,
+ * and inventing one here is exactly what CLAUDE.md forbids — this is the real
+ * count, and it says nothing at all when the catalogue is empty.
+ */
+const totalStyles = categoryTiles.reduce((sum, tile) => sum + tile.count, 0);
+
 const videoRef = readVideoRef(Astro.url.searchParams);
 const saved = readWishlist(Astro.cookies);
 const shopPhone = getShopWhatsApp(Astro.locals);
@@ -37,7 +50,19 @@ Astro.response.headers.set('Cache-Control', CATALOGUE_CACHE_CONTROL);
     the whole thing the design gets right.
   */}
   <section class="hidden px-4 pt-8 sm:px-6 lg:block">
-    <h2 class="display text-[26px] sm:text-[34px]">Shop by category</h2>
+    <div class="flex items-baseline justify-between gap-4">
+      <h2 class="display text-[26px] sm:text-[34px]">Shop by category</h2>
+      {
+        totalStyles > 0 && (
+          <a
+            href="/shop"
+            class="-my-2 -mr-2 inline-flex min-h-11 items-center px-2 text-sm font-bold text-brand-600"
+          >
+            View all {totalStyles} styles →
+          </a>
+        )
+      }
+    </div>
     <div class="mt-5">
       <CategoryTiles tiles={categoryTiles} />
     </div>

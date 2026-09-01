@@ -1,26 +1,28 @@
 /**
- * UK shoe sizes. Stored and displayed as strings so that half sizes never go
- * through float comparison — "7.5" is an identifier here, not a measurement.
+ * UK shoe sizes.
+ *
+ * Whole sizes only — the shop does not stock half sizes, so offering "7.5" in a
+ * filter or an admin picker would advertise stock that cannot be sold.
+ *
+ * Still strings rather than numbers: a size is an identifier here, not a
+ * measurement, and keeping them as strings means the stored form never depends
+ * on float formatting.
+ *
+ * Removing a size from this list is not a cosmetic change. `isUkSize` gates the
+ * order mapper, which drops any line item whose size it no longer recognises —
+ * so a size that has ever been sold must stay here, even after the shop stops
+ * stocking it, or those orders lose that line in admin.
  */
 export const UK_SIZES = [
   '3',
-  '3.5',
   '4',
-  '4.5',
   '5',
-  '5.5',
   '6',
-  '6.5',
   '7',
-  '7.5',
   '8',
-  '8.5',
   '9',
-  '9.5',
   '10',
-  '10.5',
   '11',
-  '11.5',
   '12',
   '13',
 ] as const;

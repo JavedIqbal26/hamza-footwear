@@ -13,7 +13,7 @@ INSERT INTO products (
   ('p_men_derby_black', 'classic-derby-black',
    'Classic Derby — Black',
    'Full-grain leather derby with a cushioned insole. Smart enough for a wedding, comfortable enough for a full day.',
-   6500, 5200, 'men', '["6","7","7.5","8","8.5","9","10","11"]', '[]', 1, 'in_stock'),
+   6500, 5200, 'men', '["6","7","8","9","10","11"]', '[]', 1, 'in_stock'),
 
   ('p_men_loafer_brown', 'suede-loafer-brown',
    'Suede Loafer — Brown',
@@ -53,7 +53,7 @@ INSERT INTO products (
   ('p_kids_sneaker_blue', 'school-sneaker-blue',
    'School Sneaker — Blue',
    'Velcro-strap sneaker with a scuff-resistant toe. Built for the school run.',
-   2400, NULL, 'kids', '["3","3.5","4","4.5","5","5.5","6"]', '[]', 1, 'in_stock'),
+   2400, NULL, 'kids', '["3","4","5","6"]', '[]', 1, 'in_stock'),
 
   ('p_kids_sandal_pink', 'summer-sandal-pink',
    'Summer Sandal — Pink',
