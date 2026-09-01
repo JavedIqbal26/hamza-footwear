@@ -39,7 +39,7 @@ const whatsapp = buildWhatsAppContactLink(shopPhone);
 ---
 
 <section
-  class="relative mx-4 mt-4 h-[230px] overflow-hidden rounded-[18px] bg-surface-warm lg:mx-0 lg:mt-0 lg:grid lg:h-[420px] lg:grid-cols-2 lg:rounded-none lg:border-b lg:border-line lg:bg-surface"
+  class="relative mx-4 mt-4 h-[230px] overflow-hidden rounded-[18px] bg-surface-warm lg:mx-0 lg:mt-0 lg:grid lg:h-auto lg:min-h-[560px] lg:grid-cols-2 lg:rounded-none lg:border-b lg:border-line lg:bg-surface"
 >
   {/* Copy — overlaid on the photo below lg, first column above it. */}
   <div
@@ -104,10 +104,19 @@ const whatsapp = buildWhatsAppContactLink(shopPhone);
     >
     </div>
 
+    {/*
+      The caption plate.
+
+      Sized and placed against a 560px photo, not a 420px one: at the old
+      height it took a fifth of the frame and landed square on the subject,
+      which read as a collision rather than a caption. The shadow does the rest
+      of the work — it lifts the plate off the photograph so the overlap looks
+      chosen.
+    */}
     <span
-      class="absolute bottom-5 left-5 hidden max-w-[260px] rounded-xl bg-surface/95 px-4 py-3.5 backdrop-blur lg:block"
+      class="absolute bottom-7 left-7 hidden max-w-[290px] rounded-xl bg-surface/95 px-4 py-3.5 shadow-[0_18px_40px_-22px_rgba(23,18,15,0.65)] backdrop-blur lg:block"
     >
-      <span class="eyebrow block">Handmade in Lahore</span>
+      <span class="eyebrow block text-brand-600">Handmade in Lahore</span>
       <span class="mt-1 block text-sm leading-relaxed text-ink-body">
         Leather uppers, stitched soles — not glued.
       </span>

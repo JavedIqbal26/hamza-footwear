@@ -490,6 +490,7 @@ would be easy to add now.
 | Instrument Serif for headings? | Yes, self-hosted only. Never via Google Fonts. |
 | Stock photography on product cards? | No. Only the shop own photos, via admin. |
 | Stock photography in the home hero? | Yes, self-hosted, unlinked, empty alt. Mood, not merchandise. |
+| Stock photography on the category tiles? | Yes, same reasoning as the hero. A cut-out catalogue shoe stretched to fill a 260px tile reads as an empty box. Swapping them is a file drop into `public/category/`. |
 | Invented ratings or order counts? | No. Every star comes from a delivered order. |
 | pnpm? | No. npm workspaces; nothing here needs more. |
 | Serve images from an R2 public URL? | No. Same-origin `/img/` route. |

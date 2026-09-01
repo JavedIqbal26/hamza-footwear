@@ -2,12 +2,9 @@
 import { CATEGORY_LABELS, categoryPath, type Category } from '@hamza/shared';
 
 import Icon from '../icons/Icon.astro';
-import ProductImage from './ProductImage.astro';
 
 export interface CategoryTile {
   readonly category: Category;
-  /** R2 base key of a product photo from this category, when one exists. */
-  readonly cover: string | null;
   readonly count: number;
 }
 
@@ -27,39 +24,56 @@ const META: Readonly<Record<string, string>> = {
 /*
  * The design fills each tile with a cover photograph and lays a plate over it.
  *
- * The cover is the newest photographed product in that category rather than a
- * separately managed asset: the owner already uploads product photos through
- * admin, and a category image nobody remembers to set is a category image that
- * goes stale. A category with no photos yet falls back to the flat warm tile.
+ * These are the mock's own photographs, self-hosted at `/category/` — never
+ * fetched from images.unsplash.com, which rule 3 forbids and which the handoff
+ * itself tells us not to ship.
+ *
+ * An earlier version used the newest photographed product in each category
+ * instead, on the principle that the shop's own photos beat anyone else's. In
+ * practice it looked wrong: catalogue photography is a cut-out shoe on a pale
+ * background, and stretched to fill a 260px tile it reads as an empty box. The
+ * design is asking for a mood image here, not a product shot — the same call
+ * already made for the home hero. Nothing on a tile claims to be for sale: no
+ * price, no name, no size, and `alt` is empty because the category name sits in
+ * the plate directly below.
+ *
+ * These are placeholders by the design's own account, to be replaced with the
+ * shop's photography. That swap is a file drop into `public/category/`, not a
+ * code change — the names and sizes below are the whole contract.
  */
+const WIDTHS = [480, 960] as const;
+
+function srcset(category: Category): string {
+  return WIDTHS.map((width) => `/category/${category}-${width}.webp ${width}w`).join(', ');
+}
 ---
 
 <nav aria-label="Shop by category">
   <ul class="grid gap-3 sm:grid-cols-3 sm:gap-4">
     {
-      tiles.map(({ category, cover, count }) => (
+      tiles.map(({ category, count }) => (
         <li>
           <a
             href={categoryPath(category)}
             class="group relative flex h-[180px] flex-col justify-end overflow-hidden rounded-[14px] border border-line bg-surface-warm p-4 transition-colors hover:border-brand-600 sm:h-[260px]"
           >
-            {cover && (
-              <>
-                <ProductImage
-                  baseKey={cover}
-                  alt=""
-                  variant="product"
-                  sizes="(min-width: 640px) 33vw, 100vw"
-                  ratio="fill"
-                  class="absolute inset-0 transition-transform duration-300 group-hover:scale-[1.04]"
-                />
-                {/* Scrim so the plate never sits on a busy part of the photo. */}
-                <span
-                  aria-hidden="true"
-                  class="absolute inset-0 bg-gradient-to-t from-ink/35 to-transparent to-55%"
-                />
-              </>
-            )}
+            <img
+              src={`/category/${category}-960.webp`}
+              srcset={srcset(category)}
+              sizes="(min-width: 640px) 33vw, 100vw"
+              alt=""
+              width="960"
+              height="520"
+              loading="lazy"
+              decoding="async"
+              class="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+            />
+
+            {/* Scrim so the plate never sits on a busy part of the photo. */}
+            <span
+              aria-hidden="true"
+              class="absolute inset-0 bg-gradient-to-t from-ink/35 to-transparent to-55%"
+            />
 
             <span class="relative flex items-center justify-between gap-3 rounded-[10px] bg-surface px-4 py-3.5">
               <span>

@@ -10,7 +10,6 @@ import {
   isSortOption,
   isUkSize,
   NO_RATING,
-  primaryImage,
   type CatalogueQuery,
   type Category,
   type Product,
@@ -157,16 +156,17 @@ export function ratingOf(
 
 export interface CategoryTileData {
   readonly category: Category;
-  readonly cover: string | null;
   readonly count: number;
 }
 
 /**
- * Cover photo and count for each category tile.
+ * How many styles sit in each category.
  *
- * The cover is the newest photographed product in that category rather than a
- * separately managed asset: the owner already uploads product photos through
- * admin, and an image nobody remembers to update is an image that goes stale.
+ * Counts only. The tile's photograph is a fixed asset in `public/category/`,
+ * not a product image — see CategoryTiles.astro for why. An earlier version
+ * also fetched the newest photographed product per category to use as a cover,
+ * which cost three extra queries on the home page for an image that is no
+ * longer rendered.
  */
 export async function listCategoryTiles(
   locals: App.Locals,
@@ -174,13 +174,9 @@ export async function listCategoryTiles(
   const repo = repository(locals);
 
   return Promise.all(
-    CATEGORIES.map(async (category) => {
-      const [products, count] = await Promise.all([
-        repo.listActive({ category, limit: 8 }),
-        repo.countActive(category),
-      ]);
-      const withPhoto = products.find((product) => product.images.length > 0);
-      return { category, cover: withPhoto ? primaryImage(withPhoto) : null, count };
-    }),
+    CATEGORIES.map(async (category) => ({
+      category,
+      count: await repo.countActive(category),
+    })),
   );
 }
