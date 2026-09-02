@@ -2,6 +2,7 @@ import { hrefFor, useRoute } from './lib/router.js';
 import { OrderListPage } from './features/orders/OrderListPage.jsx';
 import { ProductFormPage } from './features/products/ProductFormPage.jsx';
 import { ProductListPage } from './features/products/ProductListPage.jsx';
+import { Logo } from './components/ui/Logo.jsx';
 
 /**
  * Admin shell.
@@ -32,7 +33,10 @@ export function App() {
   return (
     <div className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
       <header className="sticky top-0 z-20 -mx-4 border-b border-neutral-200 bg-white px-4 py-3 sm:-mx-6 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:px-6 sm:py-4">
-        <h1 className="text-lg font-bold text-ink sm:text-xl">{title}</h1>
+        <div className="flex items-center gap-2.5">
+          <Logo size={34} />
+          <h1 className="text-lg font-bold text-ink sm:text-xl">{title}</h1>
+        </div>
         <nav className="mt-2 flex gap-2 sm:mt-0 sm:w-auto">
           <TabLink href={hrefFor({ name: 'orders' })} active={route.name === 'orders'}>
             Orders

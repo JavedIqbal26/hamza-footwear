@@ -8,6 +8,8 @@
  * so that importing a type or `formatPKR` never drags Zod into a browser bundle.
  */
 
+export * from './brand/logo.js';
+
 export * from './constants/categories.js';
 export * from './constants/cities.js';
 export * from './constants/order-number.js';

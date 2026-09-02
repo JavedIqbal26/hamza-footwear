@@ -1,0 +1,121 @@
+---
+import {
+  LOGO_COLORS,
+  LOGO_RECTS,
+  LOGO_VIEWBOX,
+  logoGeometry,
+  type LogoVariant,
+} from '@hamza/shared';
+
+interface Props {
+  /** Tile edge in px. Clamped at the minimum, never drawn smaller. */
+  size?: number;
+  /** Tile edge from `sm:` up, when the lockup grows across the breakpoint. */
+  smSize?: number;
+  variant?: LogoVariant;
+  /** Off for favicon-scale use, where the wordmark would be unreadable. */
+  wordmark?: boolean;
+  /** Where the lockup links, when it should link at all. */
+  href?: string;
+  class?: string;
+}
+
+const {
+  size = 40,
+  smSize,
+  variant = 'light',
+  wordmark = true,
+  href,
+  class: className = '',
+} = Astro.props;
+
+const colors = LOGO_COLORS[variant];
+
+/*
+ * The mark, drawn rather than set in a typeface.
+ *
+ * A font would make the brand depend on a download that may not arrive:
+ * `@font-face` failing is a shrug for body copy and a missing logo for a mark.
+ * Inline SVG is a few hundred bytes, always correct, crisp at every size.
+ *
+ * ONE scalable drawing covers every published size. The brief's four
+ * tile/radius/glyph triples — 40/10/23, 34/9/20, 42/11/24, 52/13/30 — are all
+ * the same two ratios, so the artwork is authored once in a 40-unit box and
+ * sized in CSS. That is what lets the header go 34 → 40 across `sm:` with a
+ * single element rather than two hidden copies; the last time this header
+ * rendered two variants of one thing, it shipped a duplicate <h1> to crawlers.
+ *
+ * Sizing is inline CSS rather than Tailwind classes on purpose: the values come
+ * from props, and Tailwind only compiles class names it can read in the source.
+ */
+const { radius, offset, scale } = logoGeometry(LOGO_VIEWBOX);
+const tile = logoGeometry(size).tile;
+const wideTile = smSize === undefined ? null : logoGeometry(smSize).tile;
+
+const Tag = href ? 'a' : 'span';
+---
+
+<Tag
+  href={href}
+  class:list={['inline-flex shrink-0 items-center gap-2.5', className]}
+  aria-label={href && !wordmark ? 'Hamza Footwear' : undefined}
+>
+  <svg
+    viewBox={`0 0 ${LOGO_VIEWBOX} ${LOGO_VIEWBOX}`}
+    data-mark
+    data-wide={wideTile === null ? undefined : ''}
+    role={wordmark ? undefined : 'img'}
+    aria-label={wordmark ? undefined : 'Hamza Footwear'}
+    aria-hidden={wordmark ? 'true' : undefined}
+    class="shrink-0"
+  >
+    <rect width={LOGO_VIEWBOX} height={LOGO_VIEWBOX} rx={radius} fill={colors.tile} />
+    <g transform={`translate(${offset} ${offset}) scale(${scale})`}>
+      {
+        LOGO_RECTS.map((rect) => (
+          <rect
+            x={rect.x}
+            y={rect.y}
+            width={rect.width}
+            height={rect.height}
+            rx={rect.rx}
+            fill={rect.fill === 'slab' ? colors.slab : colors.glyph}
+          />
+        ))
+      }
+    </g>
+  </svg>
+
+  {
+    wordmark && (
+      <span class="flex flex-col gap-[3px]">
+        <span
+          class="display text-[22px] leading-none text-ink sm:text-[26px]"
+          style="letter-spacing: -0.015em;"
+        >
+          Hamza
+        </span>
+        <span
+          class="text-[8px] font-extrabold uppercase leading-none text-brand-600 sm:text-[9.5px]"
+          style="letter-spacing: 0.28em;"
+        >
+          Footwear
+        </span>
+      </span>
+    )
+  }
+</Tag>
+
+<style define:vars={{ tile: `${tile}px`, wideTile: wideTile === null ? null : `${wideTile}px` }}>
+  svg[data-mark] {
+    width: var(--tile);
+    height: var(--tile);
+  }
+
+  @media (min-width: 640px) {
+    svg[data-mark][data-wide] {
+      width: var(--wideTile);
+      height: var(--wideTile);
+    }
+  }
+</style>

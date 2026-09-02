@@ -1,5 +1,6 @@
 ---
 import Icon from '../icons/Icon.astro';
+import Logo from './Logo.astro';
 
 interface Props {
   /** 1 = number, 2 = code. Drives the back link. */
@@ -66,14 +67,17 @@ const { step } = Astro.props;
         >
       </div>
 
-      {/* The wordmark only appears on the laptop card, where there is no header. */}
-      <div class="hidden items-baseline gap-2 pb-5 lg:flex">
-        <span class="display text-[26px] text-ink">Hamza</span>
-        <span
-          class="text-[10.5px] font-bold uppercase text-brand-600"
-          style="letter-spacing: 0.18em;">Footwear</span
-        >
-      </div>
+      {/*
+        Two sizes, one per layout: the laptop card has no site header above it,
+        and the phone screen has none either once the chrome is dropped.
+      */}
+      {/*
+        Visibility lives on the wrapper, not on the Logo. The component sets its
+        own `inline-flex`, and a `hidden` passed in alongside it is a coin toss
+        decided by Tailwind's output order rather than by the caller.
+      */}
+      <span class="block pb-5 lg:hidden"><Logo size={52} /></span>
+      <span class="hidden pb-5 lg:block"><Logo size={42} /></span>
 
       <div class="flex flex-1 flex-col lg:flex-none">
         <slot />
