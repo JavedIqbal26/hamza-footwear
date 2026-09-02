@@ -39,7 +39,7 @@ const whatsapp = buildWhatsAppContactLink(shopPhone);
 ---
 
 <section
-  class="relative mx-4 mt-4 h-[230px] overflow-hidden rounded-[18px] bg-surface-warm lg:mx-0 lg:mt-0 lg:grid lg:h-auto lg:min-h-[560px] lg:grid-cols-2 lg:rounded-none lg:border-b lg:border-line lg:bg-surface"
+  class="relative mx-4 mt-4 h-[230px] overflow-hidden rounded-[18px] bg-surface-warm lg:mx-0 lg:mt-0 lg:grid lg:h-auto lg:min-h-[500px] lg:grid-cols-2 lg:rounded-none lg:border-b lg:border-line lg:bg-surface"
 >
   {/* Copy — overlaid on the photo below lg, first column above it. */}
   <div
@@ -107,11 +107,16 @@ const whatsapp = buildWhatsAppContactLink(shopPhone);
     {/*
       The caption plate.
 
-      Sized and placed against a 560px photo, not a 420px one: at the old
-      height it took a fifth of the frame and landed square on the subject,
-      which read as a collision rather than a caption. The shadow does the rest
-      of the work — it lifts the plate off the photograph so the overlap looks
-      chosen.
+      Sized and placed against a 500px photo, not a 420px one: at the old
+      height it took better than a quarter of the frame and landed square on
+      the subject, which read as a collision rather than a caption. The shadow
+      does the rest of the work — it lifts the plate off the photograph so the
+      overlap looks chosen.
+
+      500px is a shade under the design's 560px minimum, trading a little of
+      the photo for a shorter scroll to the products. The plate is still under
+      a fifth of the frame at this height; much below 460px and it starts
+      crowding the subject again.
     */}
     <span
       class="absolute bottom-7 left-7 hidden max-w-[290px] rounded-xl bg-surface/95 px-4 py-3.5 shadow-[0_18px_40px_-22px_rgba(23,18,15,0.65)] backdrop-blur lg:block"
