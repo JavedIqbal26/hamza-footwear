@@ -17,10 +17,14 @@ export interface ResendConfig {
   readonly to: string;
 }
 
-export function readResendConfig(env: CloudflareEnv): ResendConfig | null {
+/** An address set in admin wins over the deploy-time one; the key never moves. */
+export function readResendConfig(
+  env: CloudflareEnv,
+  toOverride?: string | null,
+): ResendConfig | null {
   const apiKey = env.RESEND_API_KEY;
   const from = env.ORDER_EMAIL_FROM;
-  const to = env.ORDER_EMAIL_TO;
+  const to = toOverride ?? env.ORDER_EMAIL_TO;
   return apiKey && from && to ? { apiKey, from, to } : null;
 }
 

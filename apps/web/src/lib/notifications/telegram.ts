@@ -15,9 +15,19 @@ export interface TelegramConfig {
   readonly chatId: string;
 }
 
-export function readTelegramConfig(env: CloudflareEnv): TelegramConfig | null {
+/**
+ * The bot token is always a deployment secret; the chat id is a preference.
+ *
+ * A chat id set in admin wins, so the owner can point the bot at his own chat
+ * without a redeploy. The token never moves into the database — it is the only
+ * half of the pair that can send anything.
+ */
+export function readTelegramConfig(
+  env: CloudflareEnv,
+  chatIdOverride?: string | null,
+): TelegramConfig | null {
   const botToken = env.TELEGRAM_BOT_TOKEN;
-  const chatId = env.TELEGRAM_CHAT_ID;
+  const chatId = chatIdOverride ?? env.TELEGRAM_CHAT_ID;
   return botToken && chatId ? { botToken, chatId } : null;
 }
 

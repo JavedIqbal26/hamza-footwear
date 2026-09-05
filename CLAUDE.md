@@ -436,10 +436,29 @@ Two parallel paths, **both always available**:
 Some customers will never fill in a form. **Do not remove path 2**, and do not bury
 it behind the form.
 
-Telegram is the primary notification channel — it is unmetered and lands on the
-owner's phone. Resend's free tier caps at 100 emails/day, so email is the backup
-record, not the thing the business depends on. A failed notification must never
-lose the order: write to D1 first, notify after, and log notify failures.
+**Which channels fire is the owner's choice, made in admin → Settings**, stored
+in the `settings` table. It was environment variables, which meant a redeploy to
+turn one on — the wrong home for a preference belonging to the person being
+notified. More than one at a time is the recommendation, not an accident.
+
+| Channel | Notes |
+|---|---|
+| **Web Push** | Free, no third party, lands like any app notification. Needs the admin PWA on the home screen — mandatory on iPhone. Budget Android skins can suppress it, so the Settings screen advises a second channel. |
+| **Telegram** | Unmetered and instant. The bot token is a Worker secret; the chat id is discovered by admin's Connect button via `getUpdates`, because asking a shopkeeper to find a numeric chat id fails the four-tap rule. |
+| **Email** | Resend's free tier caps at 100/day. The searchable backup record, not what the business runs on. |
+
+**WhatsApp cannot be one of them.** Sending to it programmatically needs the
+WhatsApp Cloud API → Meta business verification → the NTN and business bank
+account that also blocked the payment gateway. Messaging a customer *from* an
+order works fine: that is a person tapping a `wa.me` link, not the server sending.
+
+**Credentials never enter the settings table.** Bot token and API key stay Worker
+secrets; only destinations and on/off flags are settings. A token in the database
+is a token in every backup.
+
+A failed notification must never lose the order: write to D1 first, notify after,
+log failures, and swallow them. With every channel switched off the order is
+still created and still appears in admin.
 
 ---
 
@@ -522,6 +541,8 @@ would be easy to add now.
 | Stock photography on the category tiles? | Yes, same reasoning as the hero. A cut-out catalogue shoe stretched to fill a 260px tile reads as an empty box. Swapping them is a file drop into `public/category/`. |
 | Invented ratings or order counts? | No. Every star comes from a delivered order. |
 | pnpm? | No. npm workspaces; nothing here needs more. |
+| A library for Web Push? | No. `web-push` is Node-only and will not run in a Worker. RFC 8291 is composed from WebCrypto primitives in `lib/notifications/web-push/`, round-trip tested. |
+| WhatsApp for order alerts? | Not possible on a free tier — Cloud API needs Meta business verification. |
 | Serve images from an R2 public URL? | No. Same-origin `/img/` route. |
 
 ---

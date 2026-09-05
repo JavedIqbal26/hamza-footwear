@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 /**
  * A hash router in forty lines.
  *
- * Admin has four screens. `react-router` is ~20KB for that, and every package
+ * Admin has five screens. `react-router` is ~20KB for that, and every package
  * is weight (CLAUDE.md) — this is the whole feature set we need. Hash routing
  * also means the SPA needs no server rewrite rules to sit at `/admin`.
  */
@@ -12,7 +12,8 @@ export type Route =
   | { name: 'products' }
   | { name: 'product-new' }
   | { name: 'product-edit'; id: string }
-  | { name: 'orders' };
+  | { name: 'orders' }
+  | { name: 'settings' };
 
 const DEFAULT_ROUTE: Route = { name: 'orders' };
 
@@ -21,6 +22,7 @@ export function parseHash(hash: string): Route {
 
   if (path === 'products') return { name: 'products' };
   if (path === 'products/new') return { name: 'product-new' };
+  if (path === 'settings') return { name: 'settings' };
   if (path === 'orders' || path === '') return DEFAULT_ROUTE;
 
   const edit = /^products\/([^/]+)\/edit$/.exec(path);
@@ -39,6 +41,8 @@ export function hrefFor(route: Route): string {
       return `#/products/${route.id}/edit`;
     case 'orders':
       return '#/orders';
+    case 'settings':
+      return '#/settings';
   }
 }
 

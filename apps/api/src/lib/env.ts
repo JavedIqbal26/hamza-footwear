@@ -14,6 +14,16 @@ export interface Env {
    * itself is the allowlist.
    */
   readonly ADMIN_EMAILS?: string;
+
+  /*
+   * Notification credentials. Admin reads these only to know whether a channel
+   * is *available* — it never returns their values, and the settings screen
+   * shows an unconfigured channel as unavailable rather than merely off.
+   */
+  readonly TELEGRAM_BOT_TOKEN?: string;
+  readonly RESEND_API_KEY?: string;
+  /** Public half of the VAPID pair; the admin browser needs it to subscribe. */
+  readonly VAPID_PUBLIC_KEY?: string;
 }
 
 /** Hono's generic shape for this Worker, including what middleware attaches. */

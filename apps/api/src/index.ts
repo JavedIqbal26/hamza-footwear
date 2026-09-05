@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { healthRoutes } from './routes/health.js';
 import { orderRoutes } from './routes/admin/orders.js';
 import { productRoutes } from './routes/admin/products.js';
+import { settingsRoutes } from './routes/admin/settings.js';
 import { uploadRoutes } from './routes/admin/uploads.js';
 import { requireAccess } from './middleware/access.js';
 import type { AppBindings } from './lib/env.js';
@@ -28,6 +29,7 @@ admin.use('*', requireAccess);
 admin.route('/', productRoutes);
 admin.route('/', orderRoutes);
 admin.route('/', uploadRoutes);
+admin.route('/', settingsRoutes);
 
 app.route('/admin', admin);
 

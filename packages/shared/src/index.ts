@@ -32,6 +32,7 @@ export * from './types/image.js';
 export * from './types/order.js';
 export * from './types/product.js';
 export * from './types/review.js';
+export * from './types/settings.js';
 
 export * from './validation/phone.js';
 export * from './validation/slug.js';

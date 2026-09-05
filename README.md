@@ -107,10 +107,12 @@ and real ratings must come from real delivered orders.
 
 | Where | Setting | Currently |
 |---|---|---|
-| `apps/web/wrangler.toml` | `SHOP_WHATSAPP` | `03001234567` |
-| `apps/web/wrangler.toml` | `JAZZCASH_NUMBER`, `EASYPAISA_NUMBER` | placeholders — delete the lines to hide those payment options |
+| `apps/web/wrangler.toml` | `SHOP_WHATSAPP`, `JAZZCASH_NUMBER`, `EASYPAISA_NUMBER` | all set to the shop's real number, `03000142825`. Delete a wallet line to withdraw that option. |
 | `apps/web/src/lib/site.ts` | `SITE.address` | "Delivering across Pakistan." |
-| `db/seed/0001_cities.sql` | delivery fees | Rs 200 major / Rs 300 elsewhere, pending the real courier rate card |
+
+The `cities` table no longer prices anything — the shop quotes each delivery
+charge in admin once it sees the address. The table remains as coverage, and as
+the seam for per-area rates later.
 
 ### 4. Deploy the storefront
 
@@ -119,6 +121,49 @@ output directory `apps/web/dist`. Add the `DB` and `IMAGES` bindings in the
 project settings, then attach `hamzafootwear.com` — SSL is issued automatically.
 
 Turn on **Cloudflare Web Analytics** (cookieless) for the domain.
+
+### 4a. Notifications
+
+Which channels fire is chosen by the owner in **admin → Settings**, not here.
+This step only supplies the credentials each channel needs; a channel with none
+shows as unavailable on that screen rather than as merely switched off.
+
+```bash
+# Telegram — the token is a secret; the chat id is set from admin's Connect button
+wrangler secret put TELEGRAM_BOT_TOKEN --cwd apps/web
+wrangler secret put TELEGRAM_BOT_TOKEN --cwd apps/api   # admin needs it for Connect
+
+# Email (optional backup record)
+wrangler secret put RESEND_API_KEY --cwd apps/web
+```
+
+**Web Push** needs one VAPID keypair, generated once and shared between the two
+Workers. Generate it with Node:
+
+```bash
+node -e "(async()=>{const p=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);const b=b=>Buffer.from(b).toString('base64url');console.log('public :',b(await crypto.subtle.exportKey('raw',p.publicKey)));console.log('private:',b(await crypto.subtle.exportKey('pkcs8',p.privateKey)))})()"
+```
+
+The storefront signs and sends, so it needs both halves. The API only hands the
+public key to the browser so it can subscribe:
+
+```bash
+wrangler secret put VAPID_PRIVATE_KEY --cwd apps/web
+wrangler secret put VAPID_PUBLIC_KEY  --cwd apps/web
+wrangler secret put VAPID_PUBLIC_KEY  --cwd apps/api
+```
+
+Then, on the owner's phone: open `/admin`, add it to the home screen, and turn
+on **Phone notification** in Settings. Two things worth telling him — the app
+must be on the home screen for this to work on iPhone, and Android battery
+optimisation can hold notifications back, which is why the screen advises
+keeping a second channel on.
+
+> **WhatsApp is not an option here, and cannot be.** Sending to it
+> programmatically needs the WhatsApp Cloud API, which needs Meta business
+> verification, which needs the NTN and registered business bank account that
+> also blocked the payment gateway. Messaging a customer *from* an order still
+> works — that is a person tapping a link, not the server sending.
 
 ### 5. Deploy admin (optional, but you will want it)
 
