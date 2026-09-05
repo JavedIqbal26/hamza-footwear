@@ -22,6 +22,18 @@ const ROUTES = join(WEB_DIST, '_routes.json');
 /* Anything under here is a static file, never the SSR worker's business. */
 const ADMIN_ROUTE = '/admin/*';
 
+/*
+ * The admin API belongs to its own Worker, on a route of the same name.
+ *
+ * Worker routes are evaluated ahead of Pages, so in principle this is already
+ * unambiguous — but Astro's manifest claims `/*`, which means the storefront
+ * asserts a claim on /api too. Excluding it removes the overlap rather than
+ * relying on precedence, and the failure it prevents is a confusing one: the
+ * storefront answering an admin API call with an HTML 404 that the admin client
+ * cannot parse.
+ */
+const API_ROUTE = '/api/*';
+
 async function exists(path) {
   try {
     await access(path);
@@ -53,9 +65,15 @@ await cp(ADMIN_DIST, TARGET, { recursive: true });
  * appears once deployed, which is the worst place to find it.
  */
 const routes = JSON.parse(await readFile(ROUTES, 'utf8'));
-if (!routes.exclude.includes(ADMIN_ROUTE)) {
-  routes.exclude.push(ADMIN_ROUTE);
-  await writeFile(ROUTES, `${JSON.stringify(routes, null, 2)}\n`);
+let changed = false;
+
+for (const route of [ADMIN_ROUTE, API_ROUTE]) {
+  if (!routes.exclude.includes(route)) {
+    routes.exclude.push(route);
+    changed = true;
+  }
 }
 
-console.log(`Bundled admin into ${TARGET} and excluded ${ADMIN_ROUTE} from SSR.`);
+if (changed) await writeFile(ROUTES, `${JSON.stringify(routes, null, 2)}\n`);
+
+console.log(`Bundled admin into ${TARGET}; excluded ${ADMIN_ROUTE} and ${API_ROUTE}.`);
