@@ -58,7 +58,7 @@ Run from the repo root:
 | Command | Does |
 |---|---|
 | `npm run dev:web` | Storefront dev server with real D1/R2 bindings |
-| `npm run build:web` | Production build of the storefront |
+| `npm run build:web` | Production build: admin, then the storefront, with admin folded into `dist/admin` |
 | `npm run typecheck` | Typecheck every workspace |
 | `npm run db:reset` | Migrate + seed the local database |
 | `npm run db:migrate` | Apply migrations locally |
@@ -78,8 +78,18 @@ Run from the repo root:
 
 ## Before you deploy
 
-Work through these in order. Everything up to step 4 is required; steps 5–7 are
-optional features you can switch on later.
+Work through these in order. Steps 0–5 are required to have a working shop;
+6–8 are optional features you can switch on later.
+
+### 0. Get the domain onto Cloudflare
+
+`hamzafootwear.com` is registered, but its nameservers do not yet point at
+Cloudflare. **Nothing below resolves until they do.** Add the site in the
+Cloudflare dashboard, then change the nameservers at the registrar to the two
+Cloudflare gives you. Propagation is usually under an hour.
+
+This is a prerequisite rather than a parallel task: the Worker route in step 5
+needs the zone to exist before it can be claimed.
 
 ### 1. Create the Cloudflare resources
 
@@ -101,7 +111,9 @@ npm run db:seed:remote
 
 `db:seed:remote` loads the cities table and a sample catalogue. **Do not load
 `db/seed/0003_reviews.sql` on the live shop** — those are development fixtures,
-and real ratings must come from real delivered orders.
+and real ratings must come from real delivered orders. The sample products are
+placeholders too: they carry no photographs, so delete them once the owner has
+added real stock through admin.
 
 ### 3. Replace every placeholder
 
@@ -111,18 +123,57 @@ and real ratings must come from real delivered orders.
 | `apps/web/src/lib/site.ts` | `SITE.address` | "Delivering across Pakistan." |
 
 The `cities` table no longer prices anything — the shop quotes each delivery
-charge in admin once it sees the address. The table remains as coverage, and as
-the seam for per-area rates later.
+charge in admin once it sees the address. It remains as coverage, and as the
+seam for per-area rates later.
 
-### 4. Deploy the storefront
+### 4. Deploy the storefront and admin together
 
-Create a Pages project pointing at this repo: build command `npm run build:web`,
-output directory `apps/web/dist`. Add the `DB` and `IMAGES` bindings in the
-project settings, then attach `hamzafootwear.com` — SSL is issued automatically.
+One Pages project serves both. Build command `npm run build:web`, output
+directory `apps/web/dist`.
+
+That script builds the admin SPA, then the storefront, then folds admin into
+`dist/admin` and adds `/admin/*` to the Pages routing manifest. **That last part
+matters:** Astro emits `_routes.json` with `include: ["/*"]`, so anything not
+explicitly excluded is handed to the SSR worker — without it every request to
+`/admin` would 404, and only once deployed.
+
+Add the `DB` and `IMAGES` bindings in the project settings, then attach
+`hamzafootwear.com`. SSL is issued automatically.
 
 Turn on **Cloudflare Web Analytics** (cookieless) for the domain.
 
-### 4a. Notifications
+### 5. Deploy the admin API, and put Access in front of both
+
+```bash
+npm run deploy --workspace @hamza/api
+```
+
+The Worker claims `hamzafootwear.com/api/*` through the route in its
+`wrangler.toml`. Worker routes take precedence over Pages on matching paths, so
+everything else stays with the storefront, and admin's relative `/api/admin/...`
+calls stay same-origin — which is why there is no CORS configuration anywhere in
+this project. `workers_dev` is off deliberately.
+
+Then create **one Cloudflare Access application** covering both paths:
+
+```
+hamzafootwear.com/admin*
+hamzafootwear.com/api/admin*
+```
+
+with a policy allowing the owner's email.
+
+> **The API Worker must have no public hostname outside that Access
+> application.** Its identity check trusts a header only Access can be relied on
+> to set, and it fails closed when the header is absent. Optionally set
+> `ADMIN_EMAILS` on the Worker as a second allowlist.
+>
+> Protect `/admin` as well as `/api/admin`. The API is the real control — the
+> SPA can do nothing without it — but leaving the interface open invites
+> someone to probe it.
+
+
+### 6. Notifications (optional, but you will want one)
 
 Which channels fire is chosen by the owner in **admin → Settings**, not here.
 This step only supplies the credentials each channel needs; a channel with none
@@ -164,36 +215,6 @@ keeping a second channel on.
 > verification, which needs the NTN and registered business bank account that
 > also blocked the payment gateway. Messaging a customer *from* an order still
 > works — that is a person tapping a link, not the server sending.
-
-### 5. Deploy admin (optional, but you will want it)
-
-```bash
-npm run deploy --workspace @hamza/api
-```
-
-Then **put Cloudflare Access in front of it**. Create a Zero Trust application
-covering the Worker's hostname and `/admin`, with a policy allowing the owner's
-email.
-
-> **The API Worker must have no public hostname outside that Access
-> application.** Its identity check trusts a header that only Access can be
-> relied on to set. Optionally set `ADMIN_EMAILS` on the Worker as a second
-> allowlist.
-
-Build the admin SPA (`npm run build --workspace @hamza/admin`) and upload it to
-`/admin` on the same domain, so its `/api` and `/img` requests stay same-origin.
-
-### 6. Order notifications (optional)
-
-Set as secrets on the storefront's Pages project:
-
-```
-TELEGRAM_BOT_TOKEN   TELEGRAM_CHAT_ID
-RESEND_API_KEY       ORDER_EMAIL_FROM   ORDER_EMAIL_TO
-```
-
-A missing channel is skipped and logged; it never fails an order. Telegram is
-the primary channel — Resend's free tier caps at 100 emails/day.
 
 ### 7. Phone sign-in (optional — this one costs money)
 
