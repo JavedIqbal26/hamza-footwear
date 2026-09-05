@@ -1,22 +1,25 @@
 import type { D1Database } from '@cloudflare/workers-types';
-import type { Order, OrderItem, OrderStatus, PaymentMethod, PaymentStatus } from '@hamza/shared';
+import type { Order, OrderItem, PaymentMethod } from '@hamza/shared';
 
 import { toOrder, toOrders } from '../mappers/order.mapper.js';
+import { ORDER_COLUMNS as COLUMNS } from './order-columns.js';
 import type { OrderRow } from '../rows.js';
 
 /**
+ * Orders as the storefront sees them: placing one, reading one back, and the
+ * customer's own history.
+ *
+ * Admin's side of the same table — the delivery quote, the status lifecycle and
+ * the counts — lives in `order-admin.repository.ts`, for the same reason the
+ * product repositories are split: the two audiences have different rules, and a
+ * customer must never be able to reach an operation that only the shop should.
+ *
  * Orders: the one table where a lost write costs the shop a real sale.
  *
  * Every money field is supplied by the caller having already recomputed it from
  * the database — this layer stores what it is given and enforces nothing about
  * pricing beyond the CHECK constraints in the schema.
  */
-
-const COLUMNS = `
-  id, order_number, customer_name, phone, city, area, address_line, items,
-  subtotal_pkr, delivery_fee_pkr, total_pkr, payment_method, payment_proof_key,
-  payment_status, order_status, tiktok_video_ref, notes, created_at, customer_id
-`;
 
 export interface NewOrder {
   readonly id: string;
@@ -28,7 +31,9 @@ export interface NewOrder {
   readonly address_line: string;
   readonly items: readonly OrderItem[];
   readonly subtotal_pkr: number;
-  readonly delivery_fee_pkr: number;
+  /** Null on creation — the shop quotes it once it sees the address. */
+  readonly delivery_fee_pkr: number | null;
+  /** The subtotal until the quote lands. */
   readonly total_pkr: number;
   readonly payment_method: PaymentMethod;
   readonly payment_proof_key: string | null;
@@ -38,26 +43,21 @@ export interface NewOrder {
   readonly customer_id: string | null;
 }
 
-export interface ListOrdersOptions {
-  readonly orderStatus?: OrderStatus;
-  readonly limit?: number;
-  readonly offset?: number;
-}
-
-export interface StatusUpdate {
-  readonly orderStatus?: OrderStatus;
-  readonly paymentStatus?: PaymentStatus;
+export interface AdvancePayment {
+  readonly reference: string | null;
+  readonly proofKey: string | null;
 }
 
 export interface OrderRepository {
   create(order: NewOrder): Promise<Order>;
-  list(options?: ListOrdersOptions): Promise<Order[]>;
   findByNumber(orderNumber: string): Promise<Order | null>;
   listForCustomer(customerId: string, limit?: number): Promise<Order[]>;
   findById(id: string): Promise<Order | null>;
-  updateStatus(id: string, update: StatusUpdate): Promise<Order | null>;
-  attachPaymentProof(id: string, key: string): Promise<void>;
-  countByStatus(): Promise<Record<string, number>>;
+  /**
+   * The customer's advance payment: the wallet transaction id, and the
+   * screenshot if they attached one. Both arrive together, after the quote.
+   */
+  recordAdvancePayment(id: string, payment: AdvancePayment): Promise<Order | null>;
 }
 
 export function createOrderRepository(db: D1Database): OrderRepository {
@@ -96,32 +96,6 @@ export function createOrderRepository(db: D1Database): OrderRepository {
       return toOrder(row);
     },
 
-    async list(options: ListOrdersOptions = {}): Promise<Order[]> {
-      const limit = Math.min(Math.max(Math.trunc(options.limit ?? 50), 1), 100);
-      const offset = Math.max(Math.trunc(options.offset ?? 0), 0);
-
-      const statement =
-        options.orderStatus === undefined
-          ? db
-              .prepare(
-                `SELECT ${COLUMNS} FROM orders
-                 ORDER BY created_at DESC, id DESC
-                 LIMIT ?1 OFFSET ?2`,
-              )
-              .bind(limit, offset)
-          : db
-              .prepare(
-                `SELECT ${COLUMNS} FROM orders
-                 WHERE order_status = ?1
-                 ORDER BY created_at DESC, id DESC
-                 LIMIT ?2 OFFSET ?3`,
-              )
-              .bind(options.orderStatus, limit, offset);
-
-      const { results } = await statement.all<OrderRow>();
-      return toOrders(results);
-    },
-
     /** A customer's own order history, newest first. */
     async listForCustomer(customerId: string, limit = 20): Promise<Order[]> {
       const { results } = await db
@@ -153,38 +127,24 @@ export function createOrderRepository(db: D1Database): OrderRepository {
     },
 
     /**
-     * COALESCE lets one statement update either status, or both, without
-     * branching into separate queries that could diverge.
+     * COALESCE again, so a customer who sends a screenshot after already
+     * typing a reference does not wipe the reference, and vice versa. Neither
+     * field is ever cleared by a later, emptier submission.
      */
-    async updateStatus(id: string, update: StatusUpdate): Promise<Order | null> {
+    async recordAdvancePayment(id: string, payment: AdvancePayment): Promise<Order | null> {
       const row = await db
         .prepare(
           `UPDATE orders
-             SET order_status   = COALESCE(?2, order_status),
-                 payment_status = COALESCE(?3, payment_status)
-           WHERE id = ?1
-           RETURNING ${COLUMNS}`,
+              SET payment_reference = COALESCE(?2, payment_reference),
+                  payment_proof_key = COALESCE(?3, payment_proof_key)
+            WHERE id = ?1
+            RETURNING ${COLUMNS}`,
         )
-        .bind(id, update.orderStatus ?? null, update.paymentStatus ?? null)
+        .bind(id, payment.reference, payment.proofKey)
         .first<OrderRow>();
 
       return row === null ? null : toOrder(row);
     },
 
-    async attachPaymentProof(id: string, key: string): Promise<void> {
-      await db
-        .prepare('UPDATE orders SET payment_proof_key = ?2 WHERE id = ?1')
-        .bind(id, key)
-        .run();
-    },
-
-    /** Powers admin's "what needs action" counts. */
-    async countByStatus(): Promise<Record<string, number>> {
-      const { results } = await db
-        .prepare('SELECT order_status, COUNT(*) AS count FROM orders GROUP BY order_status')
-        .all<{ order_status: string; count: number }>();
-
-      return Object.fromEntries(results.map((row) => [row.order_status, row.count]));
-    },
   };
 }

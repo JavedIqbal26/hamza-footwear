@@ -1,12 +1,18 @@
 ---
-import { formatPKR } from '@hamza/shared';
-
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { TRUST } from '../content/microcopy.js';
 import { listCities, summariseByTier } from '../lib/delivery.js';
 import { CATALOGUE_CACHE_CONTROL } from '../lib/cache.js';
 
-/* Fees come from the same table checkout charges from — never a hard-coded copy. */
+/*
+ * Where the shop delivers — not what it charges.
+ *
+ * This page used to print a fee per tier from the cities table. Those figures
+ * were the site's invention: the charge depends on the address and the owner
+ * quotes it per order once he sees it. Publishing a number he has not agreed to
+ * is how a customer ends up paying the wrong amount, so the list stays and the
+ * prices go.
+ */
 export const prerender = false;
 
 const cities = await listCities(Astro.locals);
@@ -22,7 +28,7 @@ Astro.response.headers.set('Cache-Control', CATALOGUE_CACHE_CONTROL);
 
 <BaseLayout
   title="Delivery"
-  description="Delivery charges and timings for Hamza Footwear across Pakistan. Cash on Delivery available."
+  description="Delivery timings and charges for Hamza Footwear across Pakistan."
 >
   <div class="mx-auto max-w-3xl px-4 pt-8">
     <h1 class="display text-[30px] sm:text-[38px]">Delivery</h1>
@@ -33,14 +39,9 @@ Astro.response.headers.set('Cache-Control', CATALOGUE_CACHE_CONTROL);
       {
         tiers.map((tier) => (
           <div class="rounded-xl border border-line p-4">
-            <div class="flex items-baseline justify-between gap-4">
-              <h2 class="text-base font-semibold text-ink">
-                {TIER_LABELS[tier.tier] ?? tier.tier}
-              </h2>
-              <p class="text-base font-bold text-brand-700">
-                {formatPKR(tier.feePkr)}
-              </p>
-            </div>
+            <h2 class="text-base font-semibold text-ink">
+              {TIER_LABELS[tier.tier] ?? tier.tier}
+            </h2>
             <p class="mt-2 text-sm text-ink-muted">{tier.cities.join(', ')}</p>
           </div>
         ))
@@ -48,8 +49,14 @@ Astro.response.headers.set('Cache-Control', CATALOGUE_CACHE_CONTROL);
     </section>
 
     <section class="mt-8">
+      <h2 class="display text-[22px]">Delivery charge</h2>
+      <p class="mt-2 text-sm leading-relaxed text-ink">{TRUST.quotePending}</p>
+    </section>
+
+    <section class="mt-8">
       <h2 class="display text-[22px]">Payment</h2>
       <p class="mt-2 text-sm text-ink">{TRUST.cod}</p>
+      <p class="mt-2 text-sm text-ink">{TRUST.codAdvance}</p>
       <p class="mt-2 text-sm text-ink-muted">
         Your city is not on the list? Message us on WhatsApp — hum aap ke liye
         check kar lete hain.

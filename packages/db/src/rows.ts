@@ -42,10 +42,12 @@ export interface OrderRow {
   /** JSON array of order items. */
   items: string;
   subtotal_pkr: number;
-  delivery_fee_pkr: number;
+  /** NULL until the shop quotes it. */
+  delivery_fee_pkr: number | null;
   total_pkr: number;
   payment_method: string;
   payment_proof_key: string | null;
+  payment_reference: string | null;
   payment_status: string;
   order_status: string;
   tiktok_video_ref: string | null;

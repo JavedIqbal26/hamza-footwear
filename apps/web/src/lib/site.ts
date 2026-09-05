@@ -1,3 +1,5 @@
+import { SITE_ORIGIN } from '@hamza/shared';
+
 /**
  * Site-wide constants that are not customer data.
  *
@@ -8,9 +10,9 @@
 export const SITE = {
   name: 'Hamza Footwear',
   tagline: 'Shoes that reach your door.',
-  url: 'https://hamzafootwear.com',
+  url: SITE_ORIGIN,
   description:
-    'Shoes for men, women and kids, delivered across Pakistan. Cash on Delivery available.',
+    'Shoes for men, women and kids, delivered across Pakistan. Cash on Delivery, with delivery charges paid in advance.',
   /* Shown in the footer. Replace with the shop's real address before launch. */
   address: 'Delivering across Pakistan.',
 } as const;

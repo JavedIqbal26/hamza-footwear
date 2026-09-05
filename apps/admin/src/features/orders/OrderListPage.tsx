@@ -52,6 +52,25 @@ export function OrderListPage() {
     }
   }
 
+  /**
+   * Setting the delivery charge. The customer cannot pay until this lands, so
+   * it is the first thing to do with a new order — the card puts it above
+   * everything else for the same reason.
+   */
+  async function quote(order: Order, deliveryFeePkr: number): Promise<void> {
+    setBusyId(order.id);
+    try {
+      const { order: updated } = await api.setDeliveryFee(order.id, deliveryFeePkr);
+      setOrders((current) =>
+        current?.map((item) => (item.id === updated.id ? updated : item)) ?? null,
+      );
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not set the delivery charge');
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
 
   return (
@@ -90,6 +109,7 @@ export function OrderListPage() {
               order={order}
               busy={busyId === order.id}
               onStatusChange={(update) => void changeStatus(order, update)}
+              onQuote={(fee) => void quote(order, fee)}
             />
           ))}
         </div>

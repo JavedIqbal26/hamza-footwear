@@ -87,6 +87,7 @@ const { slug, sizes, pricePkr, selectedSize = null, showSizeError = false } = As
     >
       Add to cart · {formatPKR(pricePkr)}
     </button>
+    <slot name="call" />
     <slot name="whatsapp" />
   </div>
 </form>

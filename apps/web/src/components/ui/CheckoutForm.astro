@@ -22,16 +22,10 @@ const value = (name: string): string => values[name] ?? '';
 ---
 
 {/*
-  `enctype` is required for the optional wallet screenshot in PaymentMethods —
-  a urlencoded form sends the filename and silently drops the bytes.
+  Plain urlencoded again: the wallet screenshot moved to the order page, which
+  is the first point at which the customer knows what to pay.
 */}
-<form
-  method="POST"
-  action="/checkout/submit"
-  enctype="multipart/form-data"
-  class="flex flex-col gap-7"
-  novalidate
->
+<form method="POST" action="/checkout/submit" class="flex flex-col gap-7" novalidate>
   <DeliveryFields cities={cities} errors={errors} values={values} />
 
   <PaymentMethods wallets={wallets} errors={errors} selected={value('payment_method')} />

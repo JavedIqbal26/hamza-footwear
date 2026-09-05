@@ -1,13 +1,13 @@
 import {
   formatPKR,
-  formatPhone,
-  toTelNumber,
   ORDER_STATUSES,
   PAYMENT_METHOD_LABELS,
   PAYMENT_STATUSES,
-  toWhatsAppNumber,
   type Order,
 } from '@hamza/shared';
+
+import { DeliveryQuote } from './DeliveryQuote.jsx';
+import { OrderContact } from './OrderContact.jsx';
 
 /**
  * One order, as the owner needs it on a phone.
@@ -20,6 +20,7 @@ import {
 interface Props {
   order: Order;
   onStatusChange: (update: { order_status?: string; payment_status?: string }) => void;
+  onQuote: (deliveryFeePkr: number) => void;
   busy: boolean;
 }
 
@@ -32,14 +33,18 @@ const STATUS_LABELS: Record<string, string> = {
   returned: 'Returned',
 };
 
+/*
+ * "Advance", not "Payment". On a COD order this tracks the prepaid delivery
+ * charge only — the shoes are still to be collected in cash — and calling it
+ * payment would invite dispatching an order that is barely part-paid.
+ */
 const PAYMENT_LABELS: Record<string, string> = {
-  pending: 'Payment pending',
-  verified: 'Payment verified',
-  failed: 'Payment failed',
+  pending: 'Advance pending',
+  verified: 'Advance received',
+  failed: 'Advance failed',
 };
 
-export function OrderCard({ order, onStatusChange, busy }: Props) {
-  const isCod = order.payment_method === 'cod';
+export function OrderCard({ order, onStatusChange, onQuote, busy }: Props) {
 
   return (
     <article className="space-y-3 border-b border-neutral-200 py-4 sm:rounded-xl sm:border sm:p-4">
@@ -52,7 +57,12 @@ export function OrderCard({ order, onStatusChange, busy }: Props) {
           */}
           <p className="text-xs text-ink-muted">{ageOf(order.created_at)}</p>
         </div>
-        <p className="text-base font-bold text-ink">{formatPKR(order.total_pkr)}</p>
+        <p className="text-base font-bold text-ink">
+          {formatPKR(order.total_pkr)}
+          {order.delivery_fee_pkr === null && (
+            <span className="block text-xs font-normal text-ink-muted">+ delivery</span>
+          )}
+        </p>
       </div>
 
       <ul className="space-y-0.5 text-sm text-ink">
@@ -64,31 +74,14 @@ export function OrderCard({ order, onStatusChange, busy }: Props) {
         ))}
       </ul>
 
+      <DeliveryQuote order={order} onQuote={onQuote} busy={busy} />
+
       <div className="rounded-lg bg-neutral-50 px-3 py-2 text-sm">
         <p className="font-medium text-ink">{order.customer_name}</p>
         <p className="text-ink-muted">
           {order.address_line}, {order.area}, {order.city}
         </p>
-        {/*
-          Two ways to reach them, both one tap. Plenty of customers outside the
-          big cities are not on WhatsApp at all, and an order that cannot be
-          confirmed is an order that gets refused at the door.
-        */}
-        <div className="mt-1.5 flex flex-wrap gap-2">
-          <a
-            href={`tel:${toTelNumber(order.phone)}`}
-            className="inline-flex min-h-11 items-center rounded-lg border border-neutral-300 px-3 text-sm font-medium text-ink"
-          >
-            Call {formatPhone(order.phone)}
-          </a>
-          <a
-            href={`https://wa.me/${toWhatsAppNumber(order.phone)}`}
-            rel="noopener"
-            className="inline-flex min-h-11 items-center rounded-lg border border-whatsapp-dark px-3 text-sm font-semibold text-whatsapp-dark"
-          >
-            WhatsApp
-          </a>
-        </div>
+        <OrderContact order={order} />
       </div>
 
       <p className="text-xs text-ink-muted">
@@ -123,6 +116,12 @@ export function OrderCard({ order, onStatusChange, busy }: Props) {
         </a>
       )}
 
+      {order.payment_reference && (
+        <p className="rounded bg-neutral-50 px-3 py-2 text-sm text-ink">
+          Transaction ID <span className="font-bold">{order.payment_reference}</span>
+        </p>
+      )}
+
       {order.notes && (
         <p className="whitespace-pre-line rounded bg-amber-50 px-3 py-2 text-sm text-amber-900">
           {order.notes}
@@ -147,13 +146,13 @@ export function OrderCard({ order, onStatusChange, busy }: Props) {
         </label>
 
         {/*
-          Cash on Delivery has nothing to verify before dispatch, so the payment
-          control is only shown for wallet orders — one less thing on screen for
-          the majority of orders.
+          Shown for every order now. Cash on Delivery used to have nothing to
+          verify before dispatch; it does today, because the delivery charge is
+          prepaid and that advance is exactly what this control tracks.
         */}
-        {!isCod && (
+        {
           <label className="block">
-            <span className="text-xs font-medium text-ink-muted">Payment</span>
+            <span className="text-xs font-medium text-ink-muted">Advance</span>
             <select
               className="mt-1 min-h-11 w-full rounded-lg border border-neutral-300 px-2 text-base"
               value={order.payment_status}
@@ -167,7 +166,7 @@ export function OrderCard({ order, onStatusChange, busy }: Props) {
               ))}
             </select>
           </label>
-        )}
+        }
       </div>
     </article>
   );

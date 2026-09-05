@@ -1,5 +1,9 @@
 import { Hono } from 'hono';
-import { orderListQuerySchema, orderStatusUpdateSchema } from '@hamza/shared/schemas';
+import {
+  deliveryQuoteSchema,
+  orderListQuerySchema,
+  orderStatusUpdateSchema,
+} from '@hamza/shared/schemas';
 
 import { notFound, validationFailed } from '../../lib/http.js';
 import { createOrderService, OrderNotFoundError } from '../../services/order.service.js';
@@ -68,6 +72,35 @@ orderRoutes.get('/orders/:id/proof', async (c) => {
     'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff',
   });
+});
+
+/**
+ * The delivery quote.
+ *
+ * The one number on an order the shop supplies by hand, because it depends on
+ * where the parcel is going and the site refuses to invent it. The total is
+ * recomputed server-side from the stored subtotal; a total sent in the body
+ * would be ignored, and is not accepted by the schema at all.
+ */
+orderRoutes.put('/orders/:id/delivery-fee', async (c) => {
+  const parsed = deliveryQuoteSchema.safeParse(await c.req.json());
+  if (!parsed.success) return validationFailed(c, parsed.error);
+
+  try {
+    const order = await createOrderService(c.env.DB).setDeliveryFee(
+      c.req.param('id'),
+      parsed.data.delivery_fee_pkr,
+    );
+
+    console.log(
+      `Order ${order.order_number} quoted at ${order.delivery_fee_pkr} by ${c.get('adminEmail')}`,
+    );
+
+    return c.json({ order });
+  } catch (error) {
+    if (error instanceof OrderNotFoundError) return notFound(c, 'Order not found');
+    throw error;
+  }
 });
 
 orderRoutes.patch('/orders/:id', async (c) => {

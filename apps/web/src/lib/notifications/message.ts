@@ -17,8 +17,17 @@ export function buildOrderSummary(order: Order): string {
     ),
     '',
     `Subtotal: ${formatPKR(order.subtotal_pkr)}`,
-    `Delivery: ${formatPKR(order.delivery_fee_pkr)}`,
-    `Total: ${formatPKR(order.total_pkr)}`,
+    /*
+     * A brand new order has no delivery charge yet — setting one is the first
+     * thing the owner has to do, so the message says that rather than printing
+     * a total that is really just the subtotal.
+     */
+    order.delivery_fee_pkr === null
+      ? 'Delivery: SET THE CHARGE'
+      : `Delivery: ${formatPKR(order.delivery_fee_pkr)}`,
+    order.delivery_fee_pkr === null
+      ? ''
+      : `Total: ${formatPKR(order.total_pkr)}`,
     `Payment: ${PAYMENT_METHOD_LABELS[order.payment_method]}`,
     '',
     order.customer_name,
@@ -33,5 +42,10 @@ export function buildOrderSummary(order: Order): string {
 }
 
 export function buildOrderSubject(order: Order): string {
-  return `New order ${order.order_number} — ${formatPKR(order.total_pkr)}`;
+  const amount =
+    order.delivery_fee_pkr === null
+      ? `${formatPKR(order.subtotal_pkr)} + delivery`
+      : formatPKR(order.total_pkr);
+
+  return `New order ${order.order_number} — ${amount}`;
 }

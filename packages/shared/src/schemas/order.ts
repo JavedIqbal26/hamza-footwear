@@ -53,14 +53,37 @@ export const checkoutSchema = z.object({
   payment_method: z.enum(PAYMENT_METHODS, {
     errorMap: () => ({ message: 'Please choose how you will pay' }),
   }),
-  /** Wallet transaction id, when the customer paid by JazzCash or Easypaisa. */
-  payment_reference: z.string().trim().max(60).optional(),
   notes: z.string().trim().max(500).default(''),
   /** Which TikTok video this order came from. Sanitised before it gets here. */
   tiktok_video_ref: z.string().max(40).nullable().default(null),
 });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
+
+/**
+ * The advance payment, sent from the order page after the shop has quoted the
+ * delivery charge.
+ *
+ * Separate from checkout because it happens later: at checkout neither the
+ * customer nor the shop knows what the amount will be.
+ */
+export const advancePaymentSchema = z.object({
+  order_id: z.string().uuid(),
+  payment_reference: z.string().trim().min(3, 'Transaction ID likhein').max(60),
+});
+
+export type AdvancePaymentInput = z.infer<typeof advancePaymentSchema>;
+
+/** Admin: the delivery charge, once the shop has seen the address. */
+export const deliveryQuoteSchema = z.object({
+  delivery_fee_pkr: z.coerce
+    .number({ invalid_type_error: 'Delivery charge likhein' })
+    .int('Poore rupay likhein')
+    .min(0)
+    .max(20_000),
+});
+
+export type DeliveryQuoteInput = z.infer<typeof deliveryQuoteSchema>;
 
 /** Admin: moving an order through its lifecycle. */
 export const orderStatusUpdateSchema = z.object({

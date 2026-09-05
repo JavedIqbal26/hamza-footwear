@@ -31,11 +31,21 @@ export interface Order {
   readonly address_line: string;
   readonly items: readonly OrderItem[];
   readonly subtotal_pkr: number;
-  readonly delivery_fee_pkr: number;
+  /**
+   * NULL until the shop quotes it.
+   *
+   * The charge depends on where the parcel is going and is set by hand once the
+   * owner sees the address — the site never invents it, because it is the number
+   * the customer pays against.
+   */
+  readonly delivery_fee_pkr: number | null;
+  /** The subtotal until the quote lands, the sum afterwards. Never null. */
   readonly total_pkr: number;
   readonly payment_method: PaymentMethod;
   /** R2 key of the wallet payment screenshot, when one was uploaded. */
   readonly payment_proof_key: string | null;
+  /** Wallet transaction id for the advance, typed by the customer. */
+  readonly payment_reference: string | null;
   readonly payment_status: PaymentStatus;
   readonly order_status: OrderStatus;
   /** Which TikTok video the customer arrived from, via `?v=`. */

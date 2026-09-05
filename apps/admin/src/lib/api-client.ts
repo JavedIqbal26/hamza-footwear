@@ -106,6 +106,12 @@ export const api = {
   updateOrderStatus: (id: string, update: { order_status?: string; payment_status?: string }) =>
     jsonRequest<{ order: Order }>(`/orders/${id}`, 'PATCH', update),
 
+  /** The delivery charge the shop quotes. The total is recomputed server-side. */
+  setDeliveryFee: (id: string, deliveryFeePkr: number) =>
+    jsonRequest<{ order: Order }>(`/orders/${id}/delivery-fee`, 'PUT', {
+      delivery_fee_pkr: deliveryFeePkr,
+    }),
+
   /** Uploads all three variants of one photo; returns the base key to store. */
   uploadImage: async (variants: { thumb: File; product: File; full: File }) => {
     const form = new FormData();

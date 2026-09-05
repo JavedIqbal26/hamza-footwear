@@ -4,12 +4,7 @@ import {
   ORDER_NUMBER_COUNTER,
   type NewOrder,
 } from '@hamza/db';
-import {
-  formatOrderNumber,
-  orderTotalPkr,
-  type Order,
-  type OrderItem,
-} from '@hamza/shared';
+import { formatOrderNumber, type Order, type OrderItem } from '@hamza/shared';
 import type { CheckoutInput } from '@hamza/shared/schemas';
 
 import { getDatabase } from '../runtime.js';
@@ -22,6 +17,13 @@ import type { PricedCart } from '../cart/pricing.js';
  * The one rule here: every number stored on the order is computed on this
  * server from this request's database reads. The client supplies who they are
  * and what they want — never what it costs.
+ *
+ * **The delivery charge is not one of those numbers.** The shop quotes it by
+ * hand once it can see where the parcel is going, so an order is created with
+ * `delivery_fee_pkr: null` and a total that is, for now, just the subtotal.
+ * The city is still validated against the cities table — it decides nothing
+ * about price any more, but a delivery address in a city the shop does not
+ * serve is still worth catching at the door rather than after payment.
  */
 
 export class EmptyCartError extends Error {
@@ -60,20 +62,12 @@ export async function createOrder(
 
   const db = getDatabase(locals);
 
-  /* The fee comes from the cities table, never from the submitted form. */
+  /* Still validated, no longer priced from. */
   const cities = await listCities(locals);
   const city = cities.find((candidate) => candidate.name === input.city);
   if (!city) throw new UnknownCityError(input.city);
 
   const items = toOrderItems(priced);
-  const deliveryFeePkr = city.delivery_fee_pkr;
-  const totalPkr = orderTotalPkr(
-    items.map((item) => ({
-      unitPricePkr: item.unit_price_pkr,
-      quantity: item.quantity,
-    })),
-    deliveryFeePkr,
-  );
 
   const sequence = await createCounterRepository(db).next(ORDER_NUMBER_COUNTER);
 
@@ -87,28 +81,15 @@ export async function createOrder(
     address_line: input.address_line,
     items,
     subtotal_pkr: priced.subtotalPkr,
-    delivery_fee_pkr: deliveryFeePkr,
-    total_pkr: totalPkr,
+    delivery_fee_pkr: null,
+    total_pkr: priced.subtotalPkr,
     payment_method: input.payment_method,
     payment_proof_key: null,
     customer_id: customerId,
     tiktok_video_ref: input.tiktok_video_ref,
-    notes: buildNotes(input),
+    notes: input.notes,
   };
 
   return createOrderRepository(db).create(newOrder);
 }
 
-/**
- * The wallet transaction reference lives in notes rather than its own column.
- * The schema's `payment_proof_key` is for the uploaded screenshot; a typed
- * reference number is something the owner reads, not something we query on.
- */
-function buildNotes(input: CheckoutInput): string {
-  const parts: string[] = [];
-  if (input.payment_reference) {
-    parts.push(`Payment reference: ${input.payment_reference}`);
-  }
-  if (input.notes) parts.push(input.notes);
-  return parts.join('\n');
-}

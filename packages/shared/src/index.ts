@@ -13,6 +13,7 @@ export * from './brand/logo.js';
 export * from './constants/categories.js';
 export * from './constants/cities.js';
 export * from './constants/order-number.js';
+export * from './constants/site.js';
 export * from './constants/size-chart.js';
 export * from './constants/sizes.js';
 export * from './constants/statuses.js';

@@ -8,11 +8,16 @@ import { TRUST } from '../../content/microcopy.js';
  *
  * Above the description on purpose — nobody reads the materials paragraph
  * before they have decided the shop is safe to order from.
+ *
+ * Cash on Delivery is the title; the advance delivery charge is the line under
+ * it. That is the weighting the shop asked for, and it is also the honest one —
+ * this is where the buying decision is made, so the condition attached to COD
+ * belongs on the same card as the promise, just quieter than it.
  */
 const PROMISES = [
-  { icon: 'rupee' as const, title: 'Cash on Delivery', body: TRUST.cod },
+  { icon: 'rupee' as const, title: 'Cash on Delivery', body: TRUST.codAdvance },
   { icon: 'truck' as const, title: '2–4 din delivery', body: TRUST.deliveryFeeNote },
-  { icon: 'exchange' as const, title: '7-day free exchange', body: TRUST.returnsCondition },
+  { icon: 'exchange' as const, title: '7-day return ya exchange', body: TRUST.returnsShipping },
 ] as const;
 ---
 

@@ -2,6 +2,7 @@
 import Icon from '../icons/Icon.astro';
 import {
   buildWhatsAppOrderLink,
+  toTelNumber,
   CATEGORY_LABELS,
   categoryPath,
   effectivePricePkr,
@@ -111,6 +112,19 @@ const whatsappHref = buildWhatsAppOrderLink({
               the cart. Plenty of customers will never fill in a form, and this
               link works on arrival with no JavaScript at all.
             */}
+            {/*
+              Calling is how most of this shop's customers actually order — the
+              owner quotes delivery on the phone. It sits beside WhatsApp rather
+              than under it for that reason.
+            */}
+            <a
+              slot="call"
+              href={`tel:${toTelNumber(shopPhone)}`}
+              aria-label="Call the shop"
+              class="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full border-[1.5px] border-surface/45 text-surface"
+            >
+              <Icon name="phone" size={22} />
+            </a>
             <a
               slot="whatsapp"
               id="whatsapp-order"
@@ -138,6 +152,13 @@ const whatsappHref = buildWhatsAppOrderLink({
             >
               <Icon name="whatsapp" size={20} />
               {TRUST.whatsappPrompt}
+            </a>
+            <a
+              href={`tel:${toTelNumber(shopPhone)}`}
+              class="tap-target flex items-center justify-center gap-2 rounded-full border-[1.5px] border-ink px-5 text-base font-bold text-ink"
+            >
+              <Icon name="phone" size={20} />
+              Call karein
             </a>
           </div>
         )

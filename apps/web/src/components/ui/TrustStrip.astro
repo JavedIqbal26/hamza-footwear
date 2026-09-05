@@ -8,11 +8,15 @@ import { TRUST } from '../../content/microcopy.js';
  * Below the product grid on purpose: a visitor arriving from a TikTok video
  * wants to see shoes, not read three paragraphs first — and the Cash on
  * Delivery promise is already in the strip above the header on every page.
+ *
+ * The advance delivery charge rides in the muted body line rather than the
+ * heading: disclosed on the home page, but not competing with the promise that
+ * brought the visitor here.
  */
 const POINTS = [
-  { icon: 'rupee' as const, title: 'Cash on Delivery', body: TRUST.cod },
+  { icon: 'rupee' as const, title: 'Cash on Delivery', body: TRUST.codAdvance },
   { icon: 'truck' as const, title: '2–4 din delivery', body: TRUST.deliveryTime },
-  { icon: 'exchange' as const, title: '7-day exchange', body: TRUST.returns },
+  { icon: 'exchange' as const, title: '7-day return ya exchange', body: TRUST.returns },
   { icon: 'check' as const, title: 'Asli tasveerein', body: 'Jo tasveer mein hai wohi milega.' },
 ] as const;
 ---

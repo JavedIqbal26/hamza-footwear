@@ -19,17 +19,38 @@ export const TRUST = {
   whatsappSizeTitle: 'Size ka masla?',
   whatsappSizeBody: 'WhatsApp par pooch lein — 10 min mein jawab.',
 
-  /** Cash on Delivery. The single most important reassurance on the site. */
-  cod: 'Cash on Delivery — saman haath mein lene ke baad paisay dein',
+  /*
+   * Cash on Delivery, and the one condition attached to it.
+   *
+   * COD leads — it is the single most important reassurance on the site, and
+   * the reason a first-time TikTok buyer tries the shop at all. But the courier
+   * is prepaid, and `codAdvance` is how that gets said: quietly on the home and
+   * product pages, in full at checkout.
+   *
+   * These are deliberately two strings, not one. Joining them would force the
+   * qualifier to the same weight as the promise everywhere it appears, and
+   * splitting them lets each surface choose. What no surface may do is show
+   * `cod` where a purchase decision is made without `codAdvance` near it.
+   */
+  cod: 'Cash on Delivery — shoes ka paisa parcel milne par dein',
+  codAdvance: 'Delivery charge pehle JazzCash ya Easypaisa par bhejna hota hai',
   codShort: 'Cash on Delivery available',
 
   /** Delivery promise. Keep vague enough to always be true. */
   deliveryTime: 'Pakistan bhar mein 2 se 4 din mein delivery',
-  deliveryFeeNote: 'Delivery charges aap ke shehar ke hisaab se lagte hain',
+  deliveryFeeNote: 'Delivery charge aap ke ilaaqe ke hisaab se — order ke baad confirm hoga',
+
+  /**
+   * Shown wherever a total would be, before the shop has quoted the charge.
+   * A missing number reads as a broken page unless something explains it.
+   */
+  quotePending:
+    'Order karne ke baad hum aap ke ilaaqe ka delivery charge bhej dete hain. Us ke baad hi paisay bhejne hote hain — abhi kuch nahi.',
 
   /** Returns. */
-  returns: '7 din ke andar exchange — size theek na aaye to badal lein',
+  returns: '7 din ke andar return ya exchange — asli halat mein wapas karein',
   returnsCondition: 'Joota bilkul naya aur original box mein hona zaroori hai',
+  returnsShipping: 'Aane jaane ka courier kharcha customer ka hota hai',
 
   /** Sizing. Sizing confusion is the leading cause of returns. */
   sizeHelp: 'Size ka masla? Pehle apna paon cm mein naapein',

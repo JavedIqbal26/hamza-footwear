@@ -14,7 +14,8 @@ import NotFound from '../../components/ui/NotFound.astro';
 import { TRUST } from '../../content/microcopy.js';
 import { NO_STORE } from '../../lib/cache.js';
 import { currentCustomer } from '../../lib/auth/session.js';
-import { getDatabase, getShopWhatsApp } from '../../lib/runtime.js';
+import OrderPayment from '../../components/ui/OrderPayment.astro';
+import { getDatabase, getShopWhatsApp, getWalletNumbers } from '../../lib/runtime.js';
 
 export const prerender = false;
 
@@ -34,6 +35,8 @@ if (order === null) Astro.response.status = 404;
 Astro.response.headers.set('Cache-Control', NO_STORE);
 
 const shopPhone = getShopWhatsApp(Astro.locals);
+const wallets = getWalletNumbers(Astro.locals);
+const paymentNotice = Astro.url.searchParams.get('payment') ?? undefined;
 const customer = await currentCustomer(Astro.locals, Astro.cookies);
 const isMine = Boolean(order && customer && order.customer_id === customer.id);
 ---
@@ -50,7 +53,7 @@ const isMine = Boolean(order && customer && order.customer_id === customer.id);
           <p class="eyebrow">Shukriya!</p>
           <h1 class="display mt-1 text-[32px]">Order {order.order_number}</h1>
           <p class="mt-2 text-sm text-ink">
-            Hum aap ko is number par confirm karenge: {formatPhone(order.phone)}
+            Delivery charge is number par bhejenge: {formatPhone(order.phone)}
           </p>
           <p class="mt-3 inline-flex rounded-full bg-ink px-4 py-1.5 text-xs font-extrabold text-surface">
             {ORDER_STATUS_LABELS[order.order_status]}
@@ -73,25 +76,12 @@ const isMine = Boolean(order && customer && order.customer_id === customer.id);
             ))}
           </ul>
 
-          <dl class="mt-4 space-y-1.5 text-sm">
-            <div class="flex justify-between">
-              <dt class="text-ink-muted">Subtotal</dt>
-              <dd class="text-ink">{formatPKR(order.subtotal_pkr)}</dd>
-            </div>
-            <div class="flex justify-between">
-              <dt class="text-ink-muted">Delivery to {order.city}</dt>
-              <dd class="text-ink">{formatPKR(order.delivery_fee_pkr)}</dd>
-            </div>
-            <div class="flex justify-between border-t border-line pt-2.5">
-              <dt class="font-extrabold text-ink">Total</dt>
-              <dd class="text-xl font-extrabold text-ink">{formatPKR(order.total_pkr)}</dd>
-            </div>
-          </dl>
-
           <p class="mt-3 text-sm text-ink-muted">
             Payment: {PAYMENT_METHOD_LABELS[order.payment_method]}
           </p>
         </section>
+
+        <OrderPayment order={order} wallets={wallets} notice={paymentNotice} />
 
         <section class="mt-8">
           <h2 class="text-sm font-extrabold">Delivery address</h2>
@@ -122,12 +112,18 @@ const isMine = Boolean(order && customer && order.customer_id === customer.id);
           otherwise the link is an invitation to an empty page.
         */}
         {isMine && (
-          <a href="/account" class="mt-3 block text-center text-sm font-bold text-brand-600">
+          <a
+            href="/account"
+            class="mt-2 flex min-h-11 items-center justify-center text-sm font-bold text-brand-600"
+          >
             All your orders →
           </a>
         )}
 
-        <a href="/shop" class="mt-3 block text-center text-sm font-bold text-brand-600">
+        <a
+          href="/shop"
+          class="mt-1 flex min-h-11 items-center justify-center text-sm font-bold text-brand-600"
+        >
           Continue shopping
         </a>
       </div>

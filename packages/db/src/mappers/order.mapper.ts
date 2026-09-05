@@ -66,6 +66,7 @@ export function toOrder(row: OrderRow): Order {
     total_pkr: row.total_pkr,
     payment_method: row.payment_method as PaymentMethod,
     payment_proof_key: row.payment_proof_key,
+    payment_reference: row.payment_reference,
     payment_status: row.payment_status as PaymentStatus,
     order_status: row.order_status as OrderStatus,
     tiktok_video_ref: row.tiktok_video_ref,

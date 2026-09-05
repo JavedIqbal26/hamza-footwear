@@ -287,8 +287,10 @@ array of UK sizes), `images` (JSON array of R2 keys), `is_active`, `stock_status
 
 **orders** — `id`, `order_number` (human-readable, e.g. `HF-1042`), `customer_name`,
 `phone`, `city`, `area`, `address_line`, `items` (JSON), `subtotal_pkr`,
-`delivery_fee_pkr`, `total_pkr`, `payment_method` (`cod|jazzcash|easypaisa`),
-`payment_proof_key` (nullable R2 key), `payment_status` (`pending|verified|failed`),
+`delivery_fee_pkr` (**nullable** — NULL until the shop quotes it), `total_pkr`
+(the subtotal until then), `payment_method` (`cod|jazzcash|easypaisa`),
+`payment_proof_key` (nullable R2 key), `payment_reference` (nullable wallet
+transaction id), `payment_status` (`pending|verified|failed`),
 `order_status` (`new|confirmed|dispatched|delivered|cancelled|returned`),
 `tiktok_video_ref` (nullable), `notes`, `created_at`
 
@@ -311,9 +313,13 @@ conventions.
 - **No postal codes.** Do not add the field. It will not be filled in correctly.
 - **Address form order, exactly:** name → mobile → city (dropdown) → area →
   address (free text).
-- **Delivery fee is driven by the city dropdown**, computed server-side from the
-  `cities` table. Two tiers to start: major cities (Karachi, Lahore, Islamabad,
-  Rawalpindi, Faisalabad) and everywhere else. Never trust a fee sent by the client.
+- **Delivery fee is quoted by the shop, per order.** It depends on the address,
+  and the owner sets it in admin once he sees where the parcel is going. The site
+  never computes or displays a delivery charge of its own — a figure the shop has
+  not agreed to is the number a customer would pay against. `delivery_fee_pkr` is
+  NULL until quoted; the order page shows no total before then. The `cities`
+  table survives as coverage and as the seam for per-area rates later, but it
+  prices nothing today. Never trust a fee sent by the client.
 - **Sizes are UK.** Every product page needs a size chart plus a "measure your foot
   in cm" guide. Sizing confusion is a leading cause of returns — this is a revenue
   feature, not a nicety.
@@ -330,11 +336,34 @@ conventions.
 No payment gateway. JazzCash/Easypaisa APIs require a registered business
 (NTN + business bank account + merchant approval), which is not in place.
 
-- **COD is the default** and the most prominent option at checkout.
-- **Manual wallet:** display the shop's JazzCash/Easypaisa number. The customer
-  sends payment and uploads a screenshot or enters a transaction ID. The screenshot
-  goes to R2 and appears next to the order in admin for manual verification before
-  dispatch.
+**The courier is prepaid; the shoes are not.** Two paths, and the customer picks
+at checkout:
+
+- **Cash on Delivery** — the default and the more prominent. The delivery charge
+  reaches the shop by wallet before the parcel ships; the shoe price is cash at
+  the door. The advance is what protects the shop from a refused delivery, which
+  otherwise costs it the courier fee in both directions.
+- **Full advance** — the whole amount by wallet, nothing owed at the door.
+
+Either way, `payment_status` tracks **the advance** — the delivery charge on a
+COD order, the total on a prepaid one. Cash handed over at the door is carried by
+`order_status: delivered`, not by a second field. Admin says "Advance", never
+"Payment", so a part-paid order is never read as settled.
+
+**Nothing is paid at checkout**, because the delivery charge is not known yet.
+The transaction id and screenshot are collected on the order page, after the
+quote — that page is the customer's home for the order and the only place the
+wallet numbers appear.
+
+**COD leads in the copy; the advance charge is disclosed but subordinate.** It
+rides in the supporting line on the home and product pages, never the headline,
+and in full at checkout. A customer must never first learn about it at the moment
+they are asked to pay.
+
+- **Manual wallet:** display the shop's JazzCash/Easypaisa number — today both are
+  the same number. The customer sends payment and uploads a screenshot or enters a
+  transaction ID. The screenshot goes to R2 and appears next to the order in admin
+  for manual verification before dispatch.
 
 **A payment proof is not a catalogue photo.** Proofs are written under the
 `proofs/` prefix, which the storefront's public `/img/[key]` route can never

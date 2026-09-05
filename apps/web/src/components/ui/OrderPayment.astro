@@ -1,0 +1,173 @@
+---
+import { formatPhone, formatPKR, type Order } from '@hamza/shared';
+
+import { TRUST } from '../../content/microcopy.js';
+import type { WalletNumbers } from '../../lib/runtime.js';
+
+interface Props {
+  order: Order;
+  wallets: WalletNumbers;
+  /** From `?payment=`, so a redirect can say what just happened. */
+  notice?: string;
+}
+
+const { order, wallets, notice } = Astro.props;
+
+/*
+ * What the customer owes, and when.
+ *
+ * An order moves through three states here and the page has to be honest at
+ * each one, because the middle state is the unusual bit: the customer has
+ * ordered but there is deliberately no total yet.
+ *
+ *   1. Awaiting the quote  — the shop has not set the delivery charge.
+ *   2. Quoted, unpaid      — an amount exists; here is where to send it.
+ *   3. Paid                — reference received, or verified by the shop.
+ *
+ * On a COD order the advance is the delivery charge alone and the shoes are
+ * paid in cash at the door. On a prepaid order the advance is everything. The
+ * split is stated on screen rather than left to the customer to work out, since
+ * paying the wrong one of the two is the obvious failure mode.
+ */
+const quoted = order.delivery_fee_pkr !== null;
+const isCod = order.payment_method === 'cod';
+
+const dueNowPkr = isCod ? (order.delivery_fee_pkr ?? 0) : order.total_pkr;
+const dueOnDeliveryPkr = isCod ? order.subtotal_pkr : 0;
+
+const paid = order.payment_status === 'verified';
+const submitted = order.payment_reference !== null;
+
+/* Both wallets are usually one number; list each distinct one once. */
+const walletNumbers = [
+  { label: 'JazzCash', number: wallets.jazzcash },
+  { label: 'Easypaisa', number: wallets.easypaisa },
+].filter((wallet): wallet is typeof wallet & { number: string } => wallet.number !== null);
+
+const NOTICES: Readonly<Record<string, string>> = {
+  sent: 'Shukriya — hum payment check kar ke order confirm kar denge.',
+  invalid: 'Transaction ID theek se likhein.',
+  early: 'Pehle delivery charge confirm hone dein.',
+};
+const notice_ = notice ? NOTICES[notice] : undefined;
+---
+
+<section class="mt-8 rounded-[18px] border-2 border-ink p-5">
+  {
+    notice_ && (
+      <p role="status" class="mb-4 rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-700">
+        {notice_}
+      </p>
+    )
+  }
+
+  {
+    !quoted ? (
+      <>
+        <h2 class="display text-[22px]">Delivery charge confirm ho raha hai</h2>
+        <p class="mt-2 text-sm leading-relaxed text-ink-body">{TRUST.quotePending}</p>
+        <dl class="mt-4 flex items-baseline justify-between border-t border-line pt-3 text-sm">
+          <dt class="text-ink-muted">Shoes</dt>
+          <dd class="text-lg font-extrabold text-ink">{formatPKR(order.subtotal_pkr)}</dd>
+        </dl>
+      </>
+    ) : (
+      <>
+        <h2 class="display text-[22px]">
+          {paid ? 'Payment mil gayi' : submitted ? 'Payment check ho rahi hai' : 'Ab kya karna hai'}
+        </h2>
+
+        <dl class="mt-4 space-y-1.5 text-sm">
+          <div class="flex justify-between">
+            <dt class="text-ink-muted">Shoes</dt>
+            <dd class="text-ink">{formatPKR(order.subtotal_pkr)}</dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-ink-muted">Delivery to {order.city}</dt>
+            <dd class="text-ink">{formatPKR(order.delivery_fee_pkr ?? 0)}</dd>
+          </div>
+          <div class="flex justify-between border-t border-line pt-2.5">
+            <dt class="font-extrabold text-ink">Total</dt>
+            <dd class="text-xl font-extrabold text-ink">{formatPKR(order.total_pkr)}</dd>
+          </div>
+        </dl>
+
+        {/* The bit that actually matters: which half is due when. */}
+        <div class="mt-4 rounded-[14px] bg-surface-sunk px-4 py-3.5">
+          <p class="flex items-baseline justify-between gap-3 text-sm">
+            <span class="font-extrabold text-ink">Abhi bhejein</span>
+            <span class="text-lg font-extrabold text-ink">{formatPKR(dueNowPkr)}</span>
+          </p>
+          {dueOnDeliveryPkr > 0 && (
+            <p class="mt-1.5 flex items-baseline justify-between gap-3 text-sm">
+              <span class="text-ink-muted">Parcel milne par cash</span>
+              <span class="font-bold text-ink-body">{formatPKR(dueOnDeliveryPkr)}</span>
+            </p>
+          )}
+        </div>
+
+        {
+          !paid && walletNumbers.length > 0 && (
+            <p class="mt-4 text-sm leading-relaxed text-ink">
+              {walletNumbers.map((wallet) => (
+                <span class="mr-3 inline-block">
+                  {wallet.label}
+                  <strong class="ml-1.5 font-extrabold text-ink">
+                    {formatPhone(wallet.number)}
+                  </strong>
+                </span>
+              ))}
+            </p>
+          )
+        }
+
+        {
+          !paid && (
+            <form method="POST" action="/order/pay" enctype="multipart/form-data" class="mt-5">
+              <input type="hidden" name="order_id" value={order.id} />
+
+              <label for="payment_reference" class="eyebrow">
+                Transaction ID
+              </label>
+              <input
+                id="payment_reference"
+                name="payment_reference"
+                type="text"
+                inputmode="numeric"
+                required
+                value={order.payment_reference ?? ''}
+                class="tap-target mt-1.5 w-full rounded-xl border border-line-strong bg-surface px-3.5 py-3 text-base outline-none focus:border-ink"
+              />
+
+              {/*
+                Optional, and second to the typed id on purpose: a screenshot is
+                a multi-megabyte upload over mobile data, and a customer on a
+                weak signal must never be blocked by it. No `capture`, so the
+                picker opens the gallery where the screenshot already is.
+              */}
+              <div class="mt-3">
+                <label for="payment_proof" class="eyebrow">
+                  Screenshot <span class="normal-case text-ink-soft">(optional)</span>
+                </label>
+                <input
+                  id="payment_proof"
+                  name="payment_proof"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  class="tap-target mt-1.5 w-full rounded-xl border border-line-strong bg-surface px-3.5 py-2.5 text-sm file:mr-3 file:rounded-full file:border-0 file:bg-ink file:px-4 file:py-2 file:text-sm file:font-bold file:text-surface"
+                />
+              </div>
+
+              <button
+                type="submit"
+                class="tap-target mt-4 flex h-[54px] w-full items-center justify-center rounded-full bg-ink text-base font-extrabold text-surface"
+              >
+                Paisay bhej diye
+              </button>
+            </form>
+          )
+        }
+      </>
+    )
+  }
+</section>

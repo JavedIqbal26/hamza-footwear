@@ -23,14 +23,17 @@ bucket_name = "hamza-footwear-images"
 [vars]
 # All placeholders. Set the real values in the Pages dashboard before launch.
 #
-# The shop's WhatsApp number.
-SHOP_WHATSAPP = "03001234567"
+# The shop's WhatsApp number, and both wallet accounts. Today they are one and
+# the same number, but they stay three settings: the wallet can move without
+# the WhatsApp line moving with it, and a shared constant would make that a
+# code change instead of a dashboard one.
+SHOP_WHATSAPP = "03000142825"
 
-# Wallet numbers shown at checkout for manual payment. A wallet option is
-# hidden entirely unless its number is set, so nobody is ever shown a blank
-# number to send money to — delete these lines to hide that payment method.
-JAZZCASH_NUMBER = "03001234567"
-EASYPAISA_NUMBER = "03451234567"
+# Where the customer sends the advance. A wallet is hidden entirely unless its
+# number is set, so nobody is ever shown a blank number to send money to —
+# delete a line to withdraw that wallet.
+JAZZCASH_NUMBER = "03000142825"
+EASYPAISA_NUMBER = "03000142825"
 
 # Order notifications are configured as secrets, not here:
 #   wrangler secret put TELEGRAM_BOT_TOKEN

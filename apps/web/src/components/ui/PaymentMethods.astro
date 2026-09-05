@@ -13,17 +13,37 @@ interface Props {
 const { wallets, selected = '', errors = {} } = Astro.props;
 
 /*
- * Cash on Delivery is listed first and preselected. It is what most customers
- * want, and it is the option that requires the least trust from a first-time
- * buyer — which is most of this shop's traffic.
+ * Two payment models, not three wallets.
  *
- * A wallet option only appears if its number is actually configured. Showing
- * "send money to (blank)" would be worse than not offering it.
+ * The real choice a customer makes here is *when* they pay, not which app they
+ * open:
+ *
+ * - **Cash on Delivery** — the delivery charge reaches the shop by wallet
+ *   before the parcel ships; the shoes are paid for in cash at the door. The
+ *   advance is what protects the shop from a refused delivery, which otherwise
+ *   costs it the courier fee in both directions.
+ * - **Full advance** — the whole amount by wallet, one transfer, nothing owed
+ *   at the door.
+ *
+ * COD is listed first and preselected: it asks the least of a first-time buyer,
+ * and most of this shop's traffic is first-time buyers arriving from TikTok.
+ *
+ * NOTHING IS PAID ON THIS PAGE. The delivery charge is quoted by the shop after
+ * it sees the address, so neither amount is known yet. The transaction id and
+ * screenshot fields that used to live here now sit on the order page, which is
+ * the first moment either figure exists.
+ *
+ * A wallet is listed only if its number is configured. "Send money to (blank)"
+ * would be worse than not offering it.
  */
 const walletOptions = [
-  { value: 'jazzcash', label: 'JazzCash', number: wallets.jazzcash },
-  { value: 'easypaisa', label: 'Easypaisa', number: wallets.easypaisa },
+  { label: 'JazzCash', number: wallets.jazzcash },
+  { label: 'Easypaisa', number: wallets.easypaisa },
 ].filter((option): option is typeof option & { number: string } => option.number !== null);
+
+/* Both wallets are usually the same number; say it once when they are. */
+const walletNumbers = [...new Set(walletOptions.map((option) => option.number))];
+const walletNames = walletOptions.map((option) => option.label).join(' ya ');
 
 const isSelected = (value: string): boolean =>
   selected === value || (selected === '' && value === 'cod');
@@ -47,72 +67,44 @@ const optionClass =
     <span>
       <span class="block text-sm font-extrabold text-ink">Cash on Delivery</span>
       <span class="mt-0.5 block text-sm text-ink-muted">{TRUST.cod}</span>
+      <span class="mt-1 block text-xs text-ink-soft">{TRUST.codAdvance}</span>
     </span>
   </label>
 
   {
-    walletOptions.map((option) => (
+    walletOptions.length > 0 && (
       <label class={optionClass}>
         <input
           type="radio"
           name="payment_method"
-          value={option.value}
-          checked={isSelected(option.value)}
+          value={walletOptions[0]!.label.toLowerCase()}
+          checked={walletOptions.some((option) => isSelected(option.label.toLowerCase()))}
           class="mt-0.5 h-5 w-5 shrink-0 accent-ink"
         />
         <span>
-          <span class="block text-sm font-extrabold text-ink">{option.label}</span>
+          <span class="block text-sm font-extrabold text-ink">Poora advance</span>
           <span class="mt-0.5 block text-sm text-ink-muted">
-            Is number par bhejein:
-            <strong class="font-extrabold text-ink">{formatPhone(option.number)}</strong>
+            {walletNames} par poori raqam bhejein — darwazay par kuch dena nahi.
           </span>
           <span class="mt-1 block text-xs text-ink-soft">
-            Paisay bhejne ke baad transaction ID neeche likhein.
+            Number:
+            {walletNumbers.map((number) => (
+              <strong class="font-extrabold text-ink">{formatPhone(number)}</strong>
+            ))}
           </span>
         </span>
       </label>
-    ))
-  }
-
-  {
-    walletOptions.length > 0 && (
-      <div>
-        <label for="payment_reference" class="eyebrow">
-          Transaction ID <span class="normal-case text-ink-soft">(wallet payments only)</span>
-        </label>
-        <input
-          id="payment_reference"
-          name="payment_reference"
-          type="text"
-          inputmode="numeric"
-          class="tap-target mt-1.5 w-full rounded-xl border border-line-strong bg-surface px-3.5 py-3 text-base outline-none focus:border-ink"
-        />
-        <p class="mt-1 text-xs text-ink-soft">
-          Ya screenshot neeche lagayein — dono mein se ek kaafi hai.
-        </p>
-
-        {/*
-          Optional, and deliberately second to the typed id: a screenshot is a
-          multi-megabyte upload over mobile data, and a customer on a weak
-          signal must never be blocked by it. `capture` is left off so the
-          picker opens the gallery, where the screenshot already is, rather
-          than the camera.
-        */}
-        <div class="mt-3">
-          <label for="payment_proof" class="eyebrow">
-            Payment screenshot <span class="normal-case text-ink-soft">(optional)</span>
-          </label>
-          <input
-            id="payment_proof"
-            name="payment_proof"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            class="tap-target mt-1.5 w-full rounded-xl border border-line-strong bg-surface px-3.5 py-2.5 text-sm file:mr-3 file:rounded-full file:border-0 file:bg-ink file:px-4 file:py-2 file:text-sm file:font-bold file:text-surface"
-          />
-        </div>
-      </div>
     )
   }
+
+  {/*
+    Said once, plainly, for both options: the amount is not knowable yet. A
+    customer who expects a total on this page and does not find one assumes the
+    page is broken.
+  */}
+  <p class="rounded-xl bg-surface-sunk px-4 py-3 text-xs leading-relaxed text-ink-body">
+    {TRUST.quotePending}
+  </p>
 
   {
     errors.payment_method && (
