@@ -16,6 +16,8 @@ export * from './repositories/customer.repository.js';
 export * from './repositories/counter.repository.js';
 export * from './repositories/order-admin.repository.js';
 export * from './repositories/order.repository.js';
+export * from './repositories/push.repository.js';
+export * from './repositories/settings.repository.js';
 export * from './repositories/product.repository.js';
 export * from './repositories/product-write.repository.js';
 export * from './repositories/review.repository.js';

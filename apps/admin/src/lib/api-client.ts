@@ -1,4 +1,4 @@
-import type { Order, Product } from '@hamza/shared';
+import type { NotificationSettings, Order, Product } from '@hamza/shared';
 
 /**
  * The one place admin talks to the server.
@@ -82,6 +82,29 @@ export interface ProductInputBody {
   stock_status: string;
 }
 
+export interface NotificationSettingsBody {
+  push: boolean;
+  telegram: boolean;
+  email: boolean;
+  telegram_chat_id?: string;
+  email_to?: string;
+}
+
+export interface PushSubscriptionBody {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  label?: string;
+}
+
+export interface SettingsResponse {
+  notifications: NotificationSettings;
+  /** A channel with no credentials configured cannot work however it is set. */
+  available: { telegram: boolean; email: boolean; push: boolean };
+  vapidPublicKey: string | null;
+  pushDevices: number;
+}
+
 export const api = {
   listProducts: () => request<{ products: Product[] }>('/products'),
 
@@ -111,6 +134,25 @@ export const api = {
     jsonRequest<{ order: Order }>(`/orders/${id}/delivery-fee`, 'PUT', {
       delivery_fee_pkr: deliveryFeePkr,
     }),
+
+  getSettings: () => request<SettingsResponse>('/settings'),
+
+  saveSettings: (body: NotificationSettingsBody) =>
+    jsonRequest<{ notifications: NotificationSettings }>('/settings', 'PUT', body),
+
+  /** Reads the chat id back from whoever last messaged the bot. */
+  connectTelegram: () =>
+    jsonRequest<{ chatId: string; chatName: string }>(
+      '/settings/telegram/connect',
+      'POST',
+      {},
+    ),
+
+  subscribePush: (body: PushSubscriptionBody) =>
+    jsonRequest<{ ok: true }>('/settings/push/subscribe', 'POST', body),
+
+  unsubscribePush: (endpoint: string) =>
+    jsonRequest<{ ok: true }>('/settings/push/unsubscribe', 'POST', { endpoint }),
 
   /** Uploads all three variants of one photo; returns the base key to store. */
   uploadImage: async (variants: { thumb: File; product: File; full: File }) => {

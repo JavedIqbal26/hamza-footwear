@@ -1,7 +1,8 @@
-import { hrefFor, useRoute } from './lib/router.js';
+import { hrefFor, useRoute, type Route } from './lib/router.js';
 import { OrderListPage } from './features/orders/OrderListPage.jsx';
 import { ProductFormPage } from './features/products/ProductFormPage.jsx';
 import { ProductListPage } from './features/products/ProductListPage.jsx';
+import { SettingsPage } from './features/settings/SettingsPage.jsx';
 import { Logo } from './components/ui/Logo.jsx';
 
 /**
@@ -21,14 +22,14 @@ import { Logo } from './components/ui/Logo.jsx';
 export function App() {
   const route = useRoute();
 
-  const title =
-    route.name === 'orders'
-      ? 'Orders'
-      : route.name === 'products'
-        ? 'Products'
-        : route.name === 'product-new'
-          ? 'Add product'
-          : 'Edit product';
+  const TITLES: Record<Route['name'], string> = {
+    orders: 'Orders',
+    products: 'Products',
+    'product-new': 'Add product',
+    'product-edit': 'Edit product',
+    settings: 'Settings',
+  };
+  const title = TITLES[route.name];
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
@@ -41,8 +42,14 @@ export function App() {
           <TabLink href={hrefFor({ name: 'orders' })} active={route.name === 'orders'}>
             Orders
           </TabLink>
-          <TabLink href={hrefFor({ name: 'products' })} active={route.name !== 'orders'}>
+          <TabLink
+            href={hrefFor({ name: 'products' })}
+            active={route.name.startsWith('product')}
+          >
             Products
+          </TabLink>
+          <TabLink href={hrefFor({ name: 'settings' })} active={route.name === 'settings'}>
+            Settings
           </TabLink>
         </nav>
       </header>
@@ -52,6 +59,7 @@ export function App() {
         {route.name === 'products' && <ProductListPage />}
         {route.name === 'product-new' && <ProductFormPage />}
         {route.name === 'product-edit' && <ProductFormPage productId={route.id} />}
+        {route.name === 'settings' && <SettingsPage />}
       </main>
     </div>
   );

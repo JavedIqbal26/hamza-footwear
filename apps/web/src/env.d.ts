@@ -17,6 +17,13 @@ interface CloudflareEnv {
   readonly ORDER_EMAIL_FROM?: string;
   readonly ORDER_EMAIL_TO?: string;
 
+  /* Web Push. The private key is a secret; the public one is handed to the
+     admin browser so it can subscribe. Absent means push is skipped, which is
+     why the settings screen shows it as unavailable rather than merely off. */
+  readonly VAPID_PUBLIC_KEY?: string;
+  readonly VAPID_PRIVATE_KEY?: string;
+  readonly VAPID_SUBJECT?: string;
+
   /* One-time-code delivery. Absent means the dev log sender, which refuses to
      run in production — see lib/auth/sender.ts for why this cannot be free. */
   readonly OTP_GATEWAY_URL?: string;
