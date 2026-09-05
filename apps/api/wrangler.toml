@@ -29,7 +29,7 @@ workers_dev = false
 [[d1_databases]]
 binding = "DB"
 database_name = "hamza-footwear-db"
-database_id = "REPLACE_WITH_DATABASE_ID"
+database_id = "83afab33-3da3-4bda-a87a-27c1317e42cd"
 migrations_dir = "../../db/migrations"
 
 [[r2_buckets]]
