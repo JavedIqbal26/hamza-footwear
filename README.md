@@ -64,7 +64,7 @@ Run from the repo root:
 | `npm run db:migrate` | Apply migrations locally |
 | `npm run db:seed` | Load cities and sample products locally |
 | `npm run db:migrate:remote` | Apply migrations to the live D1 database |
-| `npm run db:seed:remote` | Seed the live D1 database |
+| `npm run db:seed:remote` | Seed the live database with cities only |
 
 ## Phase status
 
@@ -109,11 +109,13 @@ npm run db:migrate:remote
 npm run db:seed:remote
 ```
 
-`db:seed:remote` loads the cities table and a sample catalogue. **Do not load
-`db/seed/0003_reviews.sql` on the live shop** — those are development fixtures,
-and real ratings must come from real delivered orders. The sample products are
-placeholders too: they carry no photographs, so delete them once the owner has
-added real stock through admin.
+`db:seed:remote` loads **the cities table only**. That is deliberate: the sample
+catalogue is development scaffolding — ten products with no photographs and
+invented names — and it must not greet a customer arriving from TikTok. If you
+want it on a staging database, `db:seed:remote:samples` is separate and opt-in.
+
+**Never load `db/seed/0003_reviews.sql` on the live shop.** Those are review
+fixtures, and every rating on this site has to come from a real delivered order.
 
 ### 3. Replace every placeholder
 
