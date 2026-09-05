@@ -130,6 +130,28 @@ Two deliberate departures from the original sketch:
 **Package manager: npm workspaces.** Not pnpm — nothing here needs it, and it is
 one less thing to install on the shop's machine.
 
+### How the three pieces are served
+
+All of it on one hostname, which is a deliberate constraint rather than a
+convenience:
+
+| Path | Served by |
+|---|---|
+| `hamzafootwear.com/*` | Pages — the Astro storefront |
+| `hamzafootwear.com/admin*` | Pages — the admin SPA, folded into `dist/admin` at build time |
+| `hamzafootwear.com/api/*` | The API Worker, via a route in its `wrangler.toml` |
+
+Admin calls `/api/admin/...` as a **relative** path, so a second hostname would
+make every admin request cross-origin: CORS config, a second Access application,
+and two places to get it wrong. Admin's product thumbnails also come from the
+storefront's own `/img/` route. One host keeps both true and puts a single
+Access application in front of `/admin` and `/api/admin` together.
+
+The build step that folds admin in also appends `/admin/*` to Astro's
+`_routes.json` exclude list. Astro emits `include: ["/*"]`, so without it Pages
+hands every `/admin` request to the SSR worker, which has no such route — a 404
+that appears only once deployed.
+
 ### Commands
 
 Run from the repo root.
@@ -140,6 +162,7 @@ Run from the repo root.
 | `npm run dev:api` | Admin API Worker (8787) |
 | `npm run dev:admin` | Admin SPA (5173), proxying `/api` and `/img` |
 | `npm run build` | Build every app |
+| `npm run build:web` | The Pages build: admin, then the storefront, with admin folded into `dist/admin` and `/admin/*` excluded from SSR routing |
 | `npm run typecheck` | Every workspace |
 | `npm run db:reset` | Migrate + seed the local database |
 | `npm run db:migrate:remote` / `db:seed:remote` | The live D1 database |

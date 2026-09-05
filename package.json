@@ -13,14 +13,15 @@
     "dev:web": "npm run dev --workspace @hamza/web",
     "dev:api": "npm run dev --workspace @hamza/api",
     "build": "npm run build --workspaces --if-present",
-    "build:web": "npm run build --workspace @hamza/web",
+    "build:web": "npm run build --workspace @hamza/admin && npm run build --workspace @hamza/web && node scripts/bundle-admin.mjs",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "db:reset": "npm run db:reset --workspace @hamza/web",
     "db:migrate": "npm run db:migrate --workspace @hamza/web",
     "db:seed": "npm run db:seed --workspace @hamza/web",
     "db:migrate:remote": "npm run db:migrate:remote --workspace @hamza/web",
     "db:seed:remote": "npm run db:seed:remote --workspace @hamza/web",
-    "dev:admin": "npm run dev --workspace @hamza/admin"
+    "dev:admin": "npm run dev --workspace @hamza/admin",
+    "build:admin": "npm run build --workspace @hamza/admin"
   },
   "devDependencies": {
     "typescript": "^5.7.2",

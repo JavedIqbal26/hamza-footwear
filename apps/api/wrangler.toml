@@ -1,17 +1,30 @@
 #:schema node_modules/wrangler/config-schema.json
 # Admin / write API Worker.
 #
-# Not deployed in Phase 1 — the storefront reads D1 directly through its own
-# binding and ordering goes via WhatsApp. This config exists so Phase 2 can
-# deploy without rediscovering the wiring.
-#
-# In Phase 2 this Worker sits behind Cloudflare Access; there is no auth code
-# in the application.
+# Sits behind Cloudflare Access; there is no auth code in the application.
 
 name = "hamza-footwear-api"
 main = "src/index.ts"
 compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
+
+# Served from the shop's own domain, not a workers.dev subdomain.
+#
+# Admin is deployed at hamzafootwear.com/admin and calls /api/admin/... as a
+# relative path, so the API has to answer on the same host or every request
+# becomes cross-origin — which would mean CORS config, a second Access
+# application, and two places to get it wrong. A Worker route takes precedence
+# over the Pages project on matching paths, so /api/* lands here and everything
+# else stays with the storefront.
+#
+# CLAUDE.md requires this Worker to have NO public hostname outside its Access
+# application: its identity check trusts a header only Access can be relied on
+# to set. Keep workers.dev disabled.
+routes = [
+  { pattern = "hamzafootwear.com/api/*", zone_name = "hamzafootwear.com" }
+]
+
+workers_dev = false
 
 [[d1_databases]]
 binding = "DB"
@@ -24,4 +37,8 @@ binding = "IMAGES"
 bucket_name = "hamza-footwear-images"
 
 # Secrets are set with `wrangler secret put`, never in this file:
-#   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, RESEND_API_KEY
+#   TELEGRAM_BOT_TOKEN  — admin needs it to read the chat id back via Connect
+#   VAPID_PUBLIC_KEY    — handed to the browser so it can subscribe to push
+#
+# The VAPID *private* key belongs to the storefront Worker, which does the
+# sending. This one never signs anything and must not hold it.
