@@ -42,6 +42,17 @@ export default defineConfig({
   build: {
     // One stylesheet, inlined when small enough to save a round trip on 4G.
     inlineStylesheets: 'auto',
+    /*
+     * Prerendered pages emit as `size-guide.html`, not `size-guide/index.html`.
+     *
+     * With the directory form, Cloudflare Pages answers /size-guide with a 308
+     * to /size-guide/ — a wasted round trip on every visit. It is only two
+     * pages, but one of them is the size guide, which is linked from every
+     * product page and which CLAUDE.md calls a revenue feature. A redirect on
+     * the path between "will this fit?" and the answer is the wrong place to
+     * spend 100ms of someone's 4G.
+     */
+    format: 'file',
   },
   prefetch: {
     // Prefetch on hover/tap-intent only. Mobile data is not ours to spend.
