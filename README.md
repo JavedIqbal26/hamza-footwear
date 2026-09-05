@@ -181,14 +181,24 @@ Which channels fire is chosen by the owner in **admin → Settings**, not here.
 This step only supplies the credentials each channel needs; a channel with none
 shows as unavailable on that screen rather than as merely switched off.
 
-```bash
-# Telegram — the token is a secret; the chat id is set from admin's Connect button
-wrangler secret put TELEGRAM_BOT_TOKEN --cwd apps/web
-wrangler secret put TELEGRAM_BOT_TOKEN --cwd apps/api   # admin needs it for Connect
+> **The storefront is a Pages project, the API is a Worker, and they take
+> different commands.** `wrangler secret put` on a Pages project fails with
+> "It looks like you've run a Workers-specific command in a Pages project".
+> Pages needs `wrangler pages secret put`.
 
-# Email (optional backup record)
-wrangler secret put RESEND_API_KEY --cwd apps/web
+```bash
+# Storefront (Pages) — sends the notifications
+cd apps/web
+npx wrangler pages secret put TELEGRAM_BOT_TOKEN --project-name hamza-footwear
+npx wrangler pages secret put RESEND_API_KEY     --project-name hamza-footwear
+
+# Admin API (Worker) — needs the bot token only for the Connect button
+cd ../api
+npx wrangler secret put TELEGRAM_BOT_TOKEN
 ```
+
+The Telegram chat id is *not* set here — the owner presses **Connect Telegram**
+in admin and it is read back from whoever last messaged the bot.
 
 **Web Push** needs one VAPID keypair, generated once and shared between the two
 Workers. Generate it with Node:
@@ -201,10 +211,23 @@ The storefront signs and sends, so it needs both halves. The API only hands the
 public key to the browser so it can subscribe:
 
 ```bash
-wrangler secret put VAPID_PRIVATE_KEY --cwd apps/web
-wrangler secret put VAPID_PUBLIC_KEY  --cwd apps/web
-wrangler secret put VAPID_PUBLIC_KEY  --cwd apps/api
+# Storefront (Pages) signs and sends, so it needs both halves
+cd apps/web
+npx wrangler pages secret put VAPID_PRIVATE_KEY --project-name hamza-footwear
+npx wrangler pages secret put VAPID_PUBLIC_KEY  --project-name hamza-footwear
+npx wrangler pages secret put VAPID_SUBJECT     --project-name hamza-footwear
+
+# API (Worker) only hands the public key to the browser
+cd ../api
+npx wrangler secret put VAPID_PUBLIC_KEY
 ```
+
+**A Pages project only picks up new secrets on its next deployment.** Redeploy
+after setting them, or push will stay unavailable however the toggle looks.
+
+> On Windows, `npx` may fail in PowerShell with "running scripts is disabled on
+> this system". Use Git Bash or Command Prompt, or call `npx.cmd` — no need to
+> change the execution policy.
 
 Then, on the owner's phone: open `/admin`, add it to the home screen, and turn
 on **Phone notification** in Settings. Two things worth telling him — the app
