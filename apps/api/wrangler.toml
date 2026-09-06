@@ -8,22 +8,18 @@ main = "src/index.ts"
 compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
 
-# Served from the shop's own domain, not a workers.dev subdomain.
+# NOT ROUTED, AND DELIBERATELY SO.
 #
-# Admin is deployed at hamzafootwear.com/admin and calls /api/admin/... as a
-# relative path, so the API has to answer on the same host or every request
-# becomes cross-origin — which would mean CORS config, a second Access
-# application, and two places to get it wrong. A Worker route takes precedence
-# over the Pages project on matching paths, so /api/* lands here and everything
-# else stays with the storefront.
+# The admin API is served by the storefront's Pages project, which mounts this
+# same Hono app at apps/web/src/pages/api/admin/[...path].ts. Cloudflare Access
+# and Worker routes cannot both apply to one path on a Pages custom domain —
+# once Access processes a request it forwards to the Pages origin and the Worker
+# route never fires.
 #
-# CLAUDE.md requires this Worker to have NO public hostname outside its Access
-# application: its identity check trusts a header only Access can be relied on
-# to set. Keep workers.dev disabled.
-routes = [
-  { pattern = "hamzafootwear.com/api/*", zone_name = "hamzafootwear.com" }
-]
-
+# This config stays for local development (`npm run dev:api`), and because the
+# bindings below document what the API needs. Do not add a route back without
+# removing the Astro mount first: two live copies of the same API, only one of
+# them behind Access, is exactly the shape of an accident.
 workers_dev = false
 
 [[d1_databases]]

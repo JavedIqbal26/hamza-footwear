@@ -16,6 +16,7 @@
     "db:seed:remote:samples": "wrangler d1 execute hamza-footwear-db --remote --file=../../db/seed/0002_products.sql"
   },
   "dependencies": {
+    "@hamza/api": "*",
     "@hamza/db": "*",
     "@hamza/shared": "*",
     "astro": "^5.1.5"
