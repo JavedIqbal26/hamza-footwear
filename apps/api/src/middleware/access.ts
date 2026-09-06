@@ -1,5 +1,6 @@
 import { createMiddleware } from 'hono/factory';
 
+import { verifyAccessJwt } from '../lib/access-jwt.js';
 import type { AppBindings } from '../lib/env.js';
 
 /**
@@ -17,19 +18,25 @@ import type { AppBindings } from '../lib/env.js';
  * ---------------------------------------------------------------------------
  * SECURITY NOTE — read before changing the deployment.
  *
- * `Cf-Access-Authenticated-User-Email` is trustworthy ONLY because Access
- * terminates the request first and strips any client-supplied copy. If this
- * Worker is ever reachable on a hostname that Access does not cover, that
- * header can be forged and this check is worthless.
+ * This used to trust `Cf-Access-Authenticated-User-Email`, on the reasoning
+ * that Access strips any client-supplied copy. Two things were wrong with that.
  *
- * Therefore: every route of this Worker must sit behind an Access application,
- * and the Worker must have no other public hostname. If that ever stops being
- * true, this must be replaced with real verification of the
- * `Cf-Access-Jwt-Assertion` JWT against the team's public keys.
+ * First, it did not work: Access does not send that header. Measured on the
+ * deployed site — the JWT assertion arrives, the email header does not.
+ *
+ * Second, and more importantly, trusting a plain header made the whole thing
+ * contingent on deployment shape. It was only safe while every route sat behind
+ * Access on a hostname with no other door, and this project has since grown a
+ * `www` hostname that Access did not cover — where the admin UI was reachable
+ * and only this middleware's refusal stopped it doing anything.
+ *
+ * Verifying the signed token removes that dependency. A forged header is now
+ * worth nothing regardless of how the app is exposed, which is the property we
+ * actually wanted.
  * ---------------------------------------------------------------------------
  */
 
-const IDENTITY_HEADER = 'Cf-Access-Authenticated-User-Email';
+const TOKEN_HEADER = 'Cf-Access-Jwt-Assertion';
 
 function parseAllowList(raw: string | undefined): string[] {
   if (!raw) return [];
@@ -40,9 +47,9 @@ function parseAllowList(raw: string | undefined): string[] {
 }
 
 export const requireAccess = createMiddleware<AppBindings>(async (c, next) => {
-  const email = c.req.header(IDENTITY_HEADER)?.trim().toLowerCase();
+  const token = c.req.header(TOKEN_HEADER);
 
-  if (!email) {
+  if (!token) {
     return c.json(
       {
         error:
@@ -51,6 +58,28 @@ export const requireAccess = createMiddleware<AppBindings>(async (c, next) => {
       401,
     );
   }
+
+  /*
+   * Both are plain identifiers rather than secrets, so they live in
+   * wrangler.toml. Missing configuration fails closed: an unverifiable token is
+   * refused rather than waved through, because the alternative is an admin API
+   * that opens itself when someone forgets a variable.
+   */
+  const teamDomain = c.env.ACCESS_TEAM_DOMAIN;
+  const audience = c.env.ACCESS_AUD;
+
+  if (!teamDomain || !audience) {
+    console.error('ACCESS_TEAM_DOMAIN or ACCESS_AUD is not configured');
+    return c.json({ error: 'Admin authentication is not configured.' }, 500);
+  }
+
+  const identity = await verifyAccessJwt(token, teamDomain, audience);
+
+  if (!identity) {
+    return c.json({ error: 'Your Access session is not valid. Reload to sign in.' }, 401);
+  }
+
+  const email = identity.email;
 
   /* A second allowlist is optional; the Access policy is the primary one. */
   const allowed = parseAllowList(c.env.ADMIN_EMAILS);

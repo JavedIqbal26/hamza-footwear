@@ -35,6 +35,15 @@ SHOP_WHATSAPP = "03000142825"
 JAZZCASH_NUMBER = "03000142825"
 EASYPAISA_NUMBER = "03000142825"
 
+# Cloudflare Access, for verifying the token it forwards to /api/admin.
+#
+# Identifiers, not secrets: the team domain is public, and the AUD tag is
+# meaningless without a signature from Cloudflare's private key. Both are read
+# from the deployed token itself, so they cannot drift from reality silently —
+# a wrong value fails closed rather than opening anything.
+ACCESS_TEAM_DOMAIN = "small-sunset-28db.cloudflareaccess.com"
+ACCESS_AUD = "5f85248b08cdead6881fe96d7ae0426a655d294ca5f70db96d18d58d67b001c0"
+
 # Order notifications are configured as secrets, not here:
 #   wrangler secret put TELEGRAM_BOT_TOKEN
 #   wrangler secret put TELEGRAM_CHAT_ID

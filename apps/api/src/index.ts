@@ -24,6 +24,7 @@ const app = new Hono<AppBindings>().basePath('/api');
 
 app.route('/', healthRoutes);
 
+
 const admin = new Hono<AppBindings>();
 admin.use('*', requireAccess);
 admin.route('/', productRoutes);

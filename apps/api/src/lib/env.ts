@@ -24,6 +24,14 @@ export interface Env {
   readonly RESEND_API_KEY?: string;
   /** Public half of the VAPID pair; the admin browser needs it to subscribe. */
   readonly VAPID_PUBLIC_KEY?: string;
+
+  /*
+   * Cloudflare Access, for verifying the token it forwards. Identifiers, not
+   * secrets — the team domain is public and the AUD tag is meaningless without
+   * a signature from the matching private key.
+   */
+  readonly ACCESS_TEAM_DOMAIN?: string;
+  readonly ACCESS_AUD?: string;
 }
 
 /** Hono's generic shape for this Worker, including what middleware attaches. */
