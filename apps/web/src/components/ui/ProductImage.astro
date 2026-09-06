@@ -23,17 +23,13 @@ interface Props {
   /**
    * How the image sits in its box.
    *
-   * `contain` by default, and that default matters more here than it looks.
-   * Variants are produced with `maxWidthOrHeight`, which preserves the source
-   * aspect ratio — a shop owner photographing stock on a phone produces 4:3,
-   * 3:4 and everything between, never squares. Cropping those to fill a square
-   * card cuts real product: measured on the first three real uploads, a 400x329
-   * photo lost 18% off the sides and a 320x400 lost 20% off top and bottom.
+   * `cover` by default, which is safe because admin now pads every upload to a
+   * square before storing it — so there is nothing left to crop. That padding
+   * is the real fix: CSS can only crop or letterbox what it is given, and a
+   * consistent catalogue needs the stored files to be consistent.
    *
-   * On a shoe shop the photograph IS the merchandise, so showing all of it on a
-   * neutral ground beats filling the tile edge to edge. `cover` stays available
-   * for the category tiles and the hero, where the image is mood and the crop
-   * is the point.
+   * `contain` remains for anything uploaded before that change, where the
+   * source is still 4:3 or 3:4 and cropping would cut the shoe.
    */
   fit?: 'contain' | 'cover';
   class?: string;
@@ -46,7 +42,7 @@ const {
   sizes = '(min-width: 640px) 50vw, 100vw',
   loading = 'lazy',
   ratio = 'square',
-  fit = 'contain',
+  fit = 'cover',
   class: className = '',
 } = Astro.props;
 
